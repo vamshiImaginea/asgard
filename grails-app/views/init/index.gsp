@@ -58,7 +58,7 @@
 								<label for="openStackUrl">URL:
 								</label></td>
 								<td class="value"><input type="text" size='25'
-									maxlength='20' id="openStackUrl" name="openStackUrl"
+									maxlength='50' id="openStackUrl" name="openStackUrl"
 									value="${params.openStackUrl}"  /></td>
 							</tr>
 							<tr class="prop">

@@ -20,7 +20,7 @@ import org.joda.time.DateTime
 class HealthcheckService implements BackgroundProcessInitializer {
 
     static transactional = false
-    static isInitilised = false
+    static isInitilised = true
     private static final Integer RECENT_MINUTES = 10
 
     Caches caches

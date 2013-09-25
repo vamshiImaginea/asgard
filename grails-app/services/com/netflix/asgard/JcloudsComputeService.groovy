@@ -107,7 +107,7 @@ class JcloudsComputeService {
 
 	ComputeService getComputeServiceForProvider(Region region){
 		ComputeService computeService = null
-		log.info 'current provider' + configService.getProvider().toString() 
+		log.info 'current provider ' + configService.getProvider().toString() 
 		if(configService.getProvider().equalsIgnoreCase(Provider.AWS.description)){			
 			computeService = getAWSComputeService(region)
 		}else{

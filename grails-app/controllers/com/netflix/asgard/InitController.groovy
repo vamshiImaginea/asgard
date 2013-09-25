@@ -35,6 +35,7 @@ class InitController {
 
 
 	def index = {
+		InitializeCommand cmd ->
 		[asgardHome: configService.asgardHome]
 		File asgardHomeDir = new File(configService.asgardHome)
 		asgardHomeDir.mkdirs()
@@ -46,13 +47,19 @@ class InitController {
 		if(!configFile.exists()) {
 			return
 		}
-	/*	//def cmd = new InitializeCommand(accountNumber: 'The Shining', secretKey: 'Stephen King')
-		if(params.get('cloudService')) {
-		
-			
-			return new ModelAndView(view: "index", model: [initializeCommand:cmd])
 
-		}*/
+
+		if(params.get('cloudService')) {
+			def config = new ConfigSlurper().parse(configFile.toURL())
+			cmd.accessId = config.secret.accessId
+			cmd.secretKey = config.secret.secretKey
+			cmd.accountNumber = config.secret.accountNumber
+			cmd.openStackUrl = config.openstack.endpoint
+			cmd.openStackPassword = config.openstack.passwd
+			cmd.openStackUsername = config.openstack.username
+
+			render(view: 'index', model: [params: cmd])
+		}
 	}
 
 
@@ -60,7 +67,9 @@ class InitController {
 	 * Creates the Config.groovy file from the supplied parameters and redirects to the home page if successful
 	 */
 	def save = { InitializeCommand cmd ->
+
 		if (cmd.hasErrors()) {
+
 			render(view: 'index', model: [cmd: cmd])
 			return
 		}
@@ -87,8 +96,8 @@ class InitializeCommand {
 	String cloudService
 	boolean showPublicAmazonImages
 	static constraints = {
-		/*		
-		 accessId(nullable: true, blank: false, matches: /[A-Z0-9]{20}/)
+
+		/*	 accessId(nullable: true, blank: false, matches: /[A-Z0-9]{20}/)
 		 secretKey(nullable: true, blank: false, matches: /[A-Za-z0-9\+\/]{40}/)
 		 accountNumber(nullable: true, blank: false, matches: /\d{4}-?\d{4}-?\d{4}/)*/
 
@@ -97,41 +106,39 @@ class InitializeCommand {
 	ConfigObject toConfigObject() {
 		if (cloudService.equals("aws")) {
 
-			if(!accessId && !accountNumber && !secretKey) {
+			if(!accessId || !accountNumber || !secretKey) {
 				throw new Exception("AWS Amazon Credentials are not provided")
 			}
 			ConfigObject rootConfig = new ConfigObject()
 			ConfigObject grailsConfig = new ConfigObject()
 			rootConfig['grails'] = grailsConfig
 			String accountNumber = accountNumber.replace('-','')
-			grailsConfig['awsAccounts'] = [accountNumber]
+			grailsConfig['awsAccounts'] =  [accountNumber]
 			grailsConfig['awsAccountNames'] = [(accountNumber): 'prod']
-			grailsConfig['currentActiveService'] = [cloudService]
+			grailsConfig['currentActiveService'] = cloudService
 			ConfigObject secretConfig = new ConfigObject()
 			rootConfig['secret'] = secretConfig
 			secretConfig['accessId'] = accessId.trim()
 			secretConfig['secretKey'] = secretKey.trim()
-
+			secretConfig['accountNumber'] = accountNumber
 			ConfigObject cloudConfig = new ConfigObject()
 			rootConfig['cloud'] = cloudConfig
 			cloudConfig['accountName'] = 'prod'
 			cloudConfig['publicResourceAccounts'] = showPublicAmazonImages ? ['amazon'] : []
 			rootConfig
 		}else {
-
-			if(!openStackUrl && !openStackUsername && !openStackPassword) {
+		if(!openStackUrl || !openStackUsername || !openStackPassword) {
 				throw new Exception("OpenStack Credentials are not provided")
 			}
 			ConfigObject rootConfig = new ConfigObject()
 			ConfigObject grailsConfig = new ConfigObject()
 			rootConfig['grails'] = grailsConfig
-			grailsConfig['openStackUrl'] = [openStackUrl]
 			ConfigObject secretConfig = new ConfigObject()
 			rootConfig['openstack'] = secretConfig
-			secretConfig['openStackPassword'] = openStackPassword.trim()
-			secretConfig['openStackUsername'] = openStackUsername.trim()
-			secretConfig['openStackUrl'] = openStackUrl.trim()
-			grailsConfig['currentActiveService'] = [cloudService]
+			secretConfig['passwd'] = openStackPassword.trim()
+			secretConfig['username'] = openStackUsername.trim()
+			secretConfig['endpoint'] = openStackUrl.trim()
+			grailsConfig['currentActiveService'] = cloudService
 			ConfigObject cloudConfig = new ConfigObject()
 			rootConfig['cloud'] = cloudConfig
 			cloudConfig['accountName'] = 'prod'

@@ -88,9 +88,12 @@ class InitService implements ApplicationContextAware {
 		for (BackgroundProcessInitializer backgroundProcessInitializer in backgroundProcessInitializers) {
 			try{
 				backgroundProcessInitializer.cancel()
+			
 			}catch(Exception e){
-				// Didn't check wheather already back ground process is started, need to check it
+			
+				log.info "error :"+e.getMessage()
 				log.error "error while Stopping the back ground thread, "
+				
 
 			}
 			backgroundProcessInitializer.initializeBackgroundProcess()

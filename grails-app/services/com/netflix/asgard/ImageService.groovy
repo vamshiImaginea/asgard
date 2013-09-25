@@ -73,6 +73,7 @@ class ImageService implements BackgroundProcessInitializer {
     }
 
 	void cancel(){
+		if(!scheduledfuture)
 		scheduledfuture.cancel(true)
 	}
     List<SpotInstanceRequest> requestSpotInstances(UserContext userContext, String imageId, Integer count,
