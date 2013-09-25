@@ -61,7 +61,7 @@
       </div>
       <div>
        <form action="" method="GET">
-          	<g:select id="cloudService" class="noSelect2" name="cloudService" from="${["aws","openstack"]}" value="${params.cloudService}"/>
+          	<g:select id="cloudService" class="noSelect2" name="cloudService" from="${["aws","openstack"]}" value="${provider}" />
          </form>
       </div>
       <div class="ticket" title="${fullTicketLabel} number for logging change actions.">

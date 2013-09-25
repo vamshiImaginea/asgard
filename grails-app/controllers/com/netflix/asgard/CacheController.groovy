@@ -52,7 +52,7 @@ class CacheController {
 
     public Map<String, ? extends List> analyzeCaches() {
         //Collection<Fillable> fillableCaches = caches.properties*.value.findAll { it instanceof Fillable }
-		Collection<Fillable> fillableCaches = [caches.allImages,caches.allInstances];
+		Collection<Fillable> fillableCaches = [caches.allImages,caches.allInstances]
 		
         List<Map> multiRegionSummaries = []
         List<Map> globalSummaries = []

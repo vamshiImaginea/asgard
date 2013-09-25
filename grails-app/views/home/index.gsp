@@ -27,7 +27,7 @@
         <thead>
         <tr>
           <th>Abstractions</th>
-          <th>AWS Objects</th>
+          <th>${provider} Objects</th>
           <th>Asgard Tasks</th>
           <g:if test='${externalLinks}'>
             <th>External Links</th>
@@ -110,22 +110,74 @@
       </div>
     </div>
     <div class="clear"></div>
-    <div class="section diagnostics">
-      <h4>Diagnostics:</h4>
-      <p>AWS Account: ${grailsApplication.config.cloud.accountName}</p>
-      <p>AWS Region: ${region}</p>
-      <p>AWS Accounts: ${grailsApplication.config.grails.awsAccountNames}</p>
-      <g:if test="${discoveryUrl}">
-        <p>Eureka UI: <a href="${discoveryUrl}">${discoveryUrl}</a></p>
-        <p>Eureka XML: <a href="${discoveryApiUrl}">${discoveryApiUrl}</a></p>
-      </g:if>
-      <g:else>
-        Eureka: There is no Eureka URL for <strong>${grailsApplication.config.cloud.accountName}</strong> in <strong>${region}</strong>
-      </g:else>
-      <p>Hostname: ${InetAddress.localHost.hostName}, IP: ${InetAddress.localHost.hostAddress}</p>
-      <p>Version: <g:meta name="app.version"/></p>
-      <p>Build: id=${grailsApplication.config.build.id} build#${grailsApplication.config.build.number} @${grailsApplication.config.scm.commit}</p>
-    </div>
-  </div>
+		<div class="section diagnostics">
+			<h4>Diagnostics:</h4>
+			<g:if test="${provider == 'openstack'}">
+				<p>
+					${provider} Account:
+					${grailsApplication.config.cloud.accountName}
+				</p>
+				<p>
+					${provider} Region:
+					${region}
+				</p>
+				<p>
+					${provider} Accounts:
+					${grailsApplication.config.openstack.username}
+				</p>
+		
+			</g:if>
+			
+					<g:else test="${provider == 'openstack'}">
+				<p>
+					${provider} Account:
+					${grailsApplication.config.cloud.accountName}
+				</p>
+				<p>
+					${provider} Region:
+					${region}
+				</p>
+				<p>
+					${provider} Accounts:
+					${grailsApplication.config.openstack.username}
+				</p>
+				<g:if test="${discoveryUrl}">
+					<p>
+						Eureka UI: <a href="${discoveryUrl}">
+							${discoveryUrl}
+						</a>
+					</p>
+					<p>
+						Eureka XML: <a href="${discoveryApiUrl}">
+							${discoveryApiUrl}
+						</a>
+					</p>
+				</g:if>
+				<g:else>
+        Eureka: There is no Eureka URL for <strong>
+						${grailsApplication.config.cloud.accountName}
+					</strong> in <strong>
+						${region}
+					</strong>
+				</g:else>
+		
+			</g:else>
+		<p>
+					Hostname:
+					${InetAddress.localHost.hostName}, IP:
+					${InetAddress.localHost.hostAddress}
+				</p>
+				<p>
+					Version:
+					<g:meta name="app.version" />
+				</p>
+				<p>
+					Build: id=${grailsApplication.config.build.id}
+					build#${grailsApplication.config.build.number} @${grailsApplication.config.scm.commit}
+				</p>
+
+
+		</div>
+	</div>
 </body>
 </html>

@@ -69,15 +69,32 @@ jQuery.extend({
       return results;
     }
 });
+function showCloudConfig() {
+	
+	if (jQuery("#cloudServiceType").val() == 'aws') {
+		document.getElementById("aws").style.display = 'block';
+		document.getElementById("openStack").style.display = 'none';
+
+	} else {
+		document.getElementById("aws").style.display = 'none';
+		document.getElementById("openStack").style.display = 'block';
+
+	}
+}
 
 jQuery(document).ready(function() {
-
+	
+	if(jQuery("#cloudServiceType").val()){
+	showCloudConfig()
+	}
+	
     /**
      * http://www.openjs.com/scripts/events/keyboard_shortcuts/
      * Version : 2.01.B
      * By Binny V A
      * License : BSD
      */
+
     var shortcut = {
         'all_shortcuts': {}, // All the shortcuts are stored in this array
         'add': function(shortcut_combination, callback, opt) {

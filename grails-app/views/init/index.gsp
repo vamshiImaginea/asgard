@@ -26,9 +26,8 @@
 	<div class="body">
 		<h1>Welcome to Asgard!</h1>
 		<h1>
-			Asgard requires <a
-				href="https://aws-portal.amazon.com/gp/aws/securityCredentials">your
-				AWS security credentials</a> to run. Enter them below to create an
+			Asgard requires your
+				cloud security credentials to run. Enter them below to create an
 			Asgard configuration file at
 			${asgardHome}/Config.groovy.
 		</h1>
@@ -49,7 +48,7 @@
 	<div>
 		<g:form method="post" class="validate">
 		<label for="cloudService">Cloud Service: </label>
-		<g:select id="cloudServiceType" name="cloudService" from="${["aws","openstack"]}" class="noSelect2" value="${params.cloudService}" onchange="showCloudConfig(this)"/>
+		<g:select id="cloudServiceType" name="cloudService" from="${["aws","openstack"]}" class="noSelect2" value="${params.cloudService}" onchange="showCloudConfig()"/>
 					<div class="dialog" id="openStack">
 					<table>
 						<tbody>
@@ -125,20 +124,7 @@
 		</g:form>
 	</div>
 
-	<script type="text/javascript">
-		document.getElementById("openStack").style.display = 'none';
-		function showCloudConfig(cloudConfigType) {
-			if (cloudConfigType.options[cloudConfigType.selectedIndex].value == 'aws') {
-				document.getElementById("aws").style.display = 'block';
-				document.getElementById("openStack").style.display = 'none';
-
-			} else {
-				document.getElementById("aws").style.display = 'none';
-				document.getElementById("openStack").style.display = 'block';
-
-			}
-		}
-	</script>
+	
 
 </body>
 </html>
