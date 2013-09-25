@@ -32,7 +32,7 @@
         <div class="buttons">
           <g:buttonSubmit class="create requireLogin" action="save" value="Create Volume"/><br/>
           <label>Volume Size (in GB):</label><g:textField name="volumeSize" size="12" placeholder="--ENTER SIZE--" class="required requireLogin"/>
-          <label>Availability Zone:</label><g:select name="availabilityZone" from="${zoneList.zoneName}" class="requireLogin"/>
+          <label>Availability Zone:</label><g:select name="availabilityZone" from="${zoneList.iso3166Codes}" class="requireLogin"/>
         </div>
         <table class="sortable">
           <thead>
@@ -41,19 +41,19 @@
             <th>Status</th>
             <th>Size (GB)</th>
             <th>Zone</th>
-            <th>Date Created</th>
+            <th>Date Created</th><%--
             <th>Tags</th>
-            <th>Attached To</th>
+            --%><th>Attached To</th>
           </tr>
           </thead>
           <tbody>
           <g:each var="v" in="${volumes}" status="i">
             <tr class="${(i % 2) == 0 ? 'odd' : 'even'}">
-              <td><g:linkObject type="volume" name="${v.volumeId}"/></td>
-              <td>${v.state}</td>
+              <td><g:linkObject type="volume" name="${v.id}"/></td>
+              <td>${v.status}</td>
               <td>${v.size}</td>
               <td>${v.availabilityZone}</td>
-              <td class="date"><g:formatDate date="${v.createTime}"/></td>
+              <td class="date"><g:formatDate date="${v.createTime}"/></td><%--
               <td>
                 <g:if test="${v.tags}">
                   <g:each var="tag" in="${v.tags}">
@@ -61,7 +61,7 @@
                   </g:each>
                 </g:if>
               </td>
-              <td><g:each var="va" in="${v.attachments.sort{it.instanceId} }">
+              --%><td><g:each var="va" in="${v.attachments.sort{it.instanceId} }">
                 <g:linkObject type="instance" name="${va.instanceId}"/><br/>
               </g:each></td>
             </tr>

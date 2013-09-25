@@ -20,7 +20,7 @@ import org.joda.time.DateTime
 class HealthcheckService implements BackgroundProcessInitializer {
 
     static transactional = false
-
+    static isInitilised = false
     private static final Integer RECENT_MINUTES = 10
 
     Caches caches
@@ -31,11 +31,16 @@ class HealthcheckService implements BackgroundProcessInitializer {
     Map<String, String> cacheNamesToProblems = new TreeMap<String, String>()
 
     void initializeBackgroundProcess() {
-        start()
+		synchronized (HealthcheckService.class) {
+			if(!isInitilised)
+			start()
+		}
+        
     }
 
     private void start() {
         Thread.startDaemon('Healthcheck') {
+			isInitilised = true
             //noinspection GroovyInfiniteLoopStatement
             while (true) {
                 checkCaches()
@@ -104,4 +109,10 @@ class HealthcheckService implements BackgroundProcessInitializer {
         }
         problem
     }
+
+	
+	public void cancel() {
+		// Currently unimplemented 
+		
+	}
 }

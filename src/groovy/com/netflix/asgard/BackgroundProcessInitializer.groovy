@@ -18,5 +18,6 @@ package com.netflix.asgard
 interface BackgroundProcessInitializer {
 
     void initializeBackgroundProcess()
+	void cancel()
 
 }

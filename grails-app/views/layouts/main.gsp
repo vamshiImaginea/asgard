@@ -57,6 +57,12 @@
                     value="${region.code}" from="${regions}" optionKey="code" optionValue="description"/><br/>
           <img src="${resource(dir: 'images/worldmap', file: region.mapImageFileName)}" title="${region.description} is your current region"/>
         </form>
+         
+      </div>
+      <div>
+       <form action="" method="GET">
+          	<g:select id="cloudService" class="noSelect2" name="cloudService" from="${["aws","openstack"]}" value="${params.cloudService}"/>
+         </form>
       </div>
       <div class="ticket" title="${fullTicketLabel} number for logging change actions.">
         <input type="text" name="ticket" placeholder="${ticketLabel}" id="ticketNumber" title="${fullTicketLabel} number" class="${ticketRequired ? 'required' : 'optional'}"/>

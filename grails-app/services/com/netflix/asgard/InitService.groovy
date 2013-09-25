@@ -15,69 +15,102 @@
  */
 package com.netflix.asgard
 
+import java.awt.TexturePaintContext.Int;
+import java.awt.event.ItemEvent;
+
+import javassist.bytecode.stackmap.BasicBlock.Catch;
+
 import com.netflix.asgard.cache.CacheInitializer
 import com.netflix.asgard.cache.Fillable
+import com.sun.org.apache.bcel.internal.generic.NEW;
+
 import org.springframework.context.ApplicationContext
 import org.springframework.context.ApplicationContextAware
 
 class InitService implements ApplicationContextAware {
 
-    static transactional = false
+	static transactional = false
 
-    ApplicationContext applicationContext
-    Caches caches
+	ApplicationContext applicationContext
+	Caches caches
 
-    def configService
-    def grailsApplication // modifying the config object directly here
+	def configService
+	def grailsApplication // modifying the config object directly here
 
-    /**
-     * Creates the Asgard Config.groovy file and updates the in memory configuration to reflect the configured state
-     *
-     * @param configObject The configuration to persist
-     */
-    void writeConfig(ConfigObject configObject) throws IOException {
-        File asgardHomeDir = new File(configService.asgardHome)
-        asgardHomeDir.mkdirs()
-        if (!asgardHomeDir.exists()) {
-            throw new IOException("Unable to create directory ${configService.asgardHome}")
-        }
+	/**
+	 * Creates the Asgard Config.groovy file and updates the in memory configuration to reflect the configured state
+	 *
+	 * @param configObject The configuration to persist
+	 */
+	void writeConfig(ConfigObject configObject) throws IOException {
+		File asgardHomeDir = new File(configService.asgardHome)
+		asgardHomeDir.mkdirs()
+		if (!asgardHomeDir.exists()) {
+			throw new IOException("Unable to create directory ${configService.asgardHome}")
+		}
 
-        File configFile = new File(configService.asgardHome, 'Config.groovy')
-        boolean fileCreated = configFile.createNewFile()
-        if (!fileCreated) {
-            throw new IOException("Unable to create Config.groovy file in directory ${configService.asgardHome}")
-        }
-        configFile.withWriter{ writer ->
-            configObject.writeTo(writer)
-        }
-        grailsApplication.config.appConfigured = true
-        grailsApplication.config.merge(configObject)
+		File configFile = new File(configService.asgardHome, 'Config.groovy')
+		if(!configFile.exists()) {
+			boolean fileCreated = configFile.createNewFile()
+			if (!fileCreated && !configFile.exists()) {
+				throw new IOException("Unable to create Config.groovy file in directory ${configService.asgardHome}")
+			}
+		}
 
-        initializeApplication()
-    }
+		ConfigObject config = new ConfigSlurper().parse(configFile.toURL());
+		config.merge(configObject)
 
-    /**
-     * Kicks off populating of caches and background threads
-     */
-    void initializeApplication() {
-        log.info 'Starting caches'
-        Collection<CacheInitializer> cacheInitializers = applicationContext.getBeansOfType(CacheInitializer).values()
-        for (CacheInitializer cacheInitializer in cacheInitializers) {
-            cacheInitializer.initializeCaches()
-        }
-        log.info 'Starting background threads'
-        Collection<BackgroundProcessInitializer> backgroundProcessInitializers =
-                applicationContext.getBeansOfType(BackgroundProcessInitializer).values()
-        for (BackgroundProcessInitializer backgroundProcessInitializer in backgroundProcessInitializers) {
-            backgroundProcessInitializer.initializeBackgroundProcess()
-        }
-    }
+		configFile.withWriter{ writer ->
+			config.writeTo(writer)
+		}
 
-    /**
-     * @return true if all caches have completed their initial load, false otherwise
-     */
-    boolean cachesFilled() {
-        Collection<Fillable> fillableCaches = caches.properties*.value.findAll { it instanceof Fillable }
-        !fillableCaches.find { !it.filled }
-    }
+		grailsApplication.config.appConfigured = true
+		grailsApplication.config.merge(config)
+
+		initializeApplication()
+	}
+
+	/**
+	 * Kicks off populating of caches and background threads
+	 */
+	void initializeApplication() {
+
+
+		removeCaches()
+		log.info 'Starting caches'
+		Collection<CacheInitializer> cacheInitializers = applicationContext.getBeansOfType(CacheInitializer).values()
+		for (CacheInitializer cacheInitializer in cacheInitializers) {
+			cacheInitializer.initializeCaches()
+		}
+		log.info 'Starting background threads'
+		Collection<BackgroundProcessInitializer> backgroundProcessInitializers =
+				applicationContext.getBeansOfType(BackgroundProcessInitializer).values()
+		for (BackgroundProcessInitializer backgroundProcessInitializer in backgroundProcessInitializers) {
+			try{
+				backgroundProcessInitializer.cancel()
+			}catch(Exception e){
+				// Didn't check wheather already back ground process is started, need to check it
+				log.error "error while Stopping the back ground thread, "
+
+			}
+			backgroundProcessInitializer.initializeBackgroundProcess()
+		}
+	}
+
+	/**
+	 * @return true if all caches have completed their initial load, false otherwise
+	 */
+	boolean cachesFilled() {
+		Collection<Fillable> fillableCaches = caches.properties*.value.findAll { it instanceof Fillable }
+		!fillableCaches.find { !it.filled }
+	}
+	void removeCaches() {
+		Collection<Fillable> fillableCaches = caches.properties*.value.findAll { it instanceof Fillable }
+		for(Iterator<Fillable> i = fillableCaches.iterator(); i.hasNext();){
+			Fillable item = i.next();
+			item.removeCachedEntries();
+		}
+
+
+	}
 }

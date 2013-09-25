@@ -352,7 +352,7 @@ class RegionalInstancePrices {
     private RegionalInstancePrices(Table<InstanceType, InstanceProductType, BigDecimal> pricesByHardwareAndProduct) {
         this.pricesByHardwareAndProduct = pricesByHardwareAndProduct
     }
-
+	
     static create(Table<InstanceType, InstanceProductType, BigDecimal> pricesByHardwareAndProduct) {
         new RegionalInstancePrices(pricesByHardwareAndProduct)
     }

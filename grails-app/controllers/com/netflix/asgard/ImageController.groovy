@@ -17,7 +17,6 @@ package com.netflix.asgard
 
 import com.amazonaws.AmazonServiceException
 import com.amazonaws.services.autoscaling.model.LaunchConfiguration
-import com.amazonaws.services.ec2.model.Image
 import com.amazonaws.services.ec2.model.Instance
 import com.amazonaws.services.ec2.model.SpotInstanceRequest
 import com.netflix.asgard.model.InstanceTypeData
@@ -28,6 +27,7 @@ import grails.converters.JSON
 import grails.converters.XML
 import org.codehaus.groovy.grails.web.binding.DataBindingUtils
 import org.codehaus.groovy.grails.web.json.JSONElement
+import org.jclouds.compute.domain.Image
 
 @ContextParam('region')
 class ImageController {
@@ -58,7 +58,7 @@ class ImageController {
         } else {
             images = awsEc2Service.getImagesForPackage(userContext, '')
         }
-        images = images.sort { it.imageLocation.toLowerCase() }
+        images = images.sort { it.description.toLowerCase() }
         Map<String, String> accounts = grailsApplication.config.grails.awsAccountNames
         withFormat {
             html { [images: images, packageNames: packageNames, accounts: accounts] }
@@ -70,20 +70,22 @@ class ImageController {
     def show = {
         UserContext userContext = UserContext.of(request)
         String imageId = EntityType.image.ensurePrefix(params.imageId ?: params.id)
+		imageId=URLDecoder.decode(imageId);
+		log.info 'show details for '+ imageId 
         Image image = imageId ? awsEc2Service.getImage(userContext, imageId) : null
         image?.tags?.sort { it.key }
         if (!image) {
             Requests.renderNotFound('Image', imageId, this)
         } else {
             List<String> launchUsers = []
-            try { launchUsers = awsEc2Service.getImageLaunchers(userContext, image.imageId) }
+            try { launchUsers = awsEc2Service.getImageLaunchers(userContext, image.id) }
             catch (AmazonServiceException ignored) { /* We may not own the image, so ignore failures here */ }
-            String snapshotId = image.blockDeviceMappings.findResult { it.ebs?.snapshotId }
-            String ownerId = image.ownerId
+            /*String snapshotId = image.blockDeviceMappings.findResult { it.ebs?.snapshotId }*/
+            String ownerId = image.userMetadata.get("owner")
             Map<String, String> accounts = grailsApplication.config.grails.awsAccountNames
             Map details = [
                     image: image,
-                    snapshotId: snapshotId,
+                   /* snapshotId: snapshotId,*/
                     launchUsers: launchUsers,
                     accounts: accounts,
                     accountName: accounts[ownerId] ?: ownerId

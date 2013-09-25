@@ -24,7 +24,7 @@ enum Region {
             'us-east',
             'us-east-1.png',
             'Virginia'
-    ),
+    )/*,
 
     US_WEST_1('us-west-1',
             'us-west',
@@ -66,7 +66,7 @@ enum Region {
             'sa-east-1',
             'sa-east-1.png',
             'Sao Paulo'
-    )
+    )*/
 
     String code
     String pricingJsonCode

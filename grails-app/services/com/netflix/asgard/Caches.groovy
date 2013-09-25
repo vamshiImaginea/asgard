@@ -20,9 +20,6 @@ import com.amazonaws.services.autoscaling.model.LaunchConfiguration
 import com.amazonaws.services.autoscaling.model.ScalingPolicy
 import com.amazonaws.services.autoscaling.model.ScheduledUpdateGroupAction
 import com.amazonaws.services.cloudwatch.model.MetricAlarm
-import com.amazonaws.services.ec2.model.AvailabilityZone
-import com.amazonaws.services.ec2.model.Image
-import com.amazonaws.services.ec2.model.Instance
 import com.amazonaws.services.ec2.model.KeyPairInfo
 import com.amazonaws.services.ec2.model.ReservedInstances
 import com.amazonaws.services.ec2.model.SecurityGroup
@@ -50,6 +47,10 @@ import com.netflix.asgard.model.SimpleQueue
 import com.netflix.asgard.model.TopicData
 import com.netflix.asgard.push.Cluster
 
+import org.jclouds.compute.domain.Image
+import org.jclouds.compute.domain.NodeMetadata;
+import org.jclouds.domain.Location
+
 /**
  * By creating all these object upfront and letting other services initialize them only if needed, we remove the problem
  * of repeatedly needing to recreate and reload the caches during development of service classes.
@@ -69,7 +70,7 @@ class Caches {
     final MultiRegionCachedMap<MetricAlarm> allAlarms
     final MultiRegionCachedMap<ApplicationInstance> allApplicationInstances
     final MultiRegionCachedMap<AutoScalingGroup> allAutoScalingGroups
-    final MultiRegionCachedMap<AvailabilityZone> allAvailabilityZones
+    final MultiRegionCachedMap<Location> allAvailabilityZones
     final MultiRegionCachedMap<Cluster> allClusters
     final MultiRegionCachedMap<DBInstance> allDBInstances
     final MultiRegionCachedMap<DBSecurityGroup> allDBSecurityGroups
@@ -78,7 +79,7 @@ class Caches {
     final MultiRegionCachedMap<String> allEurekaAddresses
     final MultiRegionCachedMap<FastProperty> allFastProperties
     final MultiRegionCachedMap<Image> allImages
-    final MultiRegionCachedMap<Instance> allInstances
+    final MultiRegionCachedMap<NodeMetadata> allInstances
     final MultiRegionCachedMap<InstanceHealth> allSignificantStackInstanceHealthChecks
     final MultiRegionCachedMap<InstanceTypeData> allInstanceTypes
     final MultiRegionCachedMap<KeyPairInfo> allKeyPairs

@@ -15,21 +15,31 @@
  */
 package com.netflix.asgard
 
+import groovy.transform.Immutable
+
+import java.lang.reflect.Field
+import java.lang.reflect.Modifier
+
+import org.codehaus.jackson.annotate.JsonAutoDetect
+import org.codehaus.jackson.annotate.JsonCreator
+import org.codehaus.jackson.annotate.JsonProperty
+import org.jclouds.compute.domain.Image
+import org.jclouds.compute.domain.NodeMetadata;
+import org.jclouds.domain.Location
+import org.jclouds.ec2.domain.Snapshot
+import org.jclouds.ec2.domain.Volume
+
 import com.amazonaws.services.autoscaling.model.AutoScalingGroup
 import com.amazonaws.services.autoscaling.model.LaunchConfiguration
 import com.amazonaws.services.autoscaling.model.ScalingPolicy
 import com.amazonaws.services.autoscaling.model.ScheduledUpdateGroupAction
 import com.amazonaws.services.cloudwatch.model.MetricAlarm
 import com.amazonaws.services.ec2.model.AvailabilityZone
-import com.amazonaws.services.ec2.model.Image
-import com.amazonaws.services.ec2.model.Instance
 import com.amazonaws.services.ec2.model.KeyPairInfo
 import com.amazonaws.services.ec2.model.ReservedInstances
 import com.amazonaws.services.ec2.model.SecurityGroup
-import com.amazonaws.services.ec2.model.Snapshot
 import com.amazonaws.services.ec2.model.SpotInstanceRequest
 import com.amazonaws.services.ec2.model.Subnet
-import com.amazonaws.services.ec2.model.Volume
 import com.amazonaws.services.ec2.model.Vpc
 import com.amazonaws.services.elasticloadbalancing.model.LoadBalancerDescription
 import com.amazonaws.services.elasticloadbalancing.model.SourceSecurityGroup
@@ -51,12 +61,6 @@ import com.netflix.asgard.model.SimpleQueue
 import com.netflix.asgard.model.StackAsg
 import com.netflix.asgard.model.TopicData
 import com.netflix.asgard.push.Cluster
-import groovy.transform.Immutable
-import java.lang.reflect.Field
-import java.lang.reflect.Modifier
-import org.codehaus.jackson.annotate.JsonAutoDetect
-import org.codehaus.jackson.annotate.JsonCreator
-import org.codehaus.jackson.annotate.JsonProperty
 
 @JsonAutoDetect(getterVisibility=JsonAutoDetect.Visibility.NONE)
 @Immutable class EntityType<T> {
@@ -70,7 +74,7 @@ import org.codehaus.jackson.annotate.JsonProperty
     static final EntityType<MetricId> metric = create('Metric', { it.displayText })
     static final EntityType<AutoScalingGroup> autoScaling = create('Auto Scaling Group',
             { it.autoScalingGroupName })
-    static final EntityType<AvailabilityZone> availabilityZone = create('Availability Zone', { it.zoneName })
+    static final EntityType<Location> availabilityZone = create('Location', { it.id })
     static final EntityType<Cluster> cluster = create('Cluster', { it.name }, '',
             'Show all the auto scaling groups in this cluster')
     static final EntityType<DBInstance> rdsInstance = create('Database Instance', { it.DBInstanceIdentifier })
@@ -84,8 +88,8 @@ import org.codehaus.jackson.annotate.JsonProperty
             { Map attrs, String objectId -> attrs.params = [name: objectId] })
     static final EntityType<HardwareProfile> hardwareProfile = create('Hardware Profile',
             { it.instanceType.toString() })
-    static final EntityType<Image> image = create('Image', { it.imageId })
-    static final EntityType<Instance> instance = create('Instance', { it.instanceId }, 'i-')
+    static final EntityType<Image> image = create('Image', { it.id })
+    static final EntityType<NodeMetadata> instance = create('Node', { it.id }, 'i-')
     static final EntityType<InstanceHealth> instanceHealth = create('Instance Health', { it.instanceId })
     static final EntityType<InstanceTypeData> instanceType = create('Instance Type', { it.name })
     static final EntityType<KeyPairInfo> keyPair = create('Key Pair', { it.keyName })
@@ -98,8 +102,8 @@ import org.codehaus.jackson.annotate.JsonProperty
     static final EntityType<ScalingPolicy> scalingPolicy = create('Scaling Policy', { it.policyName })
     static final EntityType<ScheduledUpdateGroupAction> scheduledAction = create('ScheduledAction',
             { it.scheduledActionName })
-    static final EntityType<SecurityGroup> security = create('Security Group', { it.groupName })
-    static final EntityType<Snapshot> snapshot = create('Storage Snapshot', { it.snapshotId }, 'snap-')
+    static final EntityType<SecurityGroup> security = create('Security Group', { it.name })
+    static final EntityType<Snapshot> snapshot = create('Storage Snapshot', { it }, 'snap-')
     static final EntityType<SourceSecurityGroup> sourceSecurityGroup = create('Source Security Group', { it.groupName })
     static final EntityType<SpotInstanceRequest> spotInstanceRequest = create('Spot Instance Request',
             { it.spotInstanceRequestId }, 'sir-')
@@ -108,7 +112,7 @@ import org.codehaus.jackson.annotate.JsonProperty
     static final EntityType<Task> task = create('Task', { it.id })
     static final EntityType<String> terminationPolicyType = create('Termination Policy Type', { it })
     static final EntityType<TopicData> topic = create('Topic', { it.name })
-    static final EntityType<Volume> volume = create('Volume', { it.volumeId }, 'vol-')
+    static final EntityType<Volume> volume = create('Volume', { it.id }, 'vol-')
     static final EntityType<Vpc> vpc = create('VPC', { it.vpcId }, 'vpc-')
     static final EntityType<WorkflowExecutionInfo> workflowExecution = create('Workflow Execution',
             { it.execution.runId })

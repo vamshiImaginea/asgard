@@ -41,29 +41,29 @@
             <th>Owner<br/>Alias</th>
             <th>Owner ID</th>
             <th>Progress</th>
-            <th>Tags</th>
-            <th>Start Time</th>
+            <%--<th>Tags</th>
+            --%><th>Start Time</th>
           </tr>
           </thead>
           <tbody>
           <g:each var="s" in="${snapshots}" status="i">
             <tr class="${(i % 2) == 0 ? 'odd' : 'even'}">
-              <td><g:linkObject type="snapshot" name="${s.snapshotId}"/></td>
+              <td><g:linkObject type="snapshot" name="${s.id}"/></td>
               <td><g:linkObject type="volume" name="${s.volumeId}"/></td>
-              <td>${s.state}</td>
+              <td>${s.status}</td>
               <td>${s.volumeSize}</td>
               <td>${s.description}</td>
               <td>${s.ownerAlias}</td>
               <td>${s.ownerId}</td>
               <td>${s.progress}</td>
-              <td>
+              <%--<td>
                 <g:if test="${s.tags}">
                   <g:each var="tag" in="${s.tags}">
                     <span class="tagKey">${tag.key}:</span> ${tag.value}<br/>
                   </g:each>
                 </g:if>
               </td>
-              <td><g:formatDate date="${s.startTime}"/></td>
+              --%><td><g:formatDate date="${s.startTime}"/></td>
             </tr>
           </g:each>
           </tbody>

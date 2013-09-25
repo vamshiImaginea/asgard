@@ -39,4 +39,5 @@ license {
 task(test, type:Exec) {
     commandLine './grailsw', 'test-app'    
 }
+apply plugin: 'idea'
 

@@ -68,4 +68,9 @@ class MultiRegionInstancePrices implements Fillable {
     RegionalInstancePrices by(Region region) {
         regionsToRegionalPrices[region]
     }
+
+	@Override
+	public void removeCachedEntries() {
+		doingFirstFill = true
+	}
 }

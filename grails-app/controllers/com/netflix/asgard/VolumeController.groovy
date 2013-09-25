@@ -16,10 +16,10 @@
 package com.netflix.asgard
 
 import com.amazonaws.AmazonServiceException
-import com.amazonaws.services.ec2.model.Volume
 import com.netflix.grails.contextParam.ContextParam
 import grails.converters.JSON
 import grails.converters.XML
+import org.jclouds.ec2.domain.Volume
 
 @ContextParam('region')
 class VolumeController {
@@ -30,7 +30,7 @@ class VolumeController {
 
     def list = {
         UserContext userContext = UserContext.of(request)
-        def volumes = (awsEc2Service.getVolumes(userContext) as List).sort { it.volumeId.toLowerCase() }
+        def volumes = (awsEc2Service.getVolumes(userContext) as List).sort { it.id.toLowerCase() }
         def details = ['volumes': volumes, 'zoneList': awsEc2Service.getAvailabilityZones(userContext)]
         withFormat {
             html { details }
@@ -79,7 +79,7 @@ class VolumeController {
         UserContext userContext = UserContext.of(request)
         String volumeId = EntityType.volume.ensurePrefix(params.volumeId ?: params.id)
         Volume volume = awsEc2Service.getVolume(userContext, volumeId)
-        volume?.tags?.sort { it.key }
+    /*    volume?.tags?.sort { it.key }*/
         if (!volume) {
             Requests.renderNotFound('EBS Volume', volumeId, this)
         } else {

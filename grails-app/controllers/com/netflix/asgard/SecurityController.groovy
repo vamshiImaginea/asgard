@@ -17,13 +17,13 @@ package com.netflix.asgard
 
 import com.amazonaws.services.autoscaling.model.LaunchConfiguration
 import com.amazonaws.services.ec2.model.Instance
-import com.amazonaws.services.ec2.model.IpPermission
-import com.amazonaws.services.ec2.model.SecurityGroup
 import com.amazonaws.services.elasticloadbalancing.model.LoadBalancerDescription
 import com.amazonaws.services.elasticloadbalancing.model.SourceSecurityGroup
 import com.netflix.grails.contextParam.ContextParam
 import grails.converters.JSON
 import grails.converters.XML
+import org.jclouds.ec2.domain.IpPermission
+import org.jclouds.ec2.domain.SecurityGroup
 
 @ContextParam('region')
 class SecurityController {
@@ -47,7 +47,7 @@ class SecurityController {
                 appNames.contains(Relationships.appNameFromSecurityGroupName(it.groupName))
             }
         }
-        securityGroups = securityGroups.sort { it.groupName.toLowerCase() }
+        securityGroups = securityGroups.sort { it.name.toLowerCase() }
         Collection<SourceSecurityGroup> sourceSecGroups = awsLoadBalancerService.getSourceSecurityGroups(userContext)
 
         Map details = [securityGroups: securityGroups, sourceSecurityGroups: sourceSecGroups, appNames: appNames]

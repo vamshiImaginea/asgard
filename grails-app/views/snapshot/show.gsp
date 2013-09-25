@@ -19,7 +19,7 @@
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
   <meta name="layout" content="main"/>
-  <title>${snapshot.snapshotId} Snapshot</title>
+  <title>${snapshot.id} Snapshot</title>
 </head>
 <body>
   <div class="body">
@@ -32,11 +32,11 @@
     </g:hasErrors>
     <g:if test="${snapshot}">
       <g:form>
-        <input type="hidden" name="snapshotId" value="${snapshot.snapshotId}"/>
+        <input type="hidden" name="snapshotId" value="${snapshot.id}"/>
         <div class="buttons">
           <g:if test="${accountName == env}">
             <g:buttonSubmit class="delete" action="delete" value="Delete Snapshot"
-                            data-warning="Really delete Snapshot '${snapshot.snapshotId}'?" />
+                            data-warning="Really delete Snapshot '${snapshot.id}'?" />
           </g:if>
           <g:else>
             <g:buttonSubmit disabled="true" class="delete" action="ignore"
@@ -45,11 +45,11 @@
         </div>
       </g:form>
       <g:form class="validate">
-        <div class="buttons">
+        <div class="buttons"><%--
           <g:buttonSubmit class="create requireLogin" action="restore" value="Create Volume From Snapshot"/><br/>
           Volume Size (in GB): <g:textField name="volumeSize" size="15" placeholder="--ENTER SIZE--" class="required requireLogin" />
-          Availability Zone: <g:select name="zone" from="${zoneList.zoneName}" class="requireLogin" />
-        </div>
+          Availability Zone: <g:select name="zone" from="${zoneList.}" class="requireLogin" />
+        --%></div>
       </g:form>
     </g:if>
     <div class="dialog">
@@ -57,7 +57,7 @@
         <tbody>
         <tr class="prop">
           <td class="name" title="Snapshot ID">Snapshot ID:</td>
-          <td class="value">${snapshot.snapshotId}</td>
+          <td class="value">${snapshot.id}</td>
         </tr>
         <tr class="prop">
           <td class="name" title="Volume ID">Volume ID:</td>
@@ -65,7 +65,7 @@
         </tr>
         <tr class="prop">
           <td class="name" title="Status">Status:</td>
-          <td class="value">${snapshot.state}</td>
+          <td class="value">${snapshot.status}</td>
         </tr>
         <tr class="prop">
           <td class="name" title="Size">Size:</td>
@@ -86,9 +86,9 @@
         <tr class="prop">
           <td class="name" title="Start Time">Start Time:</td>
           <td class="value"><g:formatDate date="${snapshot.startTime}"/></td>
-        </tr>
+        </tr><%--
         <g:render template="/common/showTags" model="[entity: snapshot]"/>
-        </tbody>
+        --%></tbody>
       </table>
     </div>
   </div>

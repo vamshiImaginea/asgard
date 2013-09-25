@@ -719,4 +719,26 @@ class ConfigService {
     List<String> getEbsVolumeDeviceNamesForLaunchConfigs() {
         grailsApplication.config.cloud?.launchConfig?.ebsVolumes?.deviceNames ?: ['/dev/sdb', '/dev/sdc']
     }
+	
+	List<String> getOwners() {
+		this.publicResourceAccounts + this.awsAccounts
+	}
+	
+	String getProvider(){
+		grailsApplication.config.grails?.currentActiveService?:"opens1tack";
+	}
+	
+	String getOpenStackEndPoint(){
+		grailsApplication.config.openstack?.endpoint?:"";
+	}
+	
+	String getOpenStackUser(){
+		grailsApplication.config.openstack?.username?:"";
+	}
+	
+	String getOpenStackPassword(){
+		grailsApplication.config.openstack?.passwd?:"";
+	}
+	
+	
 }

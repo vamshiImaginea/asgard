@@ -23,4 +23,6 @@ interface Fillable {
     boolean isFilled()
 
     String getName()
+	
+	void removeCachedEntries()
 }

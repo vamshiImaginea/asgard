@@ -15,11 +15,11 @@
  */
 package com.netflix.asgard
 
-import com.amazonaws.services.ec2.model.Snapshot
-import com.amazonaws.services.ec2.model.Volume
 import com.netflix.grails.contextParam.ContextParam
 import grails.converters.JSON
 import grails.converters.XML
+import org.jclouds.ec2.domain.Snapshot
+import org.jclouds.ec2.domain.Volume
 
 @ContextParam('region')
 class SnapshotController {
@@ -30,9 +30,9 @@ class SnapshotController {
 
     def list = {
         UserContext userContext = UserContext.of(request)
-        List<Snapshot> snapshots = awsEc2Service.getSnapshots(userContext).sort { it.snapshotId.toLowerCase() }
+        Set<Snapshot> snapshots = awsEc2Service.getSnapshots(userContext).sort { it.id.toLowerCase() }
         Set<String> appNames = Requests.ensureList(params.id).collect { it.split(',') }.flatten() as Set<String>
-        if (appNames) {
+       if (appNames) {
             snapshots = snapshots.findAll { Snapshot snapshot ->
                 appNames.any { snapshot.description.contains(it) }
             }

@@ -36,22 +36,22 @@
         <thead>
         <tr>
           <th>Name</th>
-          <th>Description</th>
+          <th>Description</th><%--
           <th>VPC</th>
-          <th>Ingress Permissions</th>
+          --%><th>Ingress Permissions</th>
         </tr>
         </thead>
         <tbody>
         <g:each var="grp" in="${securityGroups}" status="i">
           <tr class="${(i % 2) == 0 ? 'odd' : 'even'}">
-            <td><g:linkObject type="security" name="${grp.groupId}">${grp.groupName}</g:linkObject></td>
-            <td>${grp.description}</td>
+            <td><g:linkObject type="security" name="${grp.id}">${grp.name}</g:linkObject></td>
+            <td>${grp.description}</td><%--
             <td>${grp.vpcId}</td>
-            <td><g:each var="perm" in="${grp.ipPermissions}">
+            --%><td><g:each var="perm" in="${grp.ipPermissions}">
               ${perm.ipProtocol} ${perm.fromPort}-${perm.toPort} [
-              <g:each var="pair" in="${perm.userIdGroupPairs}" status="j"><g:if test="${j>0}">, </g:if>
+              <g:each var="pair" in="${perm.userIdGroupPairs}" status="j"><g:if test="${j>0}">, </g:if><%--
                 <g:linkObject type="security" name="${pair.groupId}">${pair.groupName}</g:linkObject>
-              </g:each>
+              --%></g:each>
               ] ${perm.ipRanges ?: ''}
               <br>
             </g:each></td>

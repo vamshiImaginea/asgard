@@ -39,30 +39,30 @@
           <th>Architecture</th>
           <th>State</th>
           <th>Owner</th>
-          <th>Creator</th>
+          <th>Creator</th><%--
           <th>Creation Time</th>
           <th>Last Used</th>
           <th>Package Version</th>
           <th>Base AMI ID</th>
           <th>Base AMI Date</th>
-        </tr>
+        --%></tr>
         </thead>
         <tbody>
         <g:each var="image" in="${images}" status="i">
           <tr class="${(i % 2) == 0 ? 'odd' : 'even'}">
-            <td><g:linkObject type="image" name="${image.imageId}"/></td>
+            <td><g:linkObject type="image" name="${image.id.encodeAsURL()}" >${image.id}</g:linkObject></td>
             <td class="ami">${image.name}</td>
-            <td class="ami">${image.imageLocation}</td>
-            <td>${image.architecture}</td>
-            <td>${image.state}</td>
-            <td>${accounts[image.ownerId] ?: image.ownerId}</td>
-            <td>${image.creator}</td>
-            <td>${image.creationTime}</td>
+            <td class="ami">${image.location}</td>
+            <td>${image.operatingSystem}</td>
+            <td>${image.status}</td>
+            <td>${accounts[image.providerId] ?: image.providerId}</td>
+            <td>${image.providerId}</td>
+            <%--<td>${image.creationTime}</td>
             <td>${image.lastReferencedTime}</td>
             <td class="ami">${image.appVersion}</td>
             <td><g:linkObject type="image" name="${image.baseAmiId}"/></td>
             <td><g:formatDate date="${image.baseAmiDate?.toDate()}" format="yyyy-MM-dd"/></td>
-          </tr>
+          --%></tr>
         </g:each>
         </tbody>
       </table>

@@ -15,6 +15,8 @@
  */
 package com.netflix.asgard
 
+import org.jclouds.compute.domain.NodeMetadata;
+
 import com.amazonaws.services.autoscaling.model.AutoScalingGroup
 import com.amazonaws.services.ec2.model.Instance
 import com.netflix.asgard.model.ApplicationInstance
@@ -44,15 +46,15 @@ class MergedInstanceGroupingService {
      * Returns the merged instances for all instances.
      */
     List<MergedInstance> getMergedInstances(UserContext userContext) {
-        Collection<Instance> ec2List = awsEc2Service.getInstances(userContext)
+        Collection<NodeMetadata> ec2List = awsEc2Service.getInstances(userContext)
         Collection<ApplicationInstance> discList = discoveryService.getAppInstances(userContext)
         Map<String, ApplicationInstance> idsToDiscInstances = discList.inject([:]) { map, discoveryInstance ->
             map << [(discoveryInstance.instanceId): discoveryInstance]
         } as Map<String, ApplicationInstance>
 
         // All the ec2 instances, with Discovery pair when available.
-        List<MergedInstance> instances = ec2List.collect { Instance ec2Inst ->
-            ApplicationInstance appInst = idsToDiscInstances[ec2Inst.instanceId]
+        List<MergedInstance> instances = ec2List.collect { NodeMetadata ec2Inst ->
+            ApplicationInstance appInst = idsToDiscInstances[ec2Inst.id]
             new MergedInstance(ec2Inst, appInst)
         }
         // All the remaining Discovery-only instances.
@@ -71,7 +73,7 @@ class MergedInstanceGroupingService {
         Collection<ApplicationInstance> discList = discoveryService.getAppInstances(userContext, appName)
 
         List<MergedInstance> instances = discList.collect { appInst ->
-            Instance ec2Inst = null
+            NodeMetadata ec2Inst = null
             if (appInst.instanceId) {
                 ec2Inst = awsEc2Service.getInstance(userContext, appInst.instanceId, From.CACHE)
             }

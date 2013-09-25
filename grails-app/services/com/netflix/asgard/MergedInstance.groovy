@@ -15,11 +15,13 @@
  */
 package com.netflix.asgard
 
-import com.amazonaws.services.ec2.model.Instance
-import com.amazonaws.services.ec2.model.Tag
-import com.netflix.asgard.model.ApplicationInstance
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
+
+import org.jclouds.compute.domain.NodeMetadata
+
+import com.amazonaws.services.ec2.model.Tag
+import com.netflix.asgard.model.ApplicationInstance
 
 /**
  * Generic Instance encapsulation for use in instance list. May be created from:
@@ -50,13 +52,13 @@ class MergedInstance {
     String autoScalingGroupName
     String launchConfigurationName
 
-    Instance ec2Instance
+    NodeMetadata ec2Instance
     ApplicationInstance appInstance
 
     MergedInstance() {
     }
 
-    MergedInstance(Instance ec2Instance, ApplicationInstance appInstance) {
+    MergedInstance(NodeMetadata ec2Instance, ApplicationInstance appInstance) {
         this.ec2Instance = ec2Instance
         this.appInstance = appInstance
 
@@ -77,13 +79,13 @@ class MergedInstance {
 
         // EC2 Instance fields
         if (ec2Instance) {
-            hostName      = ec2Instance.publicDnsName
-            status        = ec2Instance.state?.name
-            instanceId    = ec2Instance.instanceId
+            hostName      = ec2Instance.hostname
+            status        = ec2Instance.status
+            instanceId    = ec2Instance.id
             amiId         = ec2Instance.imageId
-            instanceType  = ec2Instance.instanceType
-            zone          = ec2Instance.placement?.availabilityZone
-            launchTime    = ec2Instance.launchTime
+            instanceType  = ec2Instance.type
+            zone          = ec2Instance.location
+            launchTime    = new Date()
         }
     }
 

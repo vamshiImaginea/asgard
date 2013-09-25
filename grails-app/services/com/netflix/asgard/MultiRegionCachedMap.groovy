@@ -15,6 +15,8 @@
  */
 package com.netflix.asgard
 
+import java.util.HashMap.EntrySet;
+
 import com.google.common.collect.ImmutableSet
 import com.netflix.asgard.cache.Fillable
 
@@ -67,7 +69,14 @@ class MultiRegionCachedMap<T> implements Fillable {
     void fill() {
         regionsToCachedMaps.values().each { it.fill() }
     }
-
+	void removeCachedEntries() {
+		needsInitialization = true
+		for (Map.Entry<Region, CachedMap> entry : regionsToCachedMaps.entrySet())
+		{
+			((CachedMap)entry.getValue()).removeCachedEntries();
+		}
+		
+	}
     boolean isFilled() {
         !regionsToCachedMaps.values().find { !it.filled }
     }
@@ -75,4 +84,5 @@ class MultiRegionCachedMap<T> implements Fillable {
     CachedMap<T> by(Region region) {
         regionsToCachedMaps[region]
     }
+	
 }

@@ -15,77 +15,131 @@
  */
 package com.netflix.asgard
 
+import com.amazonaws.services.opsworks.model.Command;
+import com.netflix.asgard.push.CommonPushOptions;
+import com.perforce.p4java.server.CmdSpec;
+import com.sun.org.apache.bcel.internal.generic.NEW;
+
+import org.springframework.web.servlet.ModelAndView
+
+
 /**
  * Controller that handles all user requests if there is no Config.groovy in ASGARD_HOME
  */
 class InitController {
 
-    def initService
-    def configService
+	def initService
+	def configService
 
-    static allowedMethods = [save: 'POST']
+	static allowedMethods = [save: 'POST',show: 'GET']
 
-    def beforeInterceptor = {
-        if (configService.appConfigured) {
-            redirect(controller: 'home')
-            return false
-        }
-    }
 
-    def index = {
-        [asgardHome: configService.asgardHome]
-    }
+	def index = {
+		[asgardHome: configService.asgardHome]
+		File asgardHomeDir = new File(configService.asgardHome)
+		asgardHomeDir.mkdirs()
+		if (!asgardHomeDir.exists()) {
+			return
+		}
 
-    /**
-     * Creates the Config.groovy file from the supplied parameters and redirects to the home page if successful
-     */
-    def save = { InitializeCommand cmd ->
-        if (cmd.hasErrors()) {
-            render(view: 'index', model: [cmd: cmd])
-            return
-        }
+		File configFile = new File(configService.asgardHome, 'Config.groovy')
+		if(!configFile.exists()) {
+			return
+		}
+	/*	//def cmd = new InitializeCommand(accountNumber: 'The Shining', secretKey: 'Stephen King')
+		if(params.get('cloudService')) {
+		
+			
+			return new ModelAndView(view: "index", model: [initializeCommand:cmd])
 
-        try {
-            initService.writeConfig(cmd.toConfigObject())
-        } catch (Exception ioe) {
-            flash.message = ioe.message
-            redirect(action: 'index')
-            return
-        }
-        flash.message = "Created Asgard configuration file at ${configService.asgardHome}/Config.groovy."
-        redirect(controller: 'home')
-    }
+		}*/
+	}
+
+
+	/**
+	 * Creates the Config.groovy file from the supplied parameters and redirects to the home page if successful
+	 */
+	def save = { InitializeCommand cmd ->
+		if (cmd.hasErrors()) {
+			render(view: 'index', model: [cmd: cmd])
+			return
+		}
+
+		try {
+			initService.writeConfig(cmd.toConfigObject())
+		} catch (Exception ioe) {
+			flash.message = ioe.message
+			redirect(action: 'index')
+			return
+		}
+		flash.message = "Created Asgard configuration file at ${configService.asgardHome}/Config.groovy."
+		redirect(controller: 'home')
+	}
 }
 
 class InitializeCommand {
-    String accessId
-    String secretKey
-    String accountNumber
-    boolean showPublicAmazonImages
-    static constraints = {
-        accessId(nullable: false, blank: false, matches: /[A-Z0-9]{20}/)
-        secretKey(nullable: false, blank: false, matches: /[A-Za-z0-9\+\/]{40}/)
-        accountNumber(nullable: false, blank: false, matches: /\d{4}-?\d{4}-?\d{4}/)
-    }
+	String accessId
+	String secretKey
+	String accountNumber
+	String openStackUrl
+	String openStackUsername
+	String openStackPassword
+	String cloudService
+	boolean showPublicAmazonImages
+	static constraints = {
+		/*		
+		 accessId(nullable: true, blank: false, matches: /[A-Z0-9]{20}/)
+		 secretKey(nullable: true, blank: false, matches: /[A-Za-z0-9\+\/]{40}/)
+		 accountNumber(nullable: true, blank: false, matches: /\d{4}-?\d{4}-?\d{4}/)*/
 
-    ConfigObject toConfigObject() {
-        ConfigObject rootConfig = new ConfigObject()
-        ConfigObject grailsConfig = new ConfigObject()
-        rootConfig['grails'] = grailsConfig
-        String accountNumber = accountNumber.replace('-','')
-        grailsConfig['awsAccounts'] = [accountNumber]
-        grailsConfig['awsAccountNames'] = [(accountNumber): 'prod']
+	}
 
-        ConfigObject secretConfig = new ConfigObject()
-        rootConfig['secret'] = secretConfig
-        secretConfig['accessId'] = accessId.trim()
-        secretConfig['secretKey'] = secretKey.trim()
+	ConfigObject toConfigObject() {
+		if (cloudService.equals("aws")) {
 
-        ConfigObject cloudConfig = new ConfigObject()
-        rootConfig['cloud'] = cloudConfig
-        cloudConfig['accountName'] = 'prod'
-        cloudConfig['publicResourceAccounts'] = showPublicAmazonImages ? ['amazon'] : []
+			if(!accessId && !accountNumber && !secretKey) {
+				throw new Exception("AWS Amazon Credentials are not provided")
+			}
+			ConfigObject rootConfig = new ConfigObject()
+			ConfigObject grailsConfig = new ConfigObject()
+			rootConfig['grails'] = grailsConfig
+			String accountNumber = accountNumber.replace('-','')
+			grailsConfig['awsAccounts'] = [accountNumber]
+			grailsConfig['awsAccountNames'] = [(accountNumber): 'prod']
+			grailsConfig['currentActiveService'] = [cloudService]
+			ConfigObject secretConfig = new ConfigObject()
+			rootConfig['secret'] = secretConfig
+			secretConfig['accessId'] = accessId.trim()
+			secretConfig['secretKey'] = secretKey.trim()
 
-        rootConfig
-    }
+			ConfigObject cloudConfig = new ConfigObject()
+			rootConfig['cloud'] = cloudConfig
+			cloudConfig['accountName'] = 'prod'
+			cloudConfig['publicResourceAccounts'] = showPublicAmazonImages ? ['amazon'] : []
+			rootConfig
+		}else {
+
+			if(!openStackUrl && !openStackUsername && !openStackPassword) {
+				throw new Exception("OpenStack Credentials are not provided")
+			}
+			ConfigObject rootConfig = new ConfigObject()
+			ConfigObject grailsConfig = new ConfigObject()
+			rootConfig['grails'] = grailsConfig
+			grailsConfig['openStackUrl'] = [openStackUrl]
+			ConfigObject secretConfig = new ConfigObject()
+			rootConfig['openstack'] = secretConfig
+			secretConfig['openStackPassword'] = openStackPassword.trim()
+			secretConfig['openStackUsername'] = openStackUsername.trim()
+			secretConfig['openStackUrl'] = openStackUrl.trim()
+			grailsConfig['currentActiveService'] = [cloudService]
+			ConfigObject cloudConfig = new ConfigObject()
+			rootConfig['cloud'] = cloudConfig
+			cloudConfig['accountName'] = 'prod'
+			rootConfig
+		}
+
+
+
+
+	}
 }

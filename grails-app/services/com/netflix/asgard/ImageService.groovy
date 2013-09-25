@@ -58,17 +58,23 @@ class ImageService implements BackgroundProcessInitializer {
     def spotInstanceRequestService
     def mergedInstanceGroupingService
     def taskService
-
+	def scheduledfuture
     private ScheduledExecutorService replicationExecutor
+	
 
     void initializeBackgroundProcess() {
         int priority = Thread.MIN_PRIORITY
         String format = 'image-tag-replicator-%s'
         ThreadFactory threadFactory = new ThreadFactoryBuilder().setNameFormat(format).setPriority(priority).build()
         replicationExecutor = Executors.newSingleThreadScheduledExecutor(threadFactory)
-        replicationExecutor.scheduleWithFixedDelay({ runReplicateImageTags() } as Runnable, 30, 180, TimeUnit.SECONDS)
+        scheduledfuture  = replicationExecutor.scheduleWithFixedDelay({ runReplicateImageTags() } as Runnable, 30, 180, TimeUnit.SECONDS)
+		
+		
     }
 
+	void cancel(){
+		scheduledfuture.cancel(true)
+	}
     List<SpotInstanceRequest> requestSpotInstances(UserContext userContext, String imageId, Integer count,
             Collection<String> securityGroups, String instanceType, String zone, String ownerName) {
         Check.notEmpty(ownerName, 'Owner')

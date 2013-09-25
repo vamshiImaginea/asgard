@@ -631,6 +631,15 @@ jQuery(document).ready(function() {
 
             window.location = url;
         });
+        
+        jQuery('#cloudService').change(function() {
+           
+            var cloudService = this.value;
+            url = '/home/selectService?cloudService='+cloudService;
+         
+
+            window.location = url;
+        });
 
         jQuery('.countAndList').each(function() {
             var instanceSetContainer = jQuery(this);
