@@ -108,7 +108,7 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 	private static final int TAG_IMAGE_CHUNK_SIZE = 250
 
 	void afterPropertiesSet() {
-		computeServiceClientByRegion = computeServiceClientByRegion ?: new MultiRegionAwsClient<ComputeService>({ Region region ->
+		computeServiceClientByRegion = new MultiRegionAwsClient<ComputeService>({ Region region ->
 			jcloudsComputeService.getComputeServiceForProvider(region)
 		})
 
@@ -116,6 +116,7 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 	}
 
 	void initializeCaches() {		
+		afterPropertiesSet()
 		//caches.allKeyPairs.ensureSetUp({ Region region -> retrieveKeys(region) })
 		caches.allAvailabilityZones.ensureSetUp({ Region region -> retrieveAvailabilityZones(region) },{ Region region -> caches.allKeyPairs.by(region).fill() })
 		caches.allImages.ensureSetUp({ Region region -> retrieveImages(region) })
