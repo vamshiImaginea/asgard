@@ -148,6 +148,8 @@ class InstanceController {
     def show = {
         UserContext userContext = UserContext.of(request)
         String instanceId = EntityType.instance.ensurePrefix(params.instanceId ?: params.id)
+		instanceId=URLDecoder.decode(instanceId,'UTF-8');
+		
         String appName
         ApplicationInstance appInst
         if (params.appName) {

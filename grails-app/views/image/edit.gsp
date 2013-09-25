@@ -33,13 +33,13 @@
       </div>
     </g:hasErrors>
     <g:form method="post">
-      <input type="hidden" id="imageId" name="imageId" value="${image.providerId}"/>
+      <input type="hidden" id="imageId" name="imageId" value="${image.id.encodeAsURL()}"/>
       <div class="dialog">
         <table>
           <tbody>
           <tr class="prop">
             <td class="name">ID:</td>
-            <td class="value">${image.providerId}</td>
+            <td class="value">${image.id}</td>
           </tr>
           <%--
           <tr class="prop">

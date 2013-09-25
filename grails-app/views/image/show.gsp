@@ -19,7 +19,7 @@
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
   <meta name="layout" content="main"/>
-  <title>${image.providerId} ${image.name} Image</title>
+  <title>${image.id} ${image.name} Image</title>
 </head>
 <body>
   <div class="body">
@@ -34,16 +34,16 @@
     </g:hasErrors>
     <div class="buttons">
       <g:form>
-        <input type="hidden" name="id" value="${image.providerId}"/>
-        <g:link class="edit" action="edit" params="[id:image.providerId]">Edit Image Attributes</g:link>
+        <input type="hidden" name="id" value="${image.id.encodeAsURL()}"/>
+        <g:link class="edit" action="edit" params="[id:java.net.URLEncoder.encode(image.id,'UTF-8')]">Edit Image Attributes</g:link>
         <g:if test="${accountName == env}">
           <g:buttonSubmit class="delete" action="delete" value="Delete Image"
-                          data-warning="Really delete image '${image.providerId}' with name '${image.name}'?" />
+                          data-warning="Really delete image '${image.id}' with name '${image.name}'?" />
         </g:if>
         <g:else>
           <g:buttonSubmit disabled="true" class="delete" action="ignore" value="This image can only be deleted in ${accountName}"/>
         </g:else>
-        <g:link class="push" action="prelaunch" params="[id:image.providerId]">Prepare to Launch Image Instance</g:link>
+        <g:link class="push" action="prelaunch" params="[id:java.net.URLEncoder.encode(image.id,'UTF-8')]">Prepare to Launch Image Instance</g:link>
       </g:form>
     </div>
     <div class="dialog">
@@ -51,7 +51,7 @@
         <tbody>
         <tr class="prop">
           <td class="name">ID:</td>
-          <td class="value">${image.providerId}</td>
+          <td class="value">${image.id}</td>
         </tr>
         <tr class="prop">
           <td class="name">Name:</td>

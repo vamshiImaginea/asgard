@@ -202,7 +202,7 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 	 */
 	Collection<Image> getImagesWithLaunchPermissions(UserContext userContext, Collection<String> executableUsers,
 			Collection<String> imageIds) {
-	    AWSEC2Client ec2Client = AWSEC2Client.class.cast(computeServiceClientByRegion.by(userContext.region.code).getContext().unwrap(AWSEC2ApiMetadata.CONTEXT_TOKEN).getApi());
+	    AWSEC2Client ec2Client = AWSEC2Client.class.cast(computeServiceClientByRegion.by(userContext.region).getContext().unwrap(AWSEC2ApiMetadata.CONTEXT_TOKEN).getApi());
 		DescribeImagesOptions options = new DescribeImagesOptions().ownedBy(executableUsers.toArray(String[])).imageIds(imageIds);
 		ec2Client.aMIServices.describeImagesInRegion(userContext.region.code, options)
 	}
@@ -256,7 +256,7 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 
 	void deregisterImage(UserContext userContext, String imageId, Task existingTask = null) {
 		String msg = "Deregister image ${imageId}"
-		AWSEC2Client ec2Client = AWSEC2Client.class.cast(computeServiceClientByRegion.by(userContext.region.code).getContext().unwrap(AWSEC2ApiMetadata.CONTEXT_TOKEN).getApi());
+		AWSEC2Client ec2Client = AWSEC2Client.class.cast(computeServiceClientByRegion.by(userContext.region).getContext().unwrap(AWSEC2ApiMetadata.CONTEXT_TOKEN).getApi());
 
 		Closure work = { Task task ->
 			// Verify that the image exists
@@ -272,7 +272,7 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 	//mutators
 
 	void addImageLaunchers(UserContext userContext, String imageId, List<String> userIds, Task existingTask = null) {
-		AWSEC2Client ec2Client = AWSEC2Client.class.cast(computeServiceClientByRegion.by(userContext.region.code).getContext().unwrap(AWSEC2ApiMetadata.CONTEXT_TOKEN).getApi());
+		AWSEC2Client ec2Client = AWSEC2Client.class.cast(computeServiceClientByRegion.by(userContext.region).getContext().unwrap(AWSEC2ApiMetadata.CONTEXT_TOKEN).getApi());
 		List<String> defaultUserGrp = new ArrayList<String>();
 		defaultUserGrp.add("all");
 		taskService.runTask(userContext, "Add to image ${imageId}, launchers ${userIds}", { task ->
@@ -282,7 +282,7 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 	}
 
 	void setImageLaunchers(UserContext userContext, String imageId, List<String> userIds) {
-		AWSEC2Client ec2Client = AWSEC2Client.class.cast(computeServiceClientByRegion.by(userContext.region.code).getContext().unwrap(AWSEC2ApiMetadata.CONTEXT_TOKEN).getApi());
+		AWSEC2Client ec2Client = AWSEC2Client.class.cast(computeServiceClientByRegion.by(userContext.region).getContext().unwrap(AWSEC2ApiMetadata.CONTEXT_TOKEN).getApi());
 		List<String> defaultUserGrp = new ArrayList<String>();
 		defaultUserGrp.add("all");
 		taskService.runTask(userContext, "Set image ${imageId} launchers to ${userIds}", { task ->
@@ -296,7 +296,7 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 		Check.notEmpty(imageIds, "imageIds")
 		Check.notEmpty(name, "name")
 		Check.notEmpty(value, "value")
-		AWSEC2Client ec2Client = AWSEC2Client.class.cast(computeServiceClientByRegion.by(userContext.region.code).getContext().unwrap(AWSEC2ApiMetadata.CONTEXT_TOKEN).getApi());
+		AWSEC2Client ec2Client = AWSEC2Client.class.cast(computeServiceClientByRegion.by(userContext.region).getContext().unwrap(AWSEC2ApiMetadata.CONTEXT_TOKEN).getApi());
 		List<List<String>> partitionedImageIds = Lists.partition(imageIds as List, TAG_IMAGE_CHUNK_SIZE)
 		for (List<String> imageIdsChunk in partitionedImageIds) {
 			CreateTagsRequest request = new CreateTagsRequest(resources: imageIdsChunk, tags: [new Tag(name, value)])
@@ -718,8 +718,7 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 		if (from == From.CACHE) {
 			return caches.allInstances.by(userContext.region).get(instanceId)
 		}
-		List<NodeMetadata> instances = getInstanceReservation(userContext, instanceId)?.instances
-		instances ? instances[0] : null
+		computeServiceClientByRegion.by(userContext.region).getNodeMetadata(instanceId)
 	}
 
 	Multiset<AppVersion> getCountedAppVersions(UserContext userContext) {
@@ -744,7 +743,7 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 		Check.notNull(instanceId, Reservation, "instanceId")
 		def result
 		try {
-			result = computeServiceClientByRegion.by(userContext.region).describeInstances(new DescribeInstancesRequest().withInstanceIds(instanceId))
+			result = computeServiceClientByRegion.by(userContext.region).getNodeMetadata(instanceId)
 		}
 		catch (AmazonServiceException ase) {
 			log.info "Request for instance ${instanceId} failed because ${ase}"

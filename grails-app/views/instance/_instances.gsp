@@ -60,8 +60,8 @@
           <td>${mi.port}</td>
         </g:if>
         <td>${mi.status}</td>
-        <td><g:linkObject type="instance" name="${mi.instanceId.encodeAsURL()}"/></td>
-        <td><g:linkObject type="image" name="${mi.amiId.encodeAsURL()}"/></td>
+        <td><g:linkObject type="instance" name="${mi.instanceId.encodeAsURL()}">${mi.instanceId}</g:linkObject></td>
+        <td><g:linkObject type="image" name="${mi.amiId.encodeAsURL()}">${mi.amiId}</g:linkObject></td>
         <td>${mi.instanceType}</td>
         <td><g:availabilityZone value="${mi.zone}"/></td>
         <td class="variables">

@@ -23,8 +23,10 @@ import com.netflix.asgard.model.InstanceTypeData
 import com.netflix.asgard.model.JanitorMode
 import com.netflix.asgard.model.MassDeleteRequest
 import com.netflix.grails.contextParam.ContextParam
+
 import grails.converters.JSON
 import grails.converters.XML
+
 import org.codehaus.groovy.grails.web.binding.DataBindingUtils
 import org.codehaus.groovy.grails.web.json.JSONElement
 import org.jclouds.compute.domain.Image
@@ -70,7 +72,7 @@ class ImageController {
     def show = {
         UserContext userContext = UserContext.of(request)
         String imageId = EntityType.image.ensurePrefix(params.imageId ?: params.id)
-		imageId=URLDecoder.decode(imageId);
+		imageId=URLDecoder.decode(imageId,'UTF-8');
 		log.info 'show details for '+ imageId 
         Image image = imageId ? awsEc2Service.getImage(userContext, imageId) : null
         image?.tags?.sort { it.key }
@@ -102,6 +104,8 @@ class ImageController {
         UserContext userContext = UserContext.of(request)
         def launchUsers = []
         def imageId = EntityType.image.ensurePrefix(params.imageId ?: params.id)
+		imageId=URLDecoder.decode(imageId,'UTF-8');
+		log.info 'changing image attributes for ' +imageId
         try {
             launchUsers = awsEc2Service.getImageLaunchers(userContext, imageId)
         }
@@ -173,6 +177,7 @@ class ImageController {
             String pricingMissingMessage = 'Missing required parameter pricing=spot or pricing=ondemand'
             Check.condition(pricingMissingMessage, { pricing in ['ondemand', 'spot'] })
             String imageId = EntityType.image.ensurePrefix(params.imageId)
+			imageId=URLDecoder.decode(imageId,'UTF-8');
             String owner = Check.notEmpty(params.owner as String, 'owner')
             String zone = params.zone
             String instanceType = params.instanceType
