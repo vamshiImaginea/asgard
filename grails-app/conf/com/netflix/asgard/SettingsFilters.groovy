@@ -41,7 +41,7 @@ class SettingsFilters {
                 request.bleskDataUrl = configService.bleskDataUrl
                 request.authenticationEnabled = (pluginService.authenticationProvider != null)
                 request.apiTokenEnabled = configService.apiTokenEnabled
-				request.provider = configService.provider
+				request.provider = configService.provider.toUpperCase()
                 boolean authenticated = SecurityUtils.subject?.authenticated
                 request.requireLoginForEdit = configService.authenticationRequiredForEdit && !authenticated
                 // If the last value is falsy and there is no explicit return statement then this filter method will

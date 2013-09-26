@@ -193,15 +193,10 @@ class CachedMap<T> implements Fillable {
             Set<String> cachedKeys = new HashSet<String>(map.keySet())
             Map<String, T> datasource = new HashMap<String, T>()
             Collection<T> items = retriever()
-			log.info 'items ' + items
             items.each { val -> datasource.put(entityType.key(val), val) }
-
             Set<String> datasourceKeys = datasource.keySet()
-			log.info 'datasourceKeys ' +datasourceKeys
             Set<String> deleteCandidates = Sets.difference(cachedKeys, datasourceKeys).immutableCopy()
-			log.info 'deleteCandidates ' +deleteCandidates
             Set<String> addCandidates = Sets.difference(datasourceKeys, cachedKeys).immutableCopy()
-			log.info 'addCandidates ' +deleteCandidates
             Set<String> updateCandidates = cachedKeys.intersect(datasourceKeys)
 
             // If the cache has an object that is missing from the datasource and the object was created before this

@@ -50,7 +50,10 @@
       </a>
       <span>${env}</span>
     </div>
-    <g:if test="${!pageProperty(name: 'meta.hideNav')}">
+      <g:if test="${!pageProperty(name: 'meta.hideNav')}">
+ <div class="cloudservice">
+   <g:select id="cloudService" class="noSelect2" name="cloudService" from="${["aws","openstack"]}" value="${provider.toLowerCase()}" />
+ </div>
       <div class="region">
         <form action="/" method="GET">
           <g:select title="Switch to a different Amazon region" name="region" class="noSelect2" id="regionSwitcher"
@@ -59,11 +62,7 @@
         </form>
          
       </div>
-      <div>
-       <form action="" method="GET">
-          	<g:select id="cloudService" class="noSelect2" name="cloudService" from="${["aws","openstack"]}" value="${provider}" />
-         </form>
-      </div>
+    
       <div class="ticket" title="${fullTicketLabel} number for logging change actions.">
         <input type="text" name="ticket" placeholder="${ticketLabel}" id="ticketNumber" title="${fullTicketLabel} number" class="${ticketRequired ? 'required' : 'optional'}"/>
       </div>

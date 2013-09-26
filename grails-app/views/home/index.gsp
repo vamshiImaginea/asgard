@@ -21,7 +21,7 @@
 </head>
 <body>
   <div class="homeWrapper">
-    <h1>Welcome to Asgard in <b>${grailsApplication.config.cloud.accountName}</b> in <b>${region.description}</b></h1>
+    <h1>Welcome to Asgard in <b>${provider}</b> </h1>
     <div class="section">
       <table>
         <thead>
@@ -112,11 +112,7 @@
     <div class="clear"></div>
 		<div class="section diagnostics">
 			<h4>Diagnostics:</h4>
-			<g:if test="${provider == 'openstack'}">
-				<p>
-					${provider} Account:
-					${grailsApplication.config.cloud.accountName}
-				</p>
+			<g:if test="${provider == 'OPENSTACK'}">
 				<p>
 					${provider} Region:
 					${region}
@@ -126,9 +122,8 @@
 					${grailsApplication.config.openstack.username}
 				</p>
 		
-			</g:if>
-			
-					<g:else test="${provider == 'openstack'}">
+			</g:if>			
+					<g:else>
 				<p>
 					${provider} Account:
 					${grailsApplication.config.cloud.accountName}
@@ -139,7 +134,7 @@
 				</p>
 				<p>
 					${provider} Accounts:
-					${grailsApplication.config.openstack.username}
+					${grailsApplication.config.secret.accountNumber}
 				</p>
 				<g:if test="${discoveryUrl}">
 					<p>

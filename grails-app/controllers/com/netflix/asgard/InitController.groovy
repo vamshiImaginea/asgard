@@ -51,12 +51,16 @@ class InitController {
 
 		if(params.get('cloudService')) {
 			def config = new ConfigSlurper().parse(configFile.toURL())
+			if(null != config.secret && config.secret.size() > 0){
 			cmd.accessId = config.secret.accessId
 			cmd.secretKey = config.secret.secretKey
 			cmd.accountNumber = config.secret.accountNumber
+			}
+			if(null != config.openstack && config.openstack.size() > 0){
 			cmd.openStackUrl = config.openstack.endpoint
 			cmd.openStackPassword = config.openstack.passwd
 			cmd.openStackUsername = config.openstack.username
+			}
 
 			render(view: 'index', model: [params: cmd])
 		}
@@ -104,19 +108,19 @@ class InitializeCommand {
 	}
 
 	ConfigObject toConfigObject() {
+		ConfigObject rootConfig = new ConfigObject()
+		ConfigObject grailsConfig = new ConfigObject()
+		rootConfig['grails'] = grailsConfig
+		ConfigObject secretConfig = new ConfigObject()
 		if (cloudService.equals("aws")) {
-
 			if(!accessId || !accountNumber || !secretKey) {
 				throw new Exception("AWS Amazon Credentials are not provided")
 			}
-			ConfigObject rootConfig = new ConfigObject()
-			ConfigObject grailsConfig = new ConfigObject()
-			rootConfig['grails'] = grailsConfig
 			String accountNumber = accountNumber.replace('-','')
 			grailsConfig['awsAccounts'] =  [accountNumber]
 			grailsConfig['awsAccountNames'] = [(accountNumber): 'prod']
 			grailsConfig['currentActiveService'] = cloudService
-			ConfigObject secretConfig = new ConfigObject()
+			
 			rootConfig['secret'] = secretConfig
 			secretConfig['accessId'] = accessId.trim()
 			secretConfig['secretKey'] = secretKey.trim()
@@ -130,10 +134,7 @@ class InitializeCommand {
 		if(!openStackUrl || !openStackUsername || !openStackPassword) {
 				throw new Exception("OpenStack Credentials are not provided")
 			}
-			ConfigObject rootConfig = new ConfigObject()
-			ConfigObject grailsConfig = new ConfigObject()
-			rootConfig['grails'] = grailsConfig
-			ConfigObject secretConfig = new ConfigObject()
+
 			rootConfig['openstack'] = secretConfig
 			secretConfig['passwd'] = openStackPassword.trim()
 			secretConfig['username'] = openStackUsername.trim()

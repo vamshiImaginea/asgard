@@ -263,7 +263,7 @@ jQuery(document).ready(function() {
                             modifiers.alt.pressed === modifiers.alt.wanted &&
                             modifiers.meta.pressed === modifiers.meta.wanted) {
                     callback(e);
-
+ady
                     if (!opt['propagate']) { // Stop the event
                         // e.cancelBubble is supported by IE - this will kill the bubbling process.
                         e.cancelBubble = true;

@@ -23,7 +23,7 @@
 </head>
 <body>
   <div class="body">
-    <h1>Instance types and hourly prices in ${region.description}</h1>
+    <h1>Instance types and hourly prices</h1>
     <g:if test="${flash.message}">
       <div class="message">${flash.message}</div>
     </g:if>

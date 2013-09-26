@@ -70,7 +70,7 @@
 								<td class="name"><label for="openStackPassword">Password:
 								</label></td>
 								<td class="value"><input type="password" size='25'
-									maxlength='14' id="openStackPassword" name="openStackPassword"
+									maxlength='40' id="openStackPassword" name="openStackPassword"
 									value="${params.openStackPassword}"  /></td>
 							</tr>
 
