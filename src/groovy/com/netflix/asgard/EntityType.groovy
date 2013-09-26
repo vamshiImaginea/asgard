@@ -34,7 +34,7 @@ import com.amazonaws.services.autoscaling.model.LaunchConfiguration
 import com.amazonaws.services.autoscaling.model.ScalingPolicy
 import com.amazonaws.services.autoscaling.model.ScheduledUpdateGroupAction
 import com.amazonaws.services.cloudwatch.model.MetricAlarm
-import com.amazonaws.services.ec2.model.AvailabilityZone
+//import com.amazonaws.services.ec2.model.AvailabilityZone
 import com.amazonaws.services.ec2.model.KeyPairInfo
 import com.amazonaws.services.ec2.model.ReservedInstances
 import com.amazonaws.services.ec2.model.SecurityGroup
@@ -103,7 +103,7 @@ import com.netflix.asgard.push.Cluster
     static final EntityType<ScheduledUpdateGroupAction> scheduledAction = create('ScheduledAction',
             { it.scheduledActionName })
     static final EntityType<SecurityGroup> security = create('Security Group', { it.name })
-    static final EntityType<Snapshot> snapshot = create('Storage Snapshot', { it }, 'snap-')
+    static final EntityType<Snapshot> snapshot = create('Storage Snapshot', { it.id }, 'snap-')
     static final EntityType<SourceSecurityGroup> sourceSecurityGroup = create('Source Security Group', { it.groupName })
     static final EntityType<SpotInstanceRequest> spotInstanceRequest = create('Spot Instance Request',
             { it.spotInstanceRequestId }, 'sir-')

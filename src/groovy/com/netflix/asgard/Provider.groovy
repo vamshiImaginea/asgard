@@ -11,7 +11,7 @@ enum Provider {
 	),
 
 	OPENSTACK('openstack',
-	'openstack-nova'
+	'openstack-nova-ec2'
 	)
 
 	String providerName

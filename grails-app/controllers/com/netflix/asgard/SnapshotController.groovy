@@ -30,7 +30,7 @@ class SnapshotController {
 
     def list = {
         UserContext userContext = UserContext.of(request)
-        Set<Snapshot> snapshots = awsEc2Service.getSnapshots(userContext).sort { it.id.toLowerCase() }
+        Set<Snapshot> snapshots = awsEc2Service.getSnapshots(userContext)
         Set<String> appNames = Requests.ensureList(params.id).collect { it.split(',') }.flatten() as Set<String>
        if (appNames) {
             snapshots = snapshots.findAll { Snapshot snapshot ->

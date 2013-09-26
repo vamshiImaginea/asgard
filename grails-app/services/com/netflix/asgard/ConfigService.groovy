@@ -725,7 +725,7 @@ class ConfigService {
 	}
 	
 	String getProvider(){
-		grailsApplication.config.grails?.currentActiveService?:"opens1tack";
+		grailsApplication.config.grails?.currentActiveService?:"openstack";
 	}
 	
 	String getOpenStackEndPoint(){
@@ -738,6 +738,10 @@ class ConfigService {
 	
 	String getOpenStackPassword(){
 		grailsApplication.config.openstack?.passwd?:"";
+	}
+	
+	Provider getCloudProvider(){
+		Provider.withCode(getProvider());
 	}
 	
 	

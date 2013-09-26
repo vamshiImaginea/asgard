@@ -20,13 +20,10 @@ import com.amazonaws.services.autoscaling.model.LaunchConfiguration
 import com.amazonaws.services.autoscaling.model.ScalingPolicy
 import com.amazonaws.services.autoscaling.model.ScheduledUpdateGroupAction
 import com.amazonaws.services.cloudwatch.model.MetricAlarm
-import com.amazonaws.services.ec2.model.KeyPairInfo
+import com.amazonaws.services.ec2.model.KeyPair;
 import com.amazonaws.services.ec2.model.ReservedInstances
-import com.amazonaws.services.ec2.model.SecurityGroup
-import com.amazonaws.services.ec2.model.Snapshot
 import com.amazonaws.services.ec2.model.SpotInstanceRequest
 import com.amazonaws.services.ec2.model.Subnet
-import com.amazonaws.services.ec2.model.Volume
 import com.amazonaws.services.ec2.model.Vpc
 import com.amazonaws.services.elasticloadbalancing.model.LoadBalancerDescription
 import com.amazonaws.services.elasticloadbalancing.model.SourceSecurityGroup
@@ -50,6 +47,9 @@ import com.netflix.asgard.push.Cluster
 import org.jclouds.compute.domain.Image
 import org.jclouds.compute.domain.NodeMetadata;
 import org.jclouds.domain.Location
+import org.jclouds.ec2.domain.SecurityGroup
+import org.jclouds.ec2.domain.Snapshot
+import org.jclouds.ec2.domain.Volume
 
 /**
  * By creating all these object upfront and letting other services initialize them only if needed, we remove the problem
@@ -82,7 +82,7 @@ class Caches {
     final MultiRegionCachedMap<NodeMetadata> allInstances
     final MultiRegionCachedMap<InstanceHealth> allSignificantStackInstanceHealthChecks
     final MultiRegionCachedMap<InstanceTypeData> allInstanceTypes
-    final MultiRegionCachedMap<KeyPairInfo> allKeyPairs
+    final MultiRegionCachedMap<KeyPair> allKeyPairs
     final MultiRegionCachedMap<LaunchConfiguration> allLaunchConfigurations
     final MultiRegionCachedMap<LoadBalancerDescription> allLoadBalancers
     final MultiRegionCachedMap<SimpleQueue> allQueues
