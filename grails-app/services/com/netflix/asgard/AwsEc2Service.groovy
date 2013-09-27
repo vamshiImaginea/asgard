@@ -40,6 +40,7 @@ import org.jclouds.domain.Location
 import org.jclouds.ec2.EC2Client
 import org.jclouds.ec2.domain.Attachment
 import org.jclouds.ec2.domain.KeyPair
+import org.jclouds.ec2.domain.Reservation
 import org.jclouds.ec2.domain.SecurityGroup
 import org.jclouds.ec2.domain.Snapshot
 import org.jclouds.ec2.domain.Volume
@@ -66,7 +67,6 @@ import com.amazonaws.services.ec2.model.InstanceStateChange
 import com.amazonaws.services.ec2.model.IpPermission
 import com.amazonaws.services.ec2.model.RequestSpotInstancesRequest
 import com.amazonaws.services.ec2.model.RequestSpotInstancesResult
-import com.amazonaws.services.ec2.model.Reservation
 import com.amazonaws.services.ec2.model.ReservedInstances
 import com.amazonaws.services.ec2.model.RunInstancesRequest
 import com.amazonaws.services.ec2.model.RunInstancesResult
@@ -242,7 +242,8 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 	List<String> getImageLaunchers(UserContext userContext, String imageId) {
 		Image image = computeServiceClientByRegion.by(userContext.region).getImage(imageId);
 		[
-			image.userMetadata.get("owner")]
+			image.userMetadata.get("owner")
+		]
 	}
 
 	Map<String, Image> mapImageIdsToImagesForMergedInstances(UserContext userContext,
@@ -260,7 +261,7 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 
 	void deregisterImage(UserContext userContext, String imageId, Task existingTask = null) {
 		String msg = "Deregister image ${imageId}"
-		
+
 		String regionCode = configService.getCloudProvider() == Provider.AWS ? userContext.region.code : "nova"
 		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
 
@@ -289,7 +290,7 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 	}
 
 	void setImageLaunchers(UserContext userContext, String imageId, List<String> userIds) {
-	   String regionCode = configService.getCloudProvider() == Provider.AWS ? userContext.region.code : "nova"
+		String regionCode = configService.getCloudProvider() == Provider.AWS ? userContext.region.code : "nova"
 		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
 
 		List<String> defaultUserGrp = new ArrayList<String>();
@@ -305,7 +306,7 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 		Check.notEmpty(imageIds, "imageIds")
 		Check.notEmpty(name, "name")
 		Check.notEmpty(value, "value")
-	   String regionCode = configService.getCloudProvider() == Provider.AWS ? userContext.region.code : "nova"
+		String regionCode = configService.getCloudProvider() == Provider.AWS ? userContext.region.code : "nova"
 		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
 		List<List<String>> partitionedImageIds = Lists.partition(imageIds as List, TAG_IMAGE_CHUNK_SIZE)
 		for (List<String> imageIdsChunk in partitionedImageIds) {
@@ -351,7 +352,7 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 	}
 
 	private Set<KeyPair> retrieveKeys(Region region) {
-	    String regionCode = configService.getCloudProvider() == Provider.AWS ? region.code : "nova"
+		String regionCode = configService.getCloudProvider() == Provider.AWS ? region.code : "nova"
 		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(region).getContext());
 		ec2Client.keyPairServices.describeKeyPairsInRegion(regionCode, null);
 	}
@@ -379,8 +380,8 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 	}
 
 	private Set<SecurityGroup> retrieveSecurityGroups(Region region) {
-        log.info 'retrieveSecurityGroups in region '+ region
-	   String regionCode = configService.getCloudProvider() == Provider.AWS ? region.code : "nova"
+		log.info 'retrieveSecurityGroups in region '+ region
+		String regionCode = configService.getCloudProvider() == Provider.AWS ? region.code : "nova"
 		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(region).getContext());
 		Set<SecurityGroup> securityGroups= ec2Client.securityGroupServices.describeSecurityGroupsInRegion(regionCode,null)
 		log.info 'retrieveSecurityGroups in region '+ securityGroups
@@ -399,7 +400,7 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 		String groupId = ''
 		if (name ==~ SECURITY_GROUP_ID_PATTERN) {
 			groupId = name
-			SecurityGroup cachedSecurityGroup = caches.allSecurityGroups.by(region).list().find { it.groupId == groupId }
+			SecurityGroup cachedSecurityGroup = caches.allSecurityGroups.by(region).list().find { it.name == name }
 			groupName = cachedSecurityGroup?.name
 		} else {
 			groupName = name
@@ -408,12 +409,11 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 			return caches.allSecurityGroups.by(region).get(name)
 		}
 		Set<SecurityGroup> groups = null
-	   EC2Client ec2Client=null
-	   String regionCode = configService.getCloudProvider() == Provider.AWS ? region.code : "nova"
+		EC2Client ec2Client=null
+		String regionCode = configService.getCloudProvider() == Provider.AWS ? region.code : "nova"
 		try {
-	   
-		 ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(region).getContext());
-			groups= groupId != "" ?ec2Client.securityGroupServices.describeSecurityGroupsInRegion(regionCode, groupName): ec2Client.securityGroupServices.describeSecurityGroupsInRegionById(region.code, groupId);
+			ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(region).getContext());
+			groups= ec2Client.securityGroupServices.describeSecurityGroupsInRegion(regionCode, groupName);
 			groups = Check.lone(groups, SecurityGroup)
 			groupName = groups?.name
 		} catch (AmazonServiceException e) {
@@ -486,7 +486,7 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 		Check.notEmpty(name, 'name')
 		Check.notEmpty(description, 'description')
 		String groupId = null
-	   String regionCode = configService.getCloudProvider() == Provider.AWS ? userContext.region.code : "nova"
+		String regionCode = configService.getCloudProvider() == Provider.AWS ? userContext.region.code : "nova"
 		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
 
 		taskService.runTask(userContext, "Create Security Group ${name}", { task ->
@@ -496,7 +496,7 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 	}
 
 	void removeSecurityGroup(UserContext userContext, String name, String id) {
-	   String regionCode = configService.getCloudProvider() == Provider.AWS ? userContext.region.code : "nova"
+		String regionCode = configService.getCloudProvider() == Provider.AWS ? userContext.region.code : "nova"
 		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
 
 		taskService.runTask(userContext, "Remove Security Group ${name}", { task ->
@@ -595,7 +595,7 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 		String groupName = targetgroup.name
 		String sourceGroupName = sourceGroup.name
 		UserIdGroupPair sourcePair = new UserIdGroupPair().withUserId(accounts[0]).withGroupId(sourceGroup.id)
-	   String regionCode = configService.getCloudProvider() == Provider.AWS ? userContext.region.code : "nova"
+		String regionCode = configService.getCloudProvider() == Provider.AWS ? userContext.region.code : "nova"
 		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
 
 		List<IpPermission> perms = [
@@ -611,7 +611,7 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 	private void revokeSecurityGroupIngress(UserContext userContext, SecurityGroup targetgroup, SecurityGroup sourceGroup, String ipProtocol, int fromPort, int toPort) {
 		String groupName = targetgroup.name
 		String sourceGroupName = sourceGroup.name
-	   String regionCode = configService.getCloudProvider() == Provider.AWS ? userContext.region.code : "nova"
+		String regionCode = configService.getCloudProvider() == Provider.AWS ? userContext.region.code : "nova"
 		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
 
 
@@ -762,21 +762,22 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 
 	Reservation getInstanceReservation(UserContext userContext, String instanceId) {
 		Check.notNull(instanceId, Reservation, "instanceId")
-		def result
+		String regionCode = configService.getCloudProvider() == Provider.AWS ? userContext.region.code : "nova"
+		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
+
+		Set<Reservation> reservations
 		try {
-			result = computeServiceClientByRegion.by(userContext.region).getNodeMetadata(instanceId)
+			reservations = ec2Client.instanceServices.describeInstancesInRegion(regionCode,instanceId);
 		}
 		catch (AmazonServiceException ase) {
 			log.info "Request for instance ${instanceId} failed because ${ase}"
 			return null
 		}
-		List<Reservation> reservations = result.reservations
-		if (reservations.size() < 1 || reservations[0].instances.size() < 1) {
+		if (reservations.size() < 1 ) {
 			log.info "Request for instance ${instanceId} failed because the instance no longer exists"
 			return null
 		}
 		Reservation reservation = Check.lone(reservations, Reservation)
-		caches.allInstances.by(userContext.region).put(instanceId, Check.lone(reservation.instances, Instance))
 		reservation
 	}
 
@@ -858,7 +859,7 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 	}
 
 	String getConsoleOutput(UserContext userContext, String instanceId) {
-	   String regionCode = configService.getCloudProvider() == Provider.AWS ? userContext.region.code : "nova"
+		String regionCode = configService.getCloudProvider() == Provider.AWS ? userContext.region.code : "nova"
 		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
 
 		String output =  ec2Client.instanceServices.getConsoleOutputForInstanceInRegion(regionCode, instanceId);
@@ -885,7 +886,7 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 	// Reservations
 
 	private Set<Reservation> retrieveReservations(Region region) {
-	   String regionCode = configService.getCloudProvider() == Provider.AWS ? userContext.region.code : "nova"
+		String regionCode = configService.getCloudProvider() == Provider.AWS ? userContext.region.code : "nova"
 		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
 		ec2Client.instanceServices.describeInstancesInRegion(regionCode,null)
 	}
@@ -1014,13 +1015,13 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 	}
 
 	private Set<Snapshot> retrieveSnapshots(Region region) {
-		log.info 'retrieveSnapshots in region '+ region		
+		log.info 'retrieveSnapshots in region '+ region
 		String regionCode = configService.getCloudProvider() == Provider.AWS ? region.code : "nova"
 		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(region).getContext());
 		def snapshotsInRegion = ec2Client.getElasticBlockStoreServices().describeSnapshotsInRegion(regionCode,null)
 		log.info 'retrieveSnapshots in region '+ snapshotsInRegion
 		snapshotsInRegion
-		
+
 	}
 
 	Snapshot getSnapshot(UserContext userContext, String snapshotId, From from = From.AWS) {

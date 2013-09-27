@@ -31,7 +31,6 @@ import org.jclouds.openstack.nova.v2_0.extensions.VolumeApi
 
 import com.google.common.collect.ImmutableSet
 import com.google.inject.Module
-import com.netflix.asgard.model.JcloudVolume
 
 class JcloudsComputeService {
 

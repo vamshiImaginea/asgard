@@ -17,9 +17,6 @@ package com.netflix.asgard
 
 import com.amazonaws.AmazonServiceException
 import com.amazonaws.services.autoscaling.model.AutoScalingGroup
-import com.amazonaws.services.ec2.model.Image
-import com.amazonaws.services.ec2.model.Instance
-import com.amazonaws.services.ec2.model.Reservation
 import com.amazonaws.services.ec2.model.Tag
 import com.amazonaws.services.elasticloadbalancing.model.LoadBalancerDescription
 import com.google.common.collect.Multiset
@@ -28,8 +25,13 @@ import com.netflix.asgard.text.TextLink
 import com.netflix.asgard.text.TextLinkTemplate
 import com.netflix.frigga.ami.AppVersion
 import com.netflix.grails.contextParam.ContextParam
+
 import grails.converters.JSON
 import grails.converters.XML
+
+import org.jclouds.compute.domain.Image
+import org.jclouds.compute.domain.NodeMetadata;
+import org.jclouds.ec2.domain.Reservation
 
 @ContextParam('region')
 class InstanceController {
@@ -147,7 +149,7 @@ class InstanceController {
     /* can show instance info given: instanceId, appName+instanceId, appName+hostName */
     def show = {
         UserContext userContext = UserContext.of(request)
-        String instanceId = EntityType.instance.ensurePrefix(params.instanceId ?: params.id)
+        String instanceId = params.id
 		instanceId=URLDecoder.decode(instanceId,'UTF-8');
 		
         String appName
@@ -160,22 +162,21 @@ class InstanceController {
             appInst = discoveryService.getAppInstance(userContext, instanceId)
             appName = appInst?.appName
         }
-        Reservation instRsrv = instanceId ? awsEc2Service.getInstanceReservation(userContext, instanceId) : null
-        Instance instance = instRsrv ? instRsrv.instances[0] : null
-        if (!appInst && !instance) {
+        NodeMetadata instance = awsEc2Service.getInstance(userContext, instanceId);
+        /*if (!appInst && !instance) {
             String identifier = instanceId ?: "${params.appName}/${params.hostName}"
             Requests.renderNotFound('Instance', identifier, this)
-        } else {
-            String healthCheck = runHealthCheck(appInst)
+        } else {*/
+        /*    String healthCheck = runHealthCheck(appInst)
             instance?.tags?.sort { it.key }
             Image image = instance ? awsEc2Service.getImage(userContext, instance.imageId) : null
-            AutoScalingGroup group = awsAutoScalingService.getAutoScalingGroupFor(userContext, instance?.instanceId)
+            AutoScalingGroup group = awsAutoScalingService.getAutoScalingGroupFor(userContext, instance?.id)
             String clusterName = Relationships.clusterFromGroupName(group?.autoScalingGroupName)
             List<LoadBalancerDescription> loadBalancers = awsLoadBalancerService.getLoadBalancersFor(userContext,
-                    instance?.instanceId)
+                    instance?.id)*/
 
             Map<String, List<TextLink>> linkGroupingsToListsOfTextLinks = [:]
-            String baseServer = instance?.publicDnsName ?: appInst?.hostName
+            String baseServer = instance?.hostname
             if (baseServer) {
                 Map<String, List<TextLinkTemplate>> groupingsToLinkTemplateLists =
                         configService.instanceLinkGroupingsToLinkTemplateLists
@@ -188,15 +189,15 @@ class InstanceController {
             Map details = [
                     appName: appName,
                     discInstance: appInst,
-                    healthCheck: healthCheck,  // TODO: do this in JavaScript on the page?
+                   // healthCheck: healthCheck,  // TODO: do this in JavaScript on the page?
                     baseServer: baseServer,
                     instance: instance,
                     linkGroupingsToListsOfTextLinks: linkGroupingsToListsOfTextLinks,
-                    securityGroups: instance?.securityGroups?.sort(),
-                    image: image,
-                    cluster: clusterName,
-                    group: group,
-                    loadBalancers: loadBalancers
+                    //securityGroups: instance?.securityGroups?.sort(),
+                   // image: image,
+                    //cluster: clusterName,
+                   // group: group,
+                    //loadBalancers: loadBalancers
             ]
             withFormat {
                 html { return details }
@@ -204,7 +205,7 @@ class InstanceController {
                 json { new JSON(details).render(response) }
             }
         }
-    }
+    
 
     def terminate = {
         UserContext userContext = UserContext.of(request)
@@ -338,7 +339,7 @@ class InstanceController {
 
     def associate = {
         UserContext userContext = UserContext.of(request)
-        Instance instance = awsEc2Service.getInstance(userContext, EntityType.instance.ensurePrefix(params.instanceId))
+        NodeMetadata instance = awsEc2Service.getInstance(userContext, EntityType.instance.ensurePrefix(params.instanceId))
         if (!instance) {
             flash.message = "EC2 Instance ${params.instanceId} not found."
             redirect(action: 'list')

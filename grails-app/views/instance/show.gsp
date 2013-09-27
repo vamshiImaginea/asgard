@@ -19,7 +19,7 @@
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
   <meta name="layout" content="main"/>
-  <title>${appName} ${instance?.instanceId} Instance</title>
+  <title>${appName} ${instance?.id} Instance</title>
 </head>
 <body>
   <div class="body">
@@ -29,12 +29,12 @@
     </g:if>
     <g:if test="${instance}">
       <g:form class="validate">
-        <input type="hidden" name="instanceId" value="${instance.instanceId}"/>
+        <input type="hidden" name="instanceId" value="${instance.id}"/>
         <g:if test="${group?.desiredCapacity}">
           <div class="buttons">
             <h3>ASG Decrement:</h3>
             <g:buttonSubmit class="stop"
-                    data-warning="Really Terminate instance ${instance.instanceId} and decrement size of auto scaling group ${group.autoScalingGroupName} to ${group.desiredCapacity - 1}?"
+                    data-warning="Really Terminate instance ${instance.id} and decrement size of auto scaling group ${group.autoScalingGroupName} to ${group.desiredCapacity - 1}?"
                     action="terminateAndShrinkGroup"
                     value="Shrink ASG ${group.autoScalingGroupName} to Size ${group.desiredCapacity - 1} and Terminate Instance"
                     title="Terminate this instance and decrement the size of its auto scaling group." />
@@ -42,12 +42,12 @@
         </g:if>
         <div class="buttons">
           <h3>Operating System:</h3>
-          <g:buttonSubmit class="stop" data-warning="Really Terminate: ${instance.instanceId}?"
+          <g:buttonSubmit class="stop" data-warning="Really Terminate: ${instance.id}?"
                   action="terminate" value="Terminate Instance" title="Shut down and delete this instance." />
-          <g:buttonSubmit class="shutdown" data-warning="Really Reboot: ${instance.instanceId}?"
+          <g:buttonSubmit class="shutdown" data-warning="Really Reboot: ${instance.id}?"
                   action="reboot" value="Reboot Instance" title="Restart the OS of the instance." />
-          <g:link class="cli" action="raw" params="[instanceId: instance.instanceId]" title="Display the operating system console output log.">Console Output (Raw)</g:link>
-          <g:link class="userData" action="userDataHtml" params="[id: instance.instanceId]" title="Display the user data executed by the instance on startup.">User Data</g:link>
+          <g:link class="cli" action="raw" params="[instanceId: instance.id]" title="Display the operating system console output log.">Console Output (Raw)</g:link>
+          <g:link class="userData" action="userDataHtml" params="[id: instance.id]" title="Display the user data executed by the instance on startup.">User Data</g:link>
         </div>
         <div class="buttons">
           <h3>Load Balancing:</h3>
@@ -55,7 +55,7 @@
                   action="deregister" value="Deregister Instance from LB" title="Remove this instance from the auto scaling group's load balancers." />
           <g:buttonSubmit class="requireLogin instanceBalance"
                   action="register" value="Register Instance with ASG's LB" title="Add this instance to the auto scaling group's load balancers." />
-          <g:link class="attachElastic" action="associate" params="[instanceId:instance.instanceId]"
+          <g:link class="attachElastic" action="associate" params="[instanceId:instance.id]"
                     title="Choose an elastic IP address to use for this instance.">Associate Elastic IP with Instance</g:link>
         </div>
         <g:if test="${appName}">
@@ -148,21 +148,21 @@
         <g:if test="${instance}">
           <tr class="prop">
             <td class="name">Instance ID:</td>
-            <td class="value">${instance.instanceId}</td>
+            <td class="value">${instance.id}</td>
           </tr>
-          <g:if test="${instance.spotInstanceRequestId}">
+          <g:if test="${instance.id}">
             <tr class="prop">
               <td class="name">Spot Instance Request:</td>
-              <td class="value"><g:linkObject type="spotInstanceRequest" name="${instance.spotInstanceRequestId}" /></td>
+              <td class="value"><g:linkObject type="spotInstanceRequest" name="${instance.id}" /></td>
             </tr>
           </g:if>
           <tr class="prop">
             <td class="name">Public DNS/IP:</td>
-            <td class="value">${instance.publicDnsName} | ${instance.publicIpAddress}</td>
+            <td class="value">${instance.publicAddresses}</td>
           </tr>
           <tr class="prop">
             <td class="name">Private DNS/IP:</td>
-            <td class="value">${instance.privateDnsName} | ${instance.privateIpAddress}</td>
+            <td class="value">${instance.privateAddresses}</td>
           </tr>
           <tr class="prop">
             <td class="name">Image:</td>
@@ -172,16 +172,16 @@
           </tr>
           <tr class="prop">
             <td class="name"><g:link controller="instanceType" action="list">Instance Type:</g:link></td>
-            <td class="value">${instance.instanceType}</td>
+            <td class="value">${instance.type}</td>
           </tr>
           <tr class="prop">
             <td class="name">Zone:</td>
-            <td class="value"><g:availabilityZone value="${instance.placement.availabilityZone}"/></td>
+            <td class="value"><g:availabilityZone value="${instance.location.id}"/></td>
           </tr>
           <tr class="prop">
             <td class="name">State (Transition Reason):</td>
-            <td class="value">${instance.state.name} | ${instance.stateTransitionReason} | ${instance.stateReason?.message}</td>
-          </tr>
+            <td class="value">${instance.status}</td>
+          </tr><%--
           <tr class="prop">
             <td class="name">Launch Time:</td>
             <td class="value"><g:formatDate date="${instance.launchTime}"/></td>
@@ -258,7 +258,7 @@
               </table>
             </td>
           </tr>
-          <g:render template="/common/showTags" model="[entity: instance]"/>
+          --%><g:render template="/common/showTags" model="[entity: instance]"/>
         </g:if>
 
         <tr class="prop">

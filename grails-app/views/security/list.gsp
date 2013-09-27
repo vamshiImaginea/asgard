@@ -30,7 +30,7 @@
   <g:form method="post">
     <div class="list">
       <div class="buttons">
-        <g:link class="create" action="create">Create New Security Group</g:link>
+        <g:link class="create" disabled="true" action="create">Create New Security Group</g:link>
       </div>
       <table class="sortable">
         <thead>
@@ -44,8 +44,8 @@
         <tbody>
         <g:each var="grp" in="${securityGroups}" status="i">
           <tr class="${(i % 2) == 0 ? 'odd' : 'even'}">
-            <td><g:linkObject type="security" name="${grp.id}">${grp.name}</g:linkObject></td>
-            <td>${grp.description}</td><%--
+            <%--<td><g:linkObject type="security" name="${grp.name}">${grp.name}</g:linkObject></td>            
+            --%><td>${grp.name}</td> <td>${grp.description}</td><%--
             <td>${grp.vpcId}</td>
             --%><td><g:each var="perm" in="${grp.ipPermissions}">
               ${perm.ipProtocol} ${perm.fromPort}-${perm.toPort} [

@@ -66,7 +66,7 @@ class SecurityController {
             Requests.renderNotFound('Security Group', name, this)
             return
         }
-        group.ipPermissions.sort { it.userIdGroupPairs ? it.userIdGroupPairs[0].groupName : it.fromPort }
+        group.ipPermissions.sort { it.userIdGroupPairs ? it.userIdGroupPairs[0].groupName : String.valueOf(it.fromPort) }
         group.ipPermissions.each { it.userIdGroupPairs.sort { it.groupName } }
 
         List<LaunchConfiguration> launchConfigs = awsAutoScalingService.getLaunchConfigurationsForSecurityGroup(
