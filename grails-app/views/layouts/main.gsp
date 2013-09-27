@@ -57,8 +57,7 @@
       <div class="region">
         <form action="/" method="GET">
           <g:select title="Switch to a different Amazon region" name="region" class="noSelect2" id="regionSwitcher"
-                    value="${region.code}" from="${regions}" optionKey="code" optionValue="description"/><br/>
-          <img src="${resource(dir: 'images/worldmap', file: region.mapImageFileName)}" title="${region.description} is your current region"/>
+                    value="${region.code}" from="${regions}" optionKey="code" optionValue="description"/>
         </form>
          
       </div>
@@ -92,20 +91,20 @@
   </div>
   <g:if test="${!pageProperty(name: 'meta.hideNav')}">
    <ul class="nav">
-     <li class="menuButton"><a class="home" href="${resource(dir: '/')}">Home</a></li>
+     <li class="menuButton"><a class="home" href="${resource(dir: '/')}">Home</a></li><%--
      <li class="menuButton">
        <g:link class="applications" controller="application" action="list">App</g:link>
        <ul>
-         <li class="menuButton"><g:link class="applications" controller="application" action="list">Applications</g:link></li>
+         --%><li class="menuButton"><g:link class="applications" controller="application" action="list">Applications</g:link></li>
          <li class="menuButton"><g:link class="stacks" controller="stack" action="list">Stacks</g:link></li>
          <li class="menuButton"><g:link class="users" controller="application" action="owner">Owners</g:link></li>
          <li class="menuButton"><g:link class="securityGroups" controller="security" action="list">Security Groups</g:link></li>
          <g:if test="${platformserviceExists}">
            <li class="menuButton"><g:link class="fastProperties" controller="fastProperty" action="apps">Fast Properties</g:link></li>
-         </g:if>
+         </g:if><%--
        </ul>
      </li>
-     <li class="menuButton"><g:link class="images" controller="image" action="list">AMI</g:link></li>
+     --%><li class="menuButton"><g:link class="images" controller="image" action="list">AMI</g:link></li><%--
      <li class="menuButton">
        <g:link class="cluster" controller="cluster" action="list">Cluster</g:link>
        <ul>
@@ -117,19 +116,20 @@
          <li class="menuButton"><g:link class="alarm" controller="alarm" action="list">CloudWatch Alarms</g:link></li>
        </ul>
      </li>
-     <li class="menuButton"><g:link class="loadBalancers" controller="loadBalancer" action="list">ELB</g:link></li>
+     --%><li class="menuButton"><g:link class="loadBalancers" controller="loadBalancer" action="list">ELB</g:link></li>
      <li class="menuButton">
          <g:link class="instances" controller="instance" action="list">EC2</g:link>
-         <ul>
-           <li class="menuButton"><g:link class="instances" controller="instance" action="list">Instances</g:link></li>
+        
+     </li>
+     <%--<li class="menuButton"><g:link class="instances" controller="instance" action="list">Instances</g:link></li>
+      
            <li class="menuButton"><g:link class="instanceTypes" controller="instanceType" action="list">Instance Types</g:link></li>
-           <g:if test="${spotInstancesAreAppropriate}">
+           --%><g:if test="${spotInstancesAreAppropriate}">
              <li class="menuButton"><g:link class="spotInstanceRequest" controller="spotInstanceRequest" action="list">Spot Instance Requests</g:link></li>
            </g:if>
            <li class="menuButton"><g:link class="volumes" controller="volume" action="list">EBS Volumes</g:link></li>
            <li class="menuButton"><g:link class="volumeSnapshot" controller="snapshot" action="list">EBS Snapshots</g:link></li>
-         </ul>
-     </li>
+     <%--
      <li class="menuButton">
        <g:link class="simpleDb" controller="domain" action="list">SDB</g:link>
      </li>
@@ -144,7 +144,7 @@
        </ul>
      </li>
      <li class="menuButton"><g:link class="tasks" controller="task" action="list">Task</g:link></li>
-   </ul>
+   --%></ul>
   </g:if>
   <div class="clear"></div>
   <g:if test="${bleskDataUrl}">
