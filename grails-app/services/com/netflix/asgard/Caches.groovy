@@ -23,7 +23,6 @@ import com.amazonaws.services.cloudwatch.model.MetricAlarm
 import com.amazonaws.services.ec2.model.KeyPair;
 import com.amazonaws.services.ec2.model.ReservedInstances
 import com.amazonaws.services.ec2.model.SpotInstanceRequest
-import com.amazonaws.services.ec2.model.Subnet
 import com.amazonaws.services.ec2.model.Vpc
 import com.amazonaws.services.elasticloadbalancing.model.LoadBalancerDescription
 import com.amazonaws.services.elasticloadbalancing.model.SourceSecurityGroup
@@ -47,8 +46,10 @@ import com.netflix.asgard.push.Cluster
 import org.jclouds.compute.domain.Image
 import org.jclouds.compute.domain.NodeMetadata;
 import org.jclouds.domain.Location
+import org.jclouds.ec2.domain.AvailabilityZoneInfo
 import org.jclouds.ec2.domain.SecurityGroup
 import org.jclouds.ec2.domain.Snapshot
+import org.jclouds.ec2.domain.Subnet
 import org.jclouds.ec2.domain.Volume
 
 /**
@@ -70,7 +71,7 @@ class Caches {
     final MultiRegionCachedMap<MetricAlarm> allAlarms
     final MultiRegionCachedMap<ApplicationInstance> allApplicationInstances
     final MultiRegionCachedMap<AutoScalingGroup> allAutoScalingGroups
-    final MultiRegionCachedMap<Location> allAvailabilityZones
+    final MultiRegionCachedMap<AvailabilityZoneInfo> allAvailabilityZones
     final MultiRegionCachedMap<Cluster> allClusters
     final MultiRegionCachedMap<DBInstance> allDBInstances
     final MultiRegionCachedMap<DBSecurityGroup> allDBSecurityGroups

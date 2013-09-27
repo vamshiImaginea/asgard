@@ -69,7 +69,7 @@ class SnapshotController {
     def create = {
         UserContext userContext = UserContext.of(request)
         def snapshot = awsEc2Service.createSnapshot(userContext, params.volumeId, params.description)
-        redirect(action: 'show', params:[id:snapshot?.snapshotId])
+        redirect(action: 'show', params:[id:snapshot?.id])
     }
 
     def delete = {

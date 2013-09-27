@@ -39,14 +39,17 @@ import org.jclouds.compute.domain.NodeMetadata
 import org.jclouds.domain.Location
 import org.jclouds.ec2.EC2Client
 import org.jclouds.ec2.domain.Attachment
+import org.jclouds.ec2.domain.AvailabilityZoneInfo
 import org.jclouds.ec2.domain.KeyPair
 import org.jclouds.ec2.domain.Reservation
 import org.jclouds.ec2.domain.SecurityGroup
 import org.jclouds.ec2.domain.Snapshot
+import org.jclouds.ec2.domain.Subnet
 import org.jclouds.ec2.domain.Volume
-import org.jclouds.ec2.features.TagApi;
+import org.jclouds.ec2.features.SubnetApi
 import org.jclouds.ec2.options.DescribeImagesOptions
 import org.jclouds.ec2.options.DetachVolumeOptions
+import org.jclouds.ec2.util.SubnetFilterBuilder
 import org.springframework.beans.factory.InitializingBean
 
 import com.amazonaws.AmazonServiceException
@@ -58,7 +61,6 @@ import com.amazonaws.services.ec2.model.CreateTagsRequest
 import com.amazonaws.services.ec2.model.DeleteTagsRequest
 import com.amazonaws.services.ec2.model.DescribeInstanceAttributeRequest
 import com.amazonaws.services.ec2.model.DescribeInstanceAttributeResult
-import com.amazonaws.services.ec2.model.DescribeInstancesRequest
 import com.amazonaws.services.ec2.model.DescribeSpotInstanceRequestsRequest
 import com.amazonaws.services.ec2.model.DescribeSpotInstanceRequestsResult
 import com.amazonaws.services.ec2.model.DescribeSpotPriceHistoryRequest
@@ -70,7 +72,6 @@ import com.amazonaws.services.ec2.model.RequestSpotInstancesResult
 import com.amazonaws.services.ec2.model.ReservedInstances
 import com.amazonaws.services.ec2.model.RunInstancesRequest
 import com.amazonaws.services.ec2.model.RunInstancesResult
-import com.amazonaws.services.ec2.model.Subnet
 import com.amazonaws.services.ec2.model.Tag
 import com.amazonaws.services.ec2.model.UserIdGroupPair
 import com.amazonaws.services.ec2.model.Vpc
@@ -126,7 +127,7 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 		caches.allVolumes.ensureSetUp({ Region region -> retrieveVolumes(region) })
 
 		/// not supported in jclouds
-		/*caches.allSubnets.ensureSetUp({ Region region -> retrieveSubnets(region) })	*/		
+		//caches.allSubnets.ensureSetUp({ Region region -> retrieveSubnets(region) })			
 		/*caches.allVpcs.ensureSetUp({ Region region -> retrieveVpcs(region) })
 		 caches.allReservedInstancesGroups.ensureSetUp({ Region region -> retrieveReservations(region) })
 		 caches.allSubnets.ensureSetUp({ Region region -> retrieveSubnets(region) })*/
@@ -134,18 +135,20 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 
 	// Availability Zones
 
-	private Set<Location> retrieveAvailabilityZones(Region region) {
-		Set<Location> listAssignableLocations= computeServiceClientByRegion.by(region).listAssignableLocations();
-		listAssignableLocations.sort { it.id }
+	private Set<AvailabilityZoneInfo> retrieveAvailabilityZones(Region region) {
+		String regionCode = configService.getCloudProvider() == Provider.AWS ? region.code : "nova"
+		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(region).getContext());
+		ec2Client.availabilityZoneAndRegionServices.describeAvailabilityZonesInRegion(regionCode);
+		
 	}
 
-	Collection<Location> getAvailabilityZones(UserContext userContext) {
+	Collection<AvailabilityZoneInfo> getAvailabilityZones(UserContext userContext) {
 		caches.allAvailabilityZones.by(userContext.region).list().sort { it.id }
 	}
 
-	Collection<Location> getRecommendedAvailabilityZones(UserContext userContext) {
+	Collection<AvailabilityZoneInfo> getRecommendedAvailabilityZones(UserContext userContext) {
 		List<String> discouragedAvailabilityZones = configService.discouragedAvailabilityZones
-		getAvailabilityZones(userContext).findAll { !(it.id in discouragedAvailabilityZones) }
+		getAvailabilityZones(userContext).findAll { !(it.zone in discouragedAvailabilityZones) }
 	}
 
 	// Images
@@ -162,7 +165,10 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 	}
 
 	private Collection<Subnet> retrieveSubnets(Region region) {
-		//computeServiceClientByRegion.by(region).describeSubnets().subnets
+		String regionCode = configService.getCloudProvider() == Provider.AWS ? region.code : "nova"
+		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(region).getContext());
+		log.info 'subetApi Present '+ ec2Client.subnetApi.present
+		//((SubnetApi)ec2Client.subnetApi.get()).filter(new SubnetFilterBuilder().availabilityZone(regionCode).build()).toList();
 		return null
 	}
 
@@ -177,6 +183,8 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 	}
 
 	private Collection<Vpc> retrieveVpcs(Region region) {
+		String regionCode = configService.getCloudProvider() == Provider.AWS ? region.code : "nova"
+		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(region).getContext());
 		//computeServiceClientByRegion.by(region).describeVpcs().vpcs
 		return null
 	}
@@ -296,8 +304,8 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 		List<String> defaultUserGrp = new ArrayList<String>();
 		defaultUserGrp.add("all");
 		taskService.runTask(userContext, "Set image ${imageId} launchers to ${userIds}", { task ->
-			ec2Client.aMIServices.removeLaunchPermissionsFromImageInRegion(userContext.region.code, userIds, defaultUserGrp, imageId);
-			ec2Client.aMIServices.addLaunchPermissionsToImageInRegion(regionCode, userIds, defaultUserGrp, imageId);
+			ec2Client.getAMIServices().removeLaunchPermissionsFromImageInRegion(regionCode, userIds, defaultUserGrp, imageId);
+			ec2Client.getAMIServices().addLaunchPermissionsToImageInRegion(regionCode, userIds, defaultUserGrp, imageId);
 		}, Link.to(EntityType.image, imageId))
 		getImage(userContext, imageId)
 	}
@@ -987,14 +995,17 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 	void deleteVolume(UserContext userContext, String volumeId) {
 		String regionCode = configService.getCloudProvider() == Provider.AWS ? userContext.region.code : "nova"
 		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
-		ec2Client.elasticBlockStoreServices.deleteVolumeInRegion(userContext.region, volumeId)
+		ec2Client.elasticBlockStoreServices.deleteVolumeInRegion(regionCode, volumeId)
 		// Do not remove it from the allVolumes map, as this prevents
 		// the list page from showing volumes that are in state "deleting".
 		// Volume deletes can take 20 minutes to process.
 	}
 
 	Volume createVolume(UserContext userContext, Integer size, String zone) {
-		createVolume(userContext, size, zone, null)
+		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
+		def volume=	ec2Client.elasticBlockStoreServices.createVolumeInAvailabilityZone(zone, size)
+		caches.allVolumes.by(userContext.region).put(volume.id, volume)
+		return volume
 	}
 
 	Volume createVolumeFromSnapshot(UserContext userContext, Integer size, String zone, String snapshotId) {
@@ -1051,11 +1062,10 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 		String regionCode = configService.getCloudProvider() == Provider.AWS ? userContext.region.code : "nova"
 		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
 
-
 		Snapshot snapshot = null
 		String msg = "Create snapshot for volume '${volumeId}' with description '${description}'"
 		taskService.runTask(userContext, msg, { task ->
-			snapshot = ec2Client.getElasticBlockStoreServices().createSnapshotInRegion(volumeId, withDescription(description))
+			snapshot = ec2Client.getElasticBlockStoreServices().createSnapshotInRegion(regionCode,volumeId, withDescription(description))
 			task.log("Snapshot ${snapshot.id} created")
 			caches.allSnapshots.by(userContext.region).put(snapshot.id, snapshot)
 		}, Link.to(EntityType.volume, volumeId))

@@ -133,7 +133,7 @@ class ApplicationController {
             List<String> clusterNames =
                     groups.collect { Relationships.clusterFromGroupName(it.autoScalingGroupName) }.unique()
             request.alertingServiceConfigUrl = configService.alertingServiceConfigUrl
-            SecurityGroup appSecurityGroup = awsEc2Service.getSecurityGroup(userContext, name)
+            //SecurityGroup appSecurityGroup = awsEc2Service.getSecurityGroup(userContext, name)
             boolean isChaosMonkeyActive = cloudReadyService.isChaosMonkeyActive(userContext.region)
             def details = [
                     app: app,
@@ -142,7 +142,7 @@ class ApplicationController {
                     groups: groups,
                     balancers: awsLoadBalancerService.getLoadBalancersForApp(userContext, name),
                     securities: awsEc2Service.getSecurityGroupsForApp(userContext, name),
-                    appSecurityGroup: appSecurityGroup,
+                    //appSecurityGroup: appSecurityGroup,
                     launches: awsAutoScalingService.getLaunchConfigurationsForApp(userContext, name),
                     isChaosMonkeyActive: isChaosMonkeyActive,
                     chaosMonkeyEditLink: cloudReadyService.constructChaosMonkeyEditLink(userContext.region, app.name)

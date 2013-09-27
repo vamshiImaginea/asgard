@@ -137,10 +137,11 @@ class ImageController {
         } else {
             UserContext userContext = UserContext.of(request)
             String imageId = params.id
+			imageId=URLDecoder.decode(imageId,'UTF-8');
             try {
                 Image image = awsEc2Service.getImage(userContext, imageId, From.CACHE)
-                String packageName = image.getPackageName()
-                imageService.deleteImage(userContext, imageId)
+                String packageName = image.getType()
+	            imageService.deleteImage(userContext, imageId)
                 flash.message = "Image '${imageId}' has been deleted."
                 redirect(action: 'list', params: [id: packageName])
             } catch (Exception e) {
@@ -153,6 +154,7 @@ class ImageController {
     def prelaunch = {
         UserContext userContext = UserContext.of(request)
         String imageId = EntityType.image.ensurePrefix(params.id)
+		imageId=URLDecoder.decode(imageId,'UTF-8')		
         Collection<InstanceTypeData> instanceTypes = instanceTypeService.getInstanceTypes(userContext)
         [
                  'imageId' : imageId,
@@ -432,7 +434,7 @@ class ImageDeleteCommand {
 
             // If AMI is in use by a launch config or instance in the current region-env then report those references.
             Collection<String> instances = command.awsEc2Service.
-                    getInstancesUsingImageId(userContext, value).collect { it.instanceId }
+                    getInstancesUsingImageId(userContext, value).collect { it.id }
             Collection<String> launchConfigurations = command.awsAutoScalingService.
                     getLaunchConfigurationsUsingImageId(userContext, value).collect { it.launchConfigurationName }
             if (instances || launchConfigurations) {

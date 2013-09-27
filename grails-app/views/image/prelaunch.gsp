@@ -52,10 +52,10 @@
             <td class="value">
               <select id="zone" name="zone">
                 <g:each var="z" in="${zoneList}">
-                  <g:if test="${zone == z.zoneName}">
-                    <option selected value="${z.zoneName}">${z.zoneName}</option>
+                  <g:if test="${zone == z.zone}">
+                    <option selected value="${z.zone}">${z.zone}</option>
                   </g:if>
-                  <g:else><option value="${z.zoneName}">${z.zoneName}</option></g:else>
+                  <g:else><option value="${z.zone}">${z.zone}</option></g:else>
                 </g:each>
               </select>
             </td>
@@ -65,7 +65,7 @@
             <td class="value">
               <select multiple="true" id="selectedGroups" name="selectedGroups">
                 <g:each var="g" in="${securityGroups}">
-                  <option value="${g.groupName}">${g.groupName}</option>
+                  <option value="${g.name}">${g.name}</option>
                 </g:each>
               </select>
             </td>

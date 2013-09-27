@@ -35,14 +35,15 @@
         <tr>
           <th>ID</th>
           <th>Name</th>
+          <th>Description</th>
           <th>Location</th>
           <th>Architecture</th>
           <th>State</th>
           <th>Owner</th>
-          <th>Creator</th><%--
-          <th>Creation Time</th>
-          <th>Last Used</th>
-          <th>Package Version</th>
+          <th>URI</th>
+          <th>User Data</th>
+          <%--<th>Login Credentials</th>
+          --%><th>Tags</th><%--
           <th>Base AMI ID</th>
           <th>Base AMI Date</th>
         --%></tr>
@@ -52,17 +53,18 @@
           <tr class="${(i % 2) == 0 ? 'odd' : 'even'}">
             <td><g:linkObject type="image" name="${image.id.encodeAsURL()}" >${image.id}</g:linkObject></td>
             <td class="ami">${image.name}</td>
+            <td class="ami">${image.description}</td>            
             <td class="ami">${image.location}</td>
             <td>${image.operatingSystem}</td>
             <td>${image.status}</td>
-            <td>${accounts[image.providerId] ?: image.providerId}</td>
-            <td>${image.providerId}</td>
-            <%--<td>${image.creationTime}</td>
-            <td>${image.lastReferencedTime}</td>
-            <td class="ami">${image.appVersion}</td>
+            <td>${image.userMetadata.owner}</td>
+           <td>${image.uri}</td>
+            <td>${image.userMetadata}</td><%--
+            <td>${image.defaultCredentials}</td>
+            --%><td class="ami">${image.tags}</td><%--
             <td><g:linkObject type="image" name="${image.baseAmiId}"/></td>
             <td><g:formatDate date="${image.baseAmiDate?.toDate()}" format="yyyy-MM-dd"/></td>
-          --%></tr>
+           --%></tr>
         </g:each>
         </tbody>
       </table>

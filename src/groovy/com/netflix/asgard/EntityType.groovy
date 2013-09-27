@@ -26,7 +26,11 @@ import org.codehaus.jackson.annotate.JsonProperty
 import org.jclouds.compute.domain.Image
 import org.jclouds.compute.domain.NodeMetadata;
 import org.jclouds.domain.Location
+import org.jclouds.ec2.domain.AvailabilityZoneInfo
+import org.jclouds.ec2.domain.KeyPair
+import org.jclouds.ec2.domain.SecurityGroup
 import org.jclouds.ec2.domain.Snapshot
+import org.jclouds.ec2.domain.Subnet
 import org.jclouds.ec2.domain.Volume
 
 import com.amazonaws.services.autoscaling.model.AutoScalingGroup
@@ -34,12 +38,8 @@ import com.amazonaws.services.autoscaling.model.LaunchConfiguration
 import com.amazonaws.services.autoscaling.model.ScalingPolicy
 import com.amazonaws.services.autoscaling.model.ScheduledUpdateGroupAction
 import com.amazonaws.services.cloudwatch.model.MetricAlarm
-//import com.amazonaws.services.ec2.model.AvailabilityZone
-import com.amazonaws.services.ec2.model.KeyPairInfo
 import com.amazonaws.services.ec2.model.ReservedInstances
-import com.amazonaws.services.ec2.model.SecurityGroup
 import com.amazonaws.services.ec2.model.SpotInstanceRequest
-import com.amazonaws.services.ec2.model.Subnet
 import com.amazonaws.services.ec2.model.Vpc
 import com.amazonaws.services.elasticloadbalancing.model.LoadBalancerDescription
 import com.amazonaws.services.elasticloadbalancing.model.SourceSecurityGroup
@@ -74,7 +74,7 @@ import com.netflix.asgard.push.Cluster
     static final EntityType<MetricId> metric = create('Metric', { it.displayText })
     static final EntityType<AutoScalingGroup> autoScaling = create('Auto Scaling Group',
             { it.autoScalingGroupName })
-    static final EntityType<Location> availabilityZone = create('Location', { it.id })
+    static final EntityType<AvailabilityZoneInfo> availabilityZone = create('Location', { it.zone })
     static final EntityType<Cluster> cluster = create('Cluster', { it.name }, '',
             'Show all the auto scaling groups in this cluster')
     static final EntityType<DBInstance> rdsInstance = create('Database Instance', { it.DBInstanceIdentifier })
@@ -92,7 +92,7 @@ import com.netflix.asgard.push.Cluster
     static final EntityType<NodeMetadata> instance = create('Node', { it.id }, 'i-')
     static final EntityType<InstanceHealth> instanceHealth = create('Instance Health', { it.instanceId })
     static final EntityType<InstanceTypeData> instanceType = create('Instance Type', { it.name })
-    static final EntityType<KeyPairInfo> keyPair = create('Key Pair', { it.keyName })
+    static final EntityType<KeyPair> keyPair = create('Key Pair', { it.keyName })
     static final EntityType<LaunchConfiguration> launchConfiguration = create('Launch Configuration',
             { it.launchConfigurationName })
     static final EntityType<LoadBalancerDescription> loadBalancer = create('Elastic Load Balancer',

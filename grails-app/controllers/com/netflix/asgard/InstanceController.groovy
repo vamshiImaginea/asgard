@@ -280,7 +280,7 @@ class InstanceController {
         if (autoScalingGroupName) {
             destination = [controller: 'autoScaling', action: 'show', params: [id: autoScalingGroupName, runHealthChecks: true]]
         } else if (instanceIds.size() == 1) {
-            destination = [action: 'show', params: [id: instanceIds[0]]]
+            destination = [action: 'show', params: [id: instanceIds[0].encodeAsURL()]]
         } else if (appName) {
             destination = [action: 'list', params: [id: appName]]
         }

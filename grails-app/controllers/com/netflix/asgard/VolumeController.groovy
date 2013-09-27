@@ -44,8 +44,8 @@ class VolumeController {
         try {
             Volume volume = awsEc2Service.createVolume(userContext, params.volumeSize as Integer,
                     params.availabilityZone)
-            flash.message = "EBS Volume '${volume.volumeId}' has been created."
-            redirect(action: 'show', params:[id:volume.volumeId])
+            flash.message = "EBS Volume '${volume.id}' has been created."
+            redirect(action: 'show', params:[id:volume.id])
         } catch (AmazonServiceException ase) {
             flash.message = "Could not create EBS Volume: ${ase}"
             redirect(action: 'list')

@@ -32,7 +32,7 @@
         <div class="buttons">
           <g:buttonSubmit class="create requireLogin" action="save" value="Create Volume"/><br/>
           <label>Volume Size (in GB):</label><g:textField name="volumeSize" size="12" placeholder="--ENTER SIZE--" class="required requireLogin"/>
-          <label>Availability Zone:</label><g:select name="availabilityZone" from="${zoneList.iso3166Codes}" class="requireLogin"/>
+          <label>Availability Zone:</label><g:select name="availabilityZone" from="${zoneList.zone}" class="requireLogin"/>
         </div>
         <table class="sortable">
           <thead>
