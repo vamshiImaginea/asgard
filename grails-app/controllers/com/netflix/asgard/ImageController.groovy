@@ -121,6 +121,7 @@ class ImageController {
     def update = {
         def imageId = EntityType.image.ensurePrefix(params.imageId)
         UserContext userContext = UserContext.of(request)
+		imageId=URLDecoder.decode(imageId,'UTF-8');
         List<String> launchPermissions = (params.launchPermissions instanceof String) ? [ params.launchPermissions ] : params.launchPermissions?: []
         try {
             awsEc2Service.setImageLaunchers(userContext, imageId, launchPermissions)
@@ -128,7 +129,7 @@ class ImageController {
         } catch (Exception e) {
             flash.message = "Could not update Image: ${e}"
         }
-        redirect(action: 'show', params: [id: imageId])
+        redirect(action: 'show', params: [id: URLEncoder.encode(imageId,'UTF-8')])
     }
 
     def delete = { ImageDeleteCommand cmd ->
@@ -146,7 +147,7 @@ class ImageController {
                 redirect(action: 'list', params: [id: packageName])
             } catch (Exception e) {
                 flash.message = "Could not delete image: ${e}"
-                redirect(action: 'show', params: [id: imageId])
+                redirect(action: 'show', params: [id: URLEncoder.encode(imageId,'UTF-8')])
             }
         }
     }

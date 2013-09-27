@@ -423,20 +423,23 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 			ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(region).getContext());
 			groups= ec2Client.securityGroupServices.describeSecurityGroupsInRegion(regionCode, groupName);
 			groups = Check.lone(groups, SecurityGroup)
-			groupName = groups?.name
-		} catch (AmazonServiceException e) {
-			// Can't find a security group with that request.
-			if (e.errorCode == 'InvalidParameterValue' && !groupId) {
+			//groupName = groups?.name
+		} catch (IllegalStateException e) {
+			log.error 'security group not found ' + e.printStackTrace()
+			 if (e.getCause() == 'InvalidParameterValue' && !groupId) {
 				// It's likely a VPC security group which we can't reference by name. Maybe it has an ID in the cache.
 				SecurityGroup cachedGroup = caches.allSecurityGroups.by(region).get(groupName)
 				if (cachedGroup) {
 					List<String> grooupIds= cachedGroup.id;
 					groups  = ec2Client.securityGroupServices.describeSecurityGroupsInRegion(regionCode,cachedGroup.id)
-					groups = Check.lone(groups, SecurityGroup)
+					if(!groups.empty && groups.size()==1){
+						groups = Check.lone(groups, SecurityGroup)
+					}
+					
 				}
 			}
 		}
-		if (groupName) {
+		if (groupName && !groups.empty) {
 			return caches.allSecurityGroups.by(region).put(groupName, groups)
 		}
 		null
@@ -496,11 +499,12 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 		String groupId = null
 		String regionCode = configService.getCloudProvider() == Provider.AWS ? userContext.region.code : "nova"
 		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
-
+		ec2Client.securityGroupServices.createSecurityGroupInRegion(regionCode, name, description);
+		
 		taskService.runTask(userContext, "Create Security Group ${name}", { task ->
-			groupId = ec2Client.securityGroupServices.createSecurityGroupInRegionAndReturnId(regionCode, name, description, vpcId(vpcId))
+		    ec2Client.securityGroupServices.createSecurityGroupInRegion(regionCode, name, description)
 		}, Link.to(EntityType.security, name))
-		getSecurityGroup(userContext, groupId)
+		getSecurityGroup(userContext, name)
 	}
 
 	void removeSecurityGroup(UserContext userContext, String name, String id) {
@@ -737,9 +741,9 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 	 */
 	Collection<NodeMetadata> getInstancesWithSecurityGroup(UserContext userContext, SecurityGroup securityGroup) {
 		getInstances(userContext).findAll {
-			String name = securityGroup.groupName
-			String id = securityGroup.groupId
-			(name && (name in it.securityGroups*.groupName)) || (id && (id in it.securityGroups*.groupId))
+			String name = securityGroup.name
+			String id = securityGroup.id
+			(name && (name in it.securityGroups*.name)) || (id && (id in it.securityGroups*.id))
 		}
 	}
 
