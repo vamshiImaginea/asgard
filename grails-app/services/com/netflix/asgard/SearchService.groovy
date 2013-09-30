@@ -47,6 +47,7 @@ class SearchService implements InitializingBean {
     def awsSqsService
     def awsRdsService
     def simpleDbDomainService
+	def regionService
 
     // Collect the known id prefixes to optimize for them
     Map<String, EntityType> prefixesToTypes = [:]
@@ -84,7 +85,7 @@ class SearchService implements InitializingBean {
         }
 
         // Region-specific objects
-        for (Region region in Region.values()) {
+        for (Region region in regionService.values()) {
             Map<EntityType, List> typesToRegionalLists = [:]
             for (String term in terms) {
                 EntityType guessedType = termsToGuessedTypes[term]

@@ -32,6 +32,7 @@ import com.netflix.asgard.model.MetricId
 import com.netflix.asgard.model.MetricNamespaces
 import com.netflix.asgard.model.SimpleDbSequenceLocator
 import com.netflix.asgard.retriever.AwsResultsRetriever
+
 import org.springframework.beans.factory.InitializingBean
 
 class AwsCloudWatchService implements CacheInitializer, InitializingBean {
@@ -46,6 +47,7 @@ class AwsCloudWatchService implements CacheInitializer, InitializingBean {
     def configService
     def emailerService
     def taskService
+	def regionService
 
     /** The location of the sequence number in SimpleDB */
     final SimpleDbSequenceLocator sequenceLocator = new SimpleDbSequenceLocator(region: Region.defaultRegion(),
@@ -60,9 +62,9 @@ class AwsCloudWatchService implements CacheInitializer, InitializingBean {
     }
 
     void initializeCaches() {
-        caches.allAlarms.ensureSetUp({ Region region -> retrieveAlarms(region) })
-        caches.allCustomMetrics.ensureSetUp({ retrieveCustomMetrics() })
-    }
+		caches.allAlarms.ensureSetUp({ Region region -> retrieveAlarms(region) })
+		caches.allCustomMetrics.ensureSetUp({ retrieveCustomMetrics() })
+	}
 
     private List<MetricId> retrieveCustomMetrics() {
         AwsResultsRetriever retriever = new AwsResultsRetriever<Metric, ListMetricsRequest, ListMetricsResult>() {
@@ -77,7 +79,7 @@ class AwsCloudWatchService implements CacheInitializer, InitializingBean {
     }
 
     private List<MetricId> retrieveCustomMetrics(AwsResultsRetriever retriever,
-            Collection<Region> regions = Region.values()) {
+            Collection<Region> regions = regionService.values()) {
         List<Metric> allMetrics = []
         configService.customMetricNamespacesToDimensions().keySet().each { String namespace ->
             regions.each { Region region ->
@@ -173,7 +175,7 @@ class AwsCloudWatchService implements CacheInitializer, InitializingBean {
             return UUID.randomUUID().toString()
         }
     }
-    List<Metric> getMetricsAppliedToGroups(Collection<Region> regions = Region.values()) {
+    List<Metric> getMetricsAppliedToGroups(Collection<Region> regions = regionService.values()) {
         DimensionFilter dimensionFilter = new DimensionFilter(name: AlarmData.DIMENSION_NAME_FOR_ASG)
         AwsResultsRetriever retriever = new AwsResultsRetriever<Metric, ListMetricsRequest, ListMetricsResult>() {
             ListMetricsResult makeRequest(Region region, ListMetricsRequest request) {

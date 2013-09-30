@@ -52,12 +52,14 @@ class JcloudsComputeService {
 	ComputeService getAWSComputeService(Region region){
 		Properties properties = new Properties();
 		properties.setProperty(PROPERTY_EC2_AMI_QUERY,"owner-id="+configService.publicResourceAccounts + configService.awsAccounts+"state=available;image-type=machine")
+		if(null != region)
 		properties.setProperty(LocationConstants.PROPERTY_REGIONS, region.code)
-		ComputeServiceContext context = ContextBuilder.newBuilder(Provider.AWS.jcloudsProviderMapping).overrides(properties).credentials("AKIAJ7RCWJDAISNDTA3Q", "zZyEoH/9yYK0lFcf6/dvcLvzs6+/VzcPghE0uN/1")
+		ContextBuilder context = ContextBuilder.newBuilder(Provider.AWS.jcloudsProviderMapping).overrides(properties).credentials("AKIAJ7RCWJDAISNDTA3Q", "zZyEoH/9yYK0lFcf6/dvcLvzs6+/VzcPghE0uN/1")
 				.modules(ImmutableSet.<Module> of(new SLF4JLoggingModule()))
-				.endpoint("https://ec2."+region.code+".amazonaws.com")
-				.buildView(ComputeServiceContext.class);
-		context.getComputeService();
+		if(null != region)
+			context.endpoint("https://ec2."+region.code+".amazonaws.com")
+		return context.buildView(ComputeServiceContext.class).getComputeService()
+
 	}
 
 

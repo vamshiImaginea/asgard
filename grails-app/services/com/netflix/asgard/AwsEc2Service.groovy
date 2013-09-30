@@ -101,6 +101,7 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 	def restClientService
 	def taskService
 	ThreadScheduler threadScheduler
+	def regionService
 	List<String> accounts = [] // main account is accounts[0]
 	/** The state names for instances that count against reservation usage. */
 	private static final List<String> ACTIVE_INSTANCE_STATES = ['pending', 'running'].asImmutable()
@@ -115,9 +116,16 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 
 		accounts = configService.awsAccounts
 	}
+	void initialiseComputeServiceClients() {
+		computeServiceClientByRegion = new MultiRegionAwsClient<ComputeService>({ Region region ->
+			jcloudsComputeService.getComputeServiceForProvider(region)
+		},regionService)
+
+		accounts = configService.awsAccounts
+	}
 
 	void initializeCaches() {
-		afterPropertiesSet()
+		initialiseComputeServiceClients()
 		caches.allKeyPairs.ensureSetUp({ Region region -> retrieveKeys(region) })
 		caches.allAvailabilityZones.ensureSetUp({ Region region -> retrieveAvailabilityZones(region) },{ Region region -> caches.allKeyPairs.by(region).fill() })
 		caches.allImages.ensureSetUp({ Region region -> retrieveImages(region) })

@@ -53,15 +53,15 @@ class InstanceTypeService implements CacheInitializer {
 
     void initializeCaches() {
         // Use one thread for all these data sources. None of these need updating more than once an hour.
-        caches.allOnDemandPrices.ensureSetUp({ retrieveInstanceTypeOnDemandPricing() })
-        caches.allReservedPrices.ensureSetUp({ retrieveInstanceTypeReservedPricing() })
-        caches.allSpotPrices.ensureSetUp({ retrieveInstanceTypeSpotPricing() })
-        caches.allInstanceTypes.ensureSetUp({ Region region -> buildInstanceTypes(region) })
-        caches.allHardwareProfiles.ensureSetUp({ retrieveHardwareProfiles() }, {
-            caches.allOnDemandPrices.fill()
-            caches.allReservedPrices.fill()
-            caches.allSpotPrices.fill()
-            caches.allInstanceTypes.fill()
+		caches.allOnDemandPrices.ensureSetUp({ retrieveInstanceTypeOnDemandPricing() })
+		caches.allReservedPrices.ensureSetUp({ retrieveInstanceTypeReservedPricing() })
+		caches.allSpotPrices.ensureSetUp({ retrieveInstanceTypeSpotPricing() })
+		caches.allInstanceTypes.ensureSetUp({ Region region -> buildInstanceTypes(region) })
+		caches.allHardwareProfiles.ensureSetUp({ retrieveHardwareProfiles() }, {
+			caches.allOnDemandPrices.fill()
+			caches.allReservedPrices.fill()
+			caches.allSpotPrices.fill()
+			caches.allInstanceTypes.fill()
         })
     }
 

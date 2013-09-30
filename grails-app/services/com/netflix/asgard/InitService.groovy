@@ -35,7 +35,9 @@ class InitService implements ApplicationContextAware {
 	Caches caches
 
 	def configService
+	def regionService
 	def grailsApplication // modifying the config object directly here
+	CachedMapBuilder cachedMapBuilder
 
 	/**
 	 * Creates the Asgard Config.groovy file and updates the in memory configuration to reflect the configured state
@@ -104,16 +106,25 @@ class InitService implements ApplicationContextAware {
 	 * @return true if all caches have completed their initial load, false otherwise
 	 */
 	boolean cachesFilled() {
-		Collection<Fillable> fillableCaches = caches.properties*.value.findAll { it instanceof Fillable }
-		!fillableCaches.find { !it.filled }
+		Collection<Fillable> fillableCaches = [caches.allImages,caches.allInstances,caches.allVolumes,caches.allSecurityGroups]
+		!fillableCaches.find {
+			!it.filled
+			 }
+		
 	}
 	void removeCaches() {
-		Collection<Fillable> fillableCaches = caches.properties*.value.findAll { it instanceof Fillable }
+		regionService.reloadRegions = true
+		RegionFilters.defaultRegionSet = false
+		cachedMapBuilder.regions = regionService.values()
+		caches.rebuild(cachedMapBuilder,configService)
+	/*	cachedMapBuilder.regions = regionService.values()
+		println regionService.values()*/
+		/*Collection<Fillable> fillableCaches = caches.properties*.value.findAll { it instanceof Fillable }
 		for(Iterator<Fillable> i = fillableCaches.iterator(); i.hasNext();){
 			Fillable item = i.next();
 			item.removeCachedEntries();
 		}
-
+*/
 
 	}
 }

@@ -250,9 +250,9 @@ class CachedMap<T> implements Fillable {
      */
     protected void afterAttemptedFillPermitAcquisition() { }
 
-    boolean isFilled() {
-        !doingFirstFill
-    }
+	boolean isFilled() {
+		!doingFirstFill
+	}
 
     T put(String key, T value) {
         registerActivity()

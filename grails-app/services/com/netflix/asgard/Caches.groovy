@@ -58,98 +58,106 @@ import org.jclouds.ec2.domain.Volume
  */
 class Caches {
 
-    final CachedMap<ActivityTypeInfo> allActivityTypes
-    final CachedMap<WorkflowExecutionInfo> allClosedWorkflowExecutions
-    final CachedMap<WorkflowExecutionInfo> allOpenWorkflowExecutions
-    final CachedMap<AppRegistration> allApplications
-    final CachedMap<MetricId> allCustomMetrics
-    final CachedMap<HardwareProfile> allHardwareProfiles
-    final CachedMap<String> allTerminationPolicyTypes
-    final CachedMap<WorkflowTypeInfo> allWorkflowTypes
-    final CachedMap<DomainInfo> allWorkflowDomains
+     CachedMap<ActivityTypeInfo> allActivityTypes
+     CachedMap<WorkflowExecutionInfo> allClosedWorkflowExecutions
+     CachedMap<WorkflowExecutionInfo> allOpenWorkflowExecutions
+     CachedMap<AppRegistration> allApplications
+     CachedMap<MetricId> allCustomMetrics
+     CachedMap<HardwareProfile> allHardwareProfiles
+     CachedMap<String> allTerminationPolicyTypes
+     CachedMap<WorkflowTypeInfo> allWorkflowTypes
+     CachedMap<DomainInfo> allWorkflowDomains
 
-    final MultiRegionCachedMap<MetricAlarm> allAlarms
-    final MultiRegionCachedMap<ApplicationInstance> allApplicationInstances
-    final MultiRegionCachedMap<AutoScalingGroup> allAutoScalingGroups
-    final MultiRegionCachedMap<AvailabilityZoneInfo> allAvailabilityZones
-    final MultiRegionCachedMap<Cluster> allClusters
-    final MultiRegionCachedMap<DBInstance> allDBInstances
-    final MultiRegionCachedMap<DBSecurityGroup> allDBSecurityGroups
-    final MultiRegionCachedMap<DBSnapshot> allDBSnapshots
-    final MultiRegionCachedMap<String> allDomains
-    final MultiRegionCachedMap<String> allEurekaAddresses
-    final MultiRegionCachedMap<FastProperty> allFastProperties
-    final MultiRegionCachedMap<Image> allImages
-    final MultiRegionCachedMap<NodeMetadata> allInstances
-    final MultiRegionCachedMap<InstanceHealth> allSignificantStackInstanceHealthChecks
-    final MultiRegionCachedMap<InstanceTypeData> allInstanceTypes
-    final MultiRegionCachedMap<KeyPair> allKeyPairs
-    final MultiRegionCachedMap<LaunchConfiguration> allLaunchConfigurations
-    final MultiRegionCachedMap<LoadBalancerDescription> allLoadBalancers
-    final MultiRegionCachedMap<SimpleQueue> allQueues
-    final MultiRegionCachedMap<ReservedInstances> allReservedInstancesGroups
-    final MultiRegionCachedMap<ScalingPolicy> allScalingPolicies
-    final MultiRegionCachedMap<ScheduledUpdateGroupAction> allScheduledActions
-    final MultiRegionCachedMap<SecurityGroup> allSecurityGroups
-    final MultiRegionCachedMap<Snapshot> allSnapshots
-    final MultiRegionCachedMap<SourceSecurityGroup> allSourceSecurityGroups
-    final MultiRegionCachedMap<SpotInstanceRequest> allSpotInstanceRequests
-    final MultiRegionCachedMap<Subnet> allSubnets
-    final MultiRegionCachedMap<TopicData> allTopics
-    final MultiRegionCachedMap<Volume> allVolumes
-    final MultiRegionCachedMap<Vpc> allVpcs
+     MultiRegionCachedMap<MetricAlarm> allAlarms
+     MultiRegionCachedMap<ApplicationInstance> allApplicationInstances
+     MultiRegionCachedMap<AutoScalingGroup> allAutoScalingGroups
+     MultiRegionCachedMap<AvailabilityZoneInfo> allAvailabilityZones
+     MultiRegionCachedMap<Cluster> allClusters
+     MultiRegionCachedMap<DBInstance> allDBInstances
+     MultiRegionCachedMap<DBSecurityGroup> allDBSecurityGroups
+     MultiRegionCachedMap<DBSnapshot> allDBSnapshots
+     MultiRegionCachedMap<String> allDomains
+     MultiRegionCachedMap<String> allEurekaAddresses
+     MultiRegionCachedMap<FastProperty> allFastProperties
+     MultiRegionCachedMap<Image> allImages
+     MultiRegionCachedMap<NodeMetadata> allInstances
+     MultiRegionCachedMap<InstanceHealth> allSignificantStackInstanceHealthChecks
+     MultiRegionCachedMap<InstanceTypeData> allInstanceTypes
+     MultiRegionCachedMap<KeyPair> allKeyPairs
+     MultiRegionCachedMap<LaunchConfiguration> allLaunchConfigurations
+     MultiRegionCachedMap<LoadBalancerDescription> allLoadBalancers
+     MultiRegionCachedMap<SimpleQueue> allQueues
+     MultiRegionCachedMap<ReservedInstances> allReservedInstancesGroups
+     MultiRegionCachedMap<ScalingPolicy> allScalingPolicies
+     MultiRegionCachedMap<ScheduledUpdateGroupAction> allScheduledActions
+     MultiRegionCachedMap<SecurityGroup> allSecurityGroups
+     MultiRegionCachedMap<Snapshot> allSnapshots
+     MultiRegionCachedMap<SourceSecurityGroup> allSourceSecurityGroups
+     MultiRegionCachedMap<SpotInstanceRequest> allSpotInstanceRequests
+     MultiRegionCachedMap<Subnet> allSubnets
+     MultiRegionCachedMap<TopicData> allTopics
+     MultiRegionCachedMap<Volume> allVolumes
+     MultiRegionCachedMap<Vpc> allVpcs
 
-    final MultiRegionInstancePrices allOnDemandPrices
-    final MultiRegionInstancePrices allReservedPrices
-    final MultiRegionInstancePrices allSpotPrices
+     MultiRegionInstancePrices allOnDemandPrices
+     MultiRegionInstancePrices allReservedPrices
+     MultiRegionInstancePrices allSpotPrices
 
     Caches(CachedMapBuilder cachedMapBuilder, ConfigService configService = null) {
 
-        allClusters = cachedMapBuilder.of(EntityType.cluster).buildMultiRegionCachedMap()
-        allAutoScalingGroups = cachedMapBuilder.of(EntityType.autoScaling, 120).buildMultiRegionCachedMap()
-        allLaunchConfigurations = cachedMapBuilder.of(EntityType.launchConfiguration, 180).buildMultiRegionCachedMap()
-        allLoadBalancers = cachedMapBuilder.of(EntityType.loadBalancer, 120).buildMultiRegionCachedMap()
-        allSourceSecurityGroups = cachedMapBuilder.of(EntityType.sourceSecurityGroup).buildMultiRegionCachedMap()
-        allAvailabilityZones = cachedMapBuilder.of(EntityType.availabilityZone, 3600).buildMultiRegionCachedMap()
-        allSubnets = cachedMapBuilder.of(EntityType.subnet, 3600).buildMultiRegionCachedMap()
-        allVpcs = cachedMapBuilder.of(EntityType.vpc, 3600).buildMultiRegionCachedMap()
-        allKeyPairs = cachedMapBuilder.of(EntityType.keyPair).buildMultiRegionCachedMap()
-        allImages = cachedMapBuilder.of(EntityType.image, 120).buildMultiRegionCachedMap()
-        allInstances = cachedMapBuilder.of(EntityType.instance, 120).buildMultiRegionCachedMap()
-        allSpotInstanceRequests = cachedMapBuilder.of(EntityType.spotInstanceRequest, 120).buildMultiRegionCachedMap()
-        allApplicationInstances = cachedMapBuilder.of(EntityType.applicationInstance, 60).buildMultiRegionCachedMap()
-        allReservedInstancesGroups = cachedMapBuilder.of(EntityType.reservation, 3600).buildMultiRegionCachedMap()
-        allSecurityGroups = cachedMapBuilder.of(EntityType.security, 120).buildMultiRegionCachedMap()
-        allSnapshots = cachedMapBuilder.of(EntityType.snapshot, 300).buildMultiRegionCachedMap()
-        allVolumes = cachedMapBuilder.of(EntityType.volume, 300).buildMultiRegionCachedMap()
-        allDomains = cachedMapBuilder.of(EntityType.domain, 120).buildMultiRegionCachedMap()
-        allEurekaAddresses = cachedMapBuilder.of(EntityType.eurekaAddress, 120).buildMultiRegionCachedMap()
-        allTopics = cachedMapBuilder.of(EntityType.topic, 120).buildMultiRegionCachedMap()
-        allQueues = cachedMapBuilder.of(EntityType.queue, 120).buildMultiRegionCachedMap()
-        allAlarms = cachedMapBuilder.of(EntityType.alarm, 120).buildMultiRegionCachedMap()
-        allDBInstances = cachedMapBuilder.of(EntityType.rdsInstance, 120).buildMultiRegionCachedMap()
-        allDBSecurityGroups = cachedMapBuilder.of(EntityType.dbSecurity, 120).buildMultiRegionCachedMap()
-        allDBSnapshots = cachedMapBuilder.of(EntityType.dbSnapshot, 120).buildMultiRegionCachedMap()
-        allFastProperties = cachedMapBuilder.of(EntityType.fastProperty, 180).buildMultiRegionCachedMap(configService?.
-                platformServiceRegions)
-        allScalingPolicies = cachedMapBuilder.of(EntityType.scalingPolicy, 120).buildMultiRegionCachedMap()
-        allScheduledActions = cachedMapBuilder.of(EntityType.scheduledAction, 120).buildMultiRegionCachedMap()
-        allSignificantStackInstanceHealthChecks = cachedMapBuilder.of(EntityType.instanceHealth, 300).
-                buildMultiRegionCachedMap()
-        allActivityTypes = cachedMapBuilder.of(EntityType.activityType, 120).buildCachedMap()
-        allOpenWorkflowExecutions = cachedMapBuilder.of(EntityType.workflowExecution, 30).buildCachedMap()
-        allClosedWorkflowExecutions = cachedMapBuilder.of(EntityType.workflowExecution, 30).buildCachedMap()
-        allApplications = cachedMapBuilder.of(EntityType.application, 120).buildCachedMap()
-        allCustomMetrics = cachedMapBuilder.of(EntityType.metric, 120).buildCachedMap()
-        allWorkflowTypes = cachedMapBuilder.of(EntityType.workflowType, 120).buildCachedMap()
-        allWorkflowDomains = cachedMapBuilder.of(EntityType.workflowDomain, 3600).buildCachedMap()
-
-        // Use one thread for all instance type and pricing caches. None of these need updating more than once an hour.
-        allHardwareProfiles = cachedMapBuilder.of(EntityType.hardwareProfile, 3600).buildCachedMap()
-        allOnDemandPrices = MultiRegionInstancePrices.create('On Demand Prices')
-        allReservedPrices = MultiRegionInstancePrices.create('Reserved Prices')
-        allSpotPrices = MultiRegionInstancePrices.create('Spot Prices')
-        allInstanceTypes = cachedMapBuilder.of(EntityType.instanceType).buildMultiRegionCachedMap()
-        allTerminationPolicyTypes = cachedMapBuilder.of(EntityType.terminationPolicyType, 3600).buildCachedMap()
+        initialise(cachedMapBuilder, configService)
     }
+
+	private initialise(CachedMapBuilder cachedMapBuilder, ConfigService configService) {
+		allClusters = cachedMapBuilder.of(EntityType.cluster).buildMultiRegionCachedMap()
+		allAutoScalingGroups = cachedMapBuilder.of(EntityType.autoScaling, 120).buildMultiRegionCachedMap()
+		allLaunchConfigurations = cachedMapBuilder.of(EntityType.launchConfiguration, 180).buildMultiRegionCachedMap()
+		allLoadBalancers = cachedMapBuilder.of(EntityType.loadBalancer, 120).buildMultiRegionCachedMap()
+		allSourceSecurityGroups = cachedMapBuilder.of(EntityType.sourceSecurityGroup).buildMultiRegionCachedMap()
+		allAvailabilityZones = cachedMapBuilder.of(EntityType.availabilityZone, 3600).buildMultiRegionCachedMap()
+		allSubnets = cachedMapBuilder.of(EntityType.subnet, 3600).buildMultiRegionCachedMap()
+		allVpcs = cachedMapBuilder.of(EntityType.vpc, 3600).buildMultiRegionCachedMap()
+		allKeyPairs = cachedMapBuilder.of(EntityType.keyPair).buildMultiRegionCachedMap()
+		allImages = cachedMapBuilder.of(EntityType.image, 120).buildMultiRegionCachedMap()
+		allInstances = cachedMapBuilder.of(EntityType.instance, 120).buildMultiRegionCachedMap()
+		allSpotInstanceRequests = cachedMapBuilder.of(EntityType.spotInstanceRequest, 120).buildMultiRegionCachedMap()
+		allApplicationInstances = cachedMapBuilder.of(EntityType.applicationInstance, 60).buildMultiRegionCachedMap()
+		allReservedInstancesGroups = cachedMapBuilder.of(EntityType.reservation, 3600).buildMultiRegionCachedMap()
+		allSecurityGroups = cachedMapBuilder.of(EntityType.security, 120).buildMultiRegionCachedMap()
+		allSnapshots = cachedMapBuilder.of(EntityType.snapshot, 300).buildMultiRegionCachedMap()
+		allVolumes = cachedMapBuilder.of(EntityType.volume, 300).buildMultiRegionCachedMap()
+		allDomains = cachedMapBuilder.of(EntityType.domain, 120).buildMultiRegionCachedMap()
+		allEurekaAddresses = cachedMapBuilder.of(EntityType.eurekaAddress, 120).buildMultiRegionCachedMap()
+		allTopics = cachedMapBuilder.of(EntityType.topic, 120).buildMultiRegionCachedMap()
+		allQueues = cachedMapBuilder.of(EntityType.queue, 120).buildMultiRegionCachedMap()
+		allAlarms = cachedMapBuilder.of(EntityType.alarm, 120).buildMultiRegionCachedMap()
+		allDBInstances = cachedMapBuilder.of(EntityType.rdsInstance, 120).buildMultiRegionCachedMap()
+		allDBSecurityGroups = cachedMapBuilder.of(EntityType.dbSecurity, 120).buildMultiRegionCachedMap()
+		allDBSnapshots = cachedMapBuilder.of(EntityType.dbSnapshot, 120).buildMultiRegionCachedMap()
+		allFastProperties = cachedMapBuilder.of(EntityType.fastProperty, 180).buildMultiRegionCachedMap(configService?.
+				platformServiceRegions)
+		allScalingPolicies = cachedMapBuilder.of(EntityType.scalingPolicy, 120).buildMultiRegionCachedMap()
+		allScheduledActions = cachedMapBuilder.of(EntityType.scheduledAction, 120).buildMultiRegionCachedMap()
+		allSignificantStackInstanceHealthChecks = cachedMapBuilder.of(EntityType.instanceHealth, 300).
+				buildMultiRegionCachedMap()
+		allActivityTypes = cachedMapBuilder.of(EntityType.activityType, 120).buildCachedMap()
+		allOpenWorkflowExecutions = cachedMapBuilder.of(EntityType.workflowExecution, 30).buildCachedMap()
+		allClosedWorkflowExecutions = cachedMapBuilder.of(EntityType.workflowExecution, 30).buildCachedMap()
+		allApplications = cachedMapBuilder.of(EntityType.application, 120).buildCachedMap()
+		allCustomMetrics = cachedMapBuilder.of(EntityType.metric, 120).buildCachedMap()
+		allWorkflowTypes = cachedMapBuilder.of(EntityType.workflowType, 120).buildCachedMap()
+		allWorkflowDomains = cachedMapBuilder.of(EntityType.workflowDomain, 3600).buildCachedMap()
+
+		// Use one thread for all instance type and pricing caches. None of these need updating more than once an hour.
+		allHardwareProfiles = cachedMapBuilder.of(EntityType.hardwareProfile, 3600).buildCachedMap()
+		allOnDemandPrices = MultiRegionInstancePrices.create('On Demand Prices')
+		allReservedPrices = MultiRegionInstancePrices.create('Reserved Prices')
+		allSpotPrices = MultiRegionInstancePrices.create('Spot Prices')
+		allInstanceTypes = cachedMapBuilder.of(EntityType.instanceType).buildMultiRegionCachedMap()
+		allTerminationPolicyTypes = cachedMapBuilder.of(EntityType.terminationPolicyType, 3600).buildCachedMap()
+	}
+	void rebuild(CachedMapBuilder cachedMapBuilder, ConfigService configService = null){
+		
+		initialise(cachedMapBuilder, configService)
+	}
 }

@@ -21,6 +21,7 @@ import grails.converters.XML
 class RegionController {
 
     def configService
+	def regionService
 
     def index = {
         chain(action: 'list', params: [format: request.format])
@@ -28,7 +29,7 @@ class RegionController {
 
     def list = {
         List<Map> details = []
-        for (Region reg in Region.values()) {
+        for (Region reg in regionService.values()) {
 
             List<Map<String, String>> envs = grailsApplication.config.grails.awsAccounts.collect { String accountNum ->
                 String env = grailsApplication.config.grails.awsAccountNames[accountNum]

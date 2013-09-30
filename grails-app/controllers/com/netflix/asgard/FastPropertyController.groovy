@@ -31,7 +31,7 @@ class FastPropertyController {
     def awsEc2Service
     def configService
     def fastPropertyService
-
+    def regionService
     def index = { redirect(action: 'list', params: params) }
 
     def apps = {
@@ -85,7 +85,7 @@ class FastPropertyController {
     def create = {
         final UserContext userContext = UserContext.of(request)
         List<String> appNames = fastPropertyService.collectFastPropertyAppNames(userContext)
-        Collection regionOptions = Region.values()
+        Collection regionOptions = regionService.values()
         regionOptions.addAll(configService.specialCaseRegions)
         List<String> asgNames = awsAutoScalingService.getAutoScalingGroups(userContext)*.autoScalingGroupName.sort()
         List<String> clusterNames = awsAutoScalingService.getClusters(userContext)*.name.sort()

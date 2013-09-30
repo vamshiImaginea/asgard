@@ -59,6 +59,7 @@ class ImageService implements BackgroundProcessInitializer {
     def mergedInstanceGroupingService
     def taskService
 	def scheduledfuture
+	def regionService
     private ScheduledExecutorService replicationExecutor
 	
 
@@ -73,7 +74,7 @@ class ImageService implements BackgroundProcessInitializer {
     }
 
 	void cancel(){
-		if(!scheduledfuture)
+		if(null != scheduledfuture)
 		scheduledfuture.cancel(true)
 	}
     List<SpotInstanceRequest> requestSpotInstances(UserContext userContext, String imageId, Integer count,
@@ -143,7 +144,7 @@ class ImageService implements BackgroundProcessInitializer {
         String taskMessage = "Tagging all in-use AMIs with last_referenced_time ${now}"
         taskService.startTask(userContext, taskMessage, { Task task ->
             Collection<String> inUseImageNames = findInUseImageNamesForAllRegions(task)
-            Region.values().each { Region region ->
+            regionService.values().each { Region region ->
                 UserContext userContextForRegion = task.userContext.withRegion(region)
                 Collection<Image> images = awsEc2Service.getAccountImages(userContextForRegion)
                 Collection<String> imageIdsToTag = images.findAll { inUseImageNames.contains(it.name) }*.imageId
@@ -157,7 +158,7 @@ class ImageService implements BackgroundProcessInitializer {
     }
 
     private Set<String> findInUseImageNamesForAllRegions(Task task) {
-        Region.values().collect { Region region ->
+        regionService.values().collect { Region region ->
             findInUseImageNamesForRegion(task, region)
         }.flatten() as Set
     }
@@ -260,7 +261,7 @@ class ImageService implements BackgroundProcessInitializer {
             String promotionTargetServer = grailsApplication.config.promote.targetServer
             checkServerHealth(promotionTargetServer)
 
-            Region.values().each { replicateTagsForRegion(promotionTargetServer, it) }
+            regionService.values().each { replicateTagsForRegion(promotionTargetServer, it) }
             log.info 'ImageTagReplicator done'
         } catch (Exception e) {
             log.error "ImageTagReplicator failed: ${e}"

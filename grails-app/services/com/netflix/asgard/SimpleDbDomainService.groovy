@@ -29,7 +29,7 @@ class SimpleDbDomainService implements CacheInitializer {
     def taskService
 
     void initializeCaches() {
-        caches.allDomains.ensureSetUp({ Region region -> retrieveDomains(region) })
+       caches.allDomains.ensureSetUp({ Region region -> retrieveDomains(region) })
     }
 
     private List<String> retrieveDomains(Region region) {

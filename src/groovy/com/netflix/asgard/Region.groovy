@@ -15,112 +15,146 @@
  */
 package com.netflix.asgard
 
+import java.net.URI;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.Map.Entry;
+
+import groovy.transform.Immutable;
+
+import org.jclouds.compute.ComputeService
+import org.jclouds.ec2.EC2Client;
+
+import com.google.common.cache.LocalCache.Values;
+
 /**
  * A way to indicate a choice of region within the Amazon Web Services global service offering.
  */
-enum Region {
+@Immutable
+class Region {
 
-    US_EAST_1('us-east-1',
-            'us-east',
-            'us-east-1.png',
-            'Virginia'
-    )/*,
+	static final Region US_EAST_1 = new Region(code:'us-east-1'/*,
+	pricingJsonCode:'us-east',
+	mapImageFileName: 'us-east-1.png',
+	location: 'Virginia'*/)/*,
+	 US_WEST_1('us-west-1',
+	 'us-west',
+	 'us-west-1.png',
+	 'California'
+	 ),
+	 US_WEST_2('us-west-2',
+	 'us-west-2',
+	 'us-west-2.png',
+	 'Oregon'
+	 ),
+	 EU_WEST_1('eu-west-1',
+	 'eu-ireland',
+	 'eu-west-1.png',
+	 'Ireland'
+	 ),
+	 AP_NORTHEAST_1('ap-northeast-1',
+	 'apac-tokyo',
+	 'ap-northeast-1.png',
+	 'Tokyo'
+	 ),
+	 AP_SOUTHEAST_1('ap-southeast-1',
+	 'apac-sin',
+	 'ap-southeast-1.png',
+	 'Singapore'
+	 ),
+	 AP_SOUTHEAST_2('ap-southeast-2',
+	 'apac-syd',
+	 'ap-southeast-2.png',
+	 'Sydney'
+	 ),
+	 SA_EAST_1('sa-east-1',
+	 'sa-east-1',
+	 'sa-east-1.png',
+	 'Sao Paulo'
+	 )*/
 
-    US_WEST_1('us-west-1',
-            'us-west',
-            'us-west-1.png',
-            'California'
-    ),
+	String code
+	String endpoint
+/*	String pricingJsonCode
+	String mapImageFileName
+	String location*/
 
-    US_WEST_2('us-west-2',
-            'us-west-2',
-            'us-west-2.png',
-            'Oregon'
-    ),
+	/*   Region(String code, String pricingJsonCode, mapImageFileName, location) {
+	 this.code = code
+	 this.pricingJsonCode = pricingJsonCode
+	 this.mapImageFileName = mapImageFileName
+	 this.location = location
+	 }*/
+	static List<Region> values(){
 
-    EU_WEST_1('eu-west-1',
-            'eu-ireland',
-            'eu-west-1.png',
-            'Ireland'
-    ),
+/*		JcloudsComputeService cloudsComputeService = new JcloudsComputeService()
+		ComputeService computeService = cloudsComputeService.getOpenStackComputeService()
+		EC2Client ec2Client = cloudsComputeService.getProivderClient(computeService.getContext())
+		Set<Entry<String, URI>> entry = ec2Client.getAvailabilityZoneAndRegionServices().describeRegions(null).entrySet();*/
 
-    AP_NORTHEAST_1('ap-northeast-1',
-            'apac-tokyo',
-            'ap-northeast-1.png',
-            'Tokyo'
-    ),
+	
+		
+		List<Region> regions = [new Region(code:'us-east-1',endpoint:''/*,
+			pricingJsonCode:'us-east',
+			mapImageFileName: 'us-east-1.png',
+			location: 'Virginia'*/)/*new Region('us-west-1',
+			 'us-west',
+			 'us-west-1.png',
+			 'California')*/]
+		regions
+	}
+	@Override
+	boolean equals( param0) {
 
-    AP_SOUTHEAST_1('ap-southeast-1',
-            'apac-sin',
-            'ap-southeast-1.png',
-            'Singapore'
-    ),
+		return ((Region)param0).code.equalsIgnoreCase(this.code)
+	};
 
-    AP_SOUTHEAST_2('ap-southeast-2',
-            'apac-syd',
-            'ap-southeast-2.png',
-            'Sydney'
-    ),
+	@Override
+	int hashCode() {
+		return code.hash
 
-    SA_EAST_1('sa-east-1',
-            'sa-east-1',
-            'sa-east-1.png',
-            'Sao Paulo'
-    )*/
+	};
+	/**
+	 * Takes a canonical identifier for an AWS region and returns the matching Region object. If no match exists, this
+	 * method returns null.
+	 *
+	 * @pgaram code a String such as us-east-1 or ap-southeast-1
+	 * @return Region a matching Region object, or null if no match found
+	 */
+	static Region withCode(String code) {
+		Region.values().find { it.code == code } as Region
+	}
 
-    String code
-    String pricingJsonCode
-    String mapImageFileName
-    String location
+	/**
+	 * Takes a region identifier used in Amazon's pricing JSON data and returns the matching Region object.
+	 * If no match exists, this method returns null.
+	 *
+	 * @param jsonPricingCode a String such as us-east or apac-tokyo
+	 * @return Region a matching Region object, or null if no match found
+	 */
+	static Region withPricingJsonCode(String pricingJsonCode) {
+		Region.US_EAST_1
+	}
 
-    Region(String code, String pricingJsonCode, mapImageFileName, location) {
-        this.code = code
-        this.pricingJsonCode = pricingJsonCode
-        this.mapImageFileName = mapImageFileName
-        this.location = location
-    }
+	/**
+	 * There are times (such as during development) when it is useful to only use a subset of regions by specifying a
+	 * system property.
+	 *
+	 * @return List < Region > subset of regions if "onlyRegions" system property is specified, otherwise an empty list
+	 */
+	static List<Region> getLimitedRegions() {
+		String onlyRegions = System.getProperty('onlyRegions')
+		if (onlyRegions) {
+			List<String> regionNames = onlyRegions.tokenize(',')
+			return regionNames.collect { Region.withCode(it) }
+		}
+		[]
+	}
+	static Region defaultRegion() { Region.US_EAST_1 }
 
-    /**
-     * Takes a canonical identifier for an AWS region and returns the matching Region object. If no match exists, this
-     * method returns null.
-     *
-     * @param code a String such as us-east-1 or ap-southeast-1
-     * @return Region a matching Region object, or null if no match found
-     */
-    static Region withCode(String code) {
-        Region.values().find { it.code == code } as Region
-    }
+	String getDescription() {
+		code
+	}
 
-    /**
-     * Takes a region identifier used in Amazon's pricing JSON data and returns the matching Region object.
-     * If no match exists, this method returns null.
-     *
-     * @param jsonPricingCode a String such as us-east or apac-tokyo
-     * @return Region a matching Region object, or null if no match found
-     */
-    static Region withPricingJsonCode(String pricingJsonCode) {
-        return pricingJsonCode ? Region.values().find { it.pricingJsonCode == pricingJsonCode } as Region : null
-    }
-
-    /**
-     * There are times (such as during development) when it is useful to only use a subset of regions by specifying a
-     * system property.
-     *
-     * @return List < Region > subset of regions if "onlyRegions" system property is specified, otherwise an empty list
-     */
-    static List<Region> getLimitedRegions() {
-        String onlyRegions = System.getProperty('onlyRegions')
-        if (onlyRegions) {
-            List<String> regionNames = onlyRegions.tokenize(',')
-            return regionNames.collect { Region.withCode(it) }
-        }
-        []
-    }
-    static Region defaultRegion() { Region.US_EAST_1 }
-
-    String getDescription() {
-        "$code ($location)"
-    }
-
-    String toString() { code }
+	String toString() { code }
 }

@@ -29,9 +29,10 @@ package com.netflix.asgard
  */
 class CachedMapBuilder<T> {
     private final ThreadScheduler threadScheduler
-    private final Collection<Region> regions
+    private  Collection<Region> regions
     final EntityType entityType
     final Integer interval
+	def regionService
 
     // This constructor is private to indicate that it is not part of the public API. See usage above
     private CachedMapBuilder(ThreadScheduler threadScheduler, Collection<Region> regions, EntityType entityType,

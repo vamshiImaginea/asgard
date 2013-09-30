@@ -22,6 +22,7 @@ package com.netflix.asgard
  */
 class MultiRegionAwsClient<T> {
 
+	
     private Map<Region, T> regionsToAwsClients = [:]
 
     MultiRegionAwsClient(Closure clientCreator) {
@@ -29,7 +30,11 @@ class MultiRegionAwsClient<T> {
             regionsToAwsClients[region] = (T) clientCreator.call(region)
         }
     }
-
+	MultiRegionAwsClient(Closure clientCreator,RegionService regionService) {
+		regionService.values().each { Region region ->
+			regionsToAwsClients[region] = (T) clientCreator.call(region)
+		}
+	}
     T by(Region region) {
         regionsToAwsClients[region]
     }
