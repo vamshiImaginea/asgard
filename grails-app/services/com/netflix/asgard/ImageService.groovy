@@ -15,17 +15,31 @@
  */
 package com.netflix.asgard
 
+import static org.jclouds.compute.options.TemplateOptions.Builder.overrideLoginCredentials
+import static org.jclouds.compute.options.TemplateOptions.Builder.overrideLoginUser
+import static org.jclouds.compute.options.TemplateOptions.Builder.runScript
+import groovy.util.slurpersupport.GPathResult
+
+import java.rmi.server.ServerNotActiveException
+import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledExecutorService
+import java.util.concurrent.ThreadFactory
+import java.util.concurrent.TimeUnit
+
+import org.codehaus.groovy.grails.web.json.JSONArray
+import org.jclouds.compute.ComputeService
+import org.jclouds.compute.domain.Image
+import org.jclouds.compute.domain.NodeMetadata
+import org.jclouds.compute.domain.TemplateBuilder
+import org.jclouds.compute.domain.internal.ImageImpl
+import org.jclouds.ec2.domain.Tag
+import org.jclouds.ec2.domain.Tag.ResourceType
+import org.joda.time.DateTime
+
 import com.amazonaws.AmazonServiceException
-import com.amazonaws.services.ec2.model.Image
-import com.amazonaws.services.ec2.model.Instance
 import com.amazonaws.services.ec2.model.LaunchSpecification
-import com.amazonaws.services.ec2.model.Placement
-import com.amazonaws.services.ec2.model.Reservation
-import com.amazonaws.services.ec2.model.RunInstancesRequest
-import com.amazonaws.services.ec2.model.RunInstancesResult
 import com.amazonaws.services.ec2.model.SpotInstanceRequest
 import com.amazonaws.services.ec2.model.SpotPlacement
-import com.amazonaws.services.ec2.model.Tag
 import com.google.common.collect.ArrayListMultimap
 import com.google.common.collect.Multimap
 import com.google.common.collect.Sets
@@ -33,19 +47,11 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder
 import com.netflix.asgard.model.InstanceProductType
 import com.netflix.asgard.model.JanitorMode
 import com.netflix.asgard.model.MassDeleteRequest
-import groovy.util.slurpersupport.GPathResult
-import java.rmi.server.ServerNotActiveException
-import java.util.concurrent.Executors
-import java.util.concurrent.ScheduledExecutorService
-import java.util.concurrent.ThreadFactory
-import java.util.concurrent.TimeUnit
-import org.codehaus.groovy.grails.web.json.JSONArray
-import org.joda.time.DateTime
 
 class ImageService implements BackgroundProcessInitializer {
 
     static transactional = false
-
+	def jcloudsComputeService	
     def awsAutoScalingService
     def awsEc2Service
     def awsS3Service
@@ -85,8 +91,6 @@ class ImageService implements BackgroundProcessInitializer {
         String userData = Ensure.encoded(launchTemplateService.buildUserDataForImage(userContext, image))
         Map<String, String> tagPairs = buildTagPairs(image, ownerName)
 
-        List<Tag> tags = tagPairs.collect { String key, String value -> new Tag(key, value)}
-
         BigDecimal spotPrice = instanceTypeService.calculateLeisureLinuxSpotBid(userContext, instanceType)
 
         LaunchSpecification launchSpec = new LaunchSpecification().withImageId(imageId).
@@ -100,32 +104,28 @@ class ImageService implements BackgroundProcessInitializer {
         sirs
     }
 
-    List<Instance> runOnDemandInstances(UserContext userContext, String imageId, Integer count,
+    Set<NodeMetadata> runOnDemandInstances(UserContext userContext, String imageId, Integer count,
             Collection<String> securityGroups, String instanceType, String zone, String ownerName) {
         Check.notEmpty(ownerName, 'Owner')
         String keyName = awsEc2Service.getDefaultKeyName()
         Image image = awsEc2Service.getImage(userContext, imageId)
         String userData = Ensure.encoded(launchTemplateService.buildUserDataForImage(userContext, image))
-        Map<String, String> tagPairs = buildTagPairs(image, ownerName)
-
+		Set<NodeMetadata> instances
+		List<Tag> tags = null; 
+        Map<String, String> tagPairs = buildTagPairs(image, ownerName)		
         String taskName = "Launch image ${imageId}, keyName ${keyName}, instanceType ${instanceType}, zone ${zone}"
-        List<Instance> instances = taskService.runTask(userContext, taskName, { task ->
-            RunInstancesRequest request = new RunInstancesRequest().withImageId(imageId).
-                    withMinCount(count).withMaxCount(count).withKeyName(keyName).withSecurityGroups(securityGroups).
-                    withUserData(userData).withInstanceType(instanceType).
-                    withPlacement(new Placement().withAvailabilityZone(zone))
-            RunInstancesResult result = awsEc2Service.runInstances(userContext, request)
-            Reservation reservation = result.reservation
-            List<Instance> instances = reservation.instances
-            List<String> instanceIds = instances*.instanceId
-            awsEc2Service.createInstanceTags(userContext, instanceIds, tagPairs, task)
+		ComputeService compute = awsEc2Service.getComputeService(userContext);
+         TemplateBuilder templateBuilder = compute.templateBuilder();
+		 templateBuilder.fromImage(image);
+        Set<NodeMetadata> nodes = taskService.runTask(userContext, taskName, { task ->			
+		 instances = compute.createNodesInGroup(ownerName, count, templateBuilder.build())         
             return instances
         }, Link.to(EntityType.image, imageId)) as List
-        instances
+        nodes
     }
 
     private Map<String, String> buildTagPairs(Image image, String ownerName) {
-        [appversion: image.appVersion ?: '', owner: ownerName]
+        [appversion: image.version ?: '', owner: ownerName]
     }
 
     /**
@@ -320,7 +320,7 @@ class ImageService implements BackgroundProcessInitializer {
             Collection<Tag> tags = imageXml.tags.tag.collect { GPathResult tagXml ->
                 new Tag().withKey(tagXml['key'].text().trim()).withValue(tagXml['value'].text().trim())
             }
-            new Image().withImageId(imageXml.imageId.text().trim()).withTags(tags)
+            new ImageImpl().withImageId(imageXml.imageId.text().trim()).withTags(tags)
         }
         return prodImages
     }

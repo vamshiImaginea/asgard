@@ -15,9 +15,9 @@
  */
 package com.netflix.asgard
 
-import com.amazonaws.services.ec2.model.Image
 import com.netflix.asgard.model.AutoScalingGroupBeanOptions
 import com.netflix.asgard.model.LaunchConfigurationBeanOptions
+import org.jclouds.compute.domain.Image
 
 class LaunchTemplateService {
 
@@ -52,7 +52,7 @@ class LaunchTemplateService {
     }
 
     String buildUserDataForImage(UserContext userContext, Image image) {
-        String appName = image?.packageName ?: ''
+        String appName = image?.description ?: ''
         pluginService.userDataProvider.buildUserDataForVariables(userContext, appName, '', '')
     }
 

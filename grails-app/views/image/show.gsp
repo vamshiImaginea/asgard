@@ -37,7 +37,7 @@
         <input type="hidden" name="id" value="${image.id}"/>
         <g:link class="edit" action="edit" params="[id:java.net.URLEncoder.encode(image.id,'UTF-8')]">Edit Image Attributes</g:link>
         <g:if test="${accountName == env}">
-          <g:buttonSubmit class="delete" action="delete" value="Delete Image"
+          <g:buttonSubmit  disabled="true" class="delete" action="delete" value="Delete Image"
                           data-warning="Really delete image '${image.id}' with name '${image.name}'?" />
         </g:if>
         <g:else>

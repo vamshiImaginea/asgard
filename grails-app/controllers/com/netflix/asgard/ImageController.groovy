@@ -30,6 +30,7 @@ import grails.converters.XML
 import org.codehaus.groovy.grails.web.binding.DataBindingUtils
 import org.codehaus.groovy.grails.web.json.JSONElement
 import org.jclouds.compute.domain.Image
+import org.jclouds.compute.domain.NodeMetadata;
 
 @ContextParam('region')
 class ImageController {
@@ -189,9 +190,9 @@ class ImageController {
             Collection<String> securityGroups = launchTemplateService.includeDefaultSecurityGroups(rawSecurityGroups)
             Integer count = 1
             if (pricing == 'ondemand') {
-                List<Instance> launchedInstances = imageService.runOnDemandInstances(userContext, imageId, count,
+                Set<NodeMetadata> launchedInstances = imageService.runOnDemandInstances(userContext, imageId, count,
                         securityGroups, instanceType, zone, owner)
-                instanceIds = launchedInstances*.instanceId
+                instanceIds = launchedInstances*.id
                 message = "Image '${imageId}' has been launched as ${instanceIds}"
                 output = { instances { instanceIds.each { instance(it) } } }
             } else {
@@ -202,6 +203,7 @@ class ImageController {
                 output = { spotInstanceRequests { spotInstanceRequestIds.each { spotInstanceRequest(it) } } }
             }
         } catch (Exception e) {
+		  e.printStackTrace();
             message = "Could not launch Image: ${e}"
             output = { error(message) }
         }
@@ -211,7 +213,7 @@ class ImageController {
                 flash.message = message
                 Map redirectParams = [action: 'result']
                 if (instanceIds) {
-                    redirectParams = [controller: 'instance', action: 'show', id: instanceIds[0]]
+                    redirectParams = [controller: 'instance', action: 'show', id: URLEncoder.encode(instanceIds[0],'UTF-8')]
                 } else if (spotInstanceRequestIds) {
                     redirectParams = [controller: 'spotInstanceRequest', action: 'show', id: spotInstanceRequestIds[0]]
                 }
