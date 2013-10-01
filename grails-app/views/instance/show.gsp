@@ -46,8 +46,8 @@
                   action="terminate" value="Terminate Instance" title="Shut down and delete this instance." />
           <g:buttonSubmit class="shutdown" data-warning="Really Reboot: ${instance.id}?"
                   action="reboot" value="Reboot Instance" title="Restart the OS of the instance." />
-          <g:link class="cli" action="raw" params="[instanceId: instance.id]" title="Display the operating system console output log.">Console Output (Raw)</g:link>
-          <g:link class="userData" action="userDataHtml" params="[instanceId: instance.id]" title="Display the user data executed by the instance on startup.">User Data</g:link>
+          <g:link class="cli" action="raw" params="[instanceId: java.net.URLEncoder.encode(instance.id,'UTF-8')]" title="Display the operating system console output log.">Console Output (Raw)</g:link>
+          <g:link class="userData" action="userDataHtml" params="[instanceId: java.net.URLEncoder.encode(instance.id,'UTF-8') ]" title="Display the user data executed by the instance on startup.">User Data</g:link>
         </div>
         <div class="buttons">
           <h3>Load Balancing:</h3>
@@ -55,7 +55,7 @@
                   action="deregister" value="Deregister Instance from LB" title="Remove this instance from the auto scaling group's load balancers." />
           <g:buttonSubmit class="requireLogin instanceBalance"
                   action="register" value="Register Instance with ASG's LB" title="Add this instance to the auto scaling group's load balancers." />
-          <g:link class="attachElastic" action="associate" params="[instanceId:instance.id]"
+          <g:link class="attachElastic" action="associate" params="[instanceId:java.net.URLEncoder.encode(instance.id,'UTF-8') ]"
                     title="Choose an elastic IP address to use for this instance.">Associate Elastic IP with Instance</g:link>
         </div>
         <g:if test="${appName}">
@@ -153,7 +153,7 @@
           <g:if test="${instance.id}">
             <tr class="prop">
               <td class="name">Spot Instance Request:</td>
-              <td class="value"><g:linkObject type="spotInstanceRequest" name="${instance.id}" /></td>
+              <td class="value"><g:linkObject type="spotInstanceRequest" name="${java.net.URLEncoder.encode(instance.id,'UTF-8')}" >${instance.id}</g:linkObject></td>
             </tr>
           </g:if>
           <tr class="prop">
@@ -167,7 +167,7 @@
           <tr class="prop">
             <td class="name">Image:</td>
             <td class="value">
-              <g:linkObject type="image" name="${instance.imageId}"/>${image ? ' | ' + image.architecture + ' | ' + image.imageLocation : ''}
+              <g:linkObject type="image" name="${java.net.URLEncoder.encode(instance.imageId,'UTF-8')}">${instance.imageId}</g:linkObject>${image ? ' | ' + image.architecture + ' | ' + image.imageLocation : ''}
             </td>
           </tr>
           <tr class="prop">

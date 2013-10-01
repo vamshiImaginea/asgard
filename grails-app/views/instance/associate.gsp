@@ -33,7 +33,7 @@
       </div>
     </g:hasErrors>
     <g:form method="post">
-      <input type="hidden" id="instanceId" name="instanceId" value="${instance.instanceId}"/>
+      <input type="hidden" id="instanceId" name="instanceId" value="${instance.id}"/>
       <div class="dialog">
         <g:if test="${eipUsageMessage}">
           <h2>${eipUsageMessage}</h2>
@@ -42,7 +42,7 @@
           <tbody>
           <tr class="prop">
             <td class="name">Instance ID:</td>
-            <td class="value">${instance.instanceId}</td>
+            <td class="value">${instance.id}</td>
           </tr>
           <tr class="prop">
             <td class="name">
@@ -51,7 +51,7 @@
             <td class="value">
               <select id="publicIp" name="publicIp">
                 <g:each var="eip" in="${publicIps}">
-                  <option ${instance.publicIpAddress == eip.key ? 'selected="selected"' : ''} value="${eip.key}">${eip.key} : ${eip.value}</option>
+                  <option ${instance.publicAddresses == eip.key ? 'selected="selected"' : ''} value="${eip.key}">${eip.key} : ${eip.value}</option>
                 </g:each>
               </select>
             </td>

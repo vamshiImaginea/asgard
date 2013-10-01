@@ -260,15 +260,15 @@ class InstanceController {
         awsEc2Service.rebootInstance(userContext, instanceId)
 
         flash.message = "Rebooting instance '${instanceId}'."
-        redirect(action: 'show', params:[instanceId:instanceId])
+        redirect(action: 'show', params:[instanceId:instanceId.encodeAsURL()])
     }
 
     def raw = {
         UserContext userContext = UserContext.of(request)
-        String instanceId = EntityType.instance.ensurePrefix(params.instanceId ?: params.id)
+        String instanceId = params.instanceId ?: params.id
         try {
             String consoleOutput = awsEc2Service.getConsoleOutput(userContext, instanceId)
-            return [ 'instanceId': instanceId, 'consoleOutput' : consoleOutput, 'now': new Date() ]
+            return [ 'instanceId': instanceId.encodeAsURL(), 'consoleOutput' : consoleOutput, 'now': new Date() ]
         } catch (AmazonServiceException ase) {
             Requests.renderNotFound('Instance', instanceId, this, ase.toString())
             return
@@ -339,7 +339,7 @@ class InstanceController {
 
     def associate = {
         UserContext userContext = UserContext.of(request)
-        NodeMetadata instance = awsEc2Service.getInstance(userContext, EntityType.instance.ensurePrefix(params.instanceId))
+        NodeMetadata instance = awsEc2Service.getInstance(userContext, params.instanceId)
         if (!instance) {
             flash.message = "EC2 Instance ${params.instanceId} not found."
             redirect(action: 'list')
@@ -358,7 +358,7 @@ class InstanceController {
     def associateDo = {
         //println "associateDo: ${params}"
         String publicIp = params.publicIp
-        String instanceId = EntityType.instance.ensurePrefix(params.instanceId)
+        String instanceId = params.instanceId
         UserContext userContext = UserContext.of(request)
         try {
             awsEc2Service.associateAddress(userContext, publicIp, instanceId)
@@ -366,7 +366,7 @@ class InstanceController {
         } catch (Exception e) {
             flash.message = "Could not associate Elastic IP '${publicIp}' with '${instanceId}': ${e}"
         }
-        redirect(action: 'show', params:[instanceId:instanceId])
+        redirect(action: 'show', params:[instanceId:instanceId.encodeAsURL()])
     }
 
     def takeOutOfService = {

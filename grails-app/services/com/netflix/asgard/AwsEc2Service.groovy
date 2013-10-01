@@ -41,6 +41,7 @@ import org.jclouds.ec2.EC2Client
 import org.jclouds.ec2.domain.Attachment
 import org.jclouds.ec2.domain.AvailabilityZoneInfo
 import org.jclouds.ec2.domain.KeyPair
+import org.jclouds.ec2.domain.PublicIpInstanceIdPair
 import org.jclouds.ec2.domain.Reservation
 import org.jclouds.ec2.domain.SecurityGroup
 import org.jclouds.ec2.domain.Snapshot
@@ -868,36 +869,29 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 	}
 
 	String getConsoleOutput(UserContext userContext, String instanceId) {
-		String regionCode = configService.getCloudProvider() == Provider.AWS ? userContext.region.code : "nova"
 		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
-
-		String output =  ec2Client.instanceServices.getConsoleOutputForInstanceInRegion(regionCode, instanceId);
+		String output =  ec2Client.instanceServices.getConsoleOutputForInstanceInRegion(userContext.region.code, instanceId);
 		output ? new String(Base64.decodeBase64(output.bytes)) : null
 	}
 
-	// Elastic IPs
 
 	Map<String, String> describeAddresses(UserContext userContext) {
-		List<Address> addresses = computeServiceClientByRegion.by(userContext.region).describeAddresses().addresses
+		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
+		Set<PublicIpInstanceIdPair> addresses = ec2Client.getElasticIPAddressServices().describeAddressesInRegion(userContext.region.code);
 		addresses.inject([:]) { Map memo, address -> memo[address.publicIp] = address.instanceId; memo } as Map
 	}
-	//describeAddresses(List<String>) => List<Address> => [instanceId,publicIp]
 
 	void associateAddress(UserContext userContext, String publicIp, String instanceId) {
 		taskService.runTask(userContext, "Associate ${publicIp} with ${instanceId}", { task ->
-			computeServiceClientByRegion.by(userContext.region).associateAddress(new AssociateAddressRequest().withPublicIp(publicIp).withInstanceId(instanceId))
-		}, Link.to(EntityType.instance, instanceId))
+			EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
+			Set<PublicIpInstanceIdPair> addresses = ec2Client.getElasticIPAddressServices().associateAddressInRegion(userContext.region.code,publicIp,instanceId );	
+			}, Link.to(EntityType.instance, instanceId))
 	}
 
-	// allocateAddress() => publicIp
-	// releaseAddress(publicIp)
-
-	// Reservations
 
 	private Set<Reservation> retrieveReservations(Region region) {
-		String regionCode = configService.getCloudProvider() == Provider.AWS ? region.code : "nova"
 		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(region).getContext());
-		ec2Client.instanceServices.describeInstancesInRegion(regionCode,null)
+		ec2Client.instanceServices.describeInstancesInRegion(region.code,null)
 	}
 
 	/**
@@ -987,16 +981,14 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 	}
 
 	Attachment attachVolume(UserContext userContext, String volumeId, String instanceId, String device) {
-		String regionCode = configService.getCloudProvider() == Provider.AWS ? userContext.region.code : "nova"
 		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());		DetachVolumeOptions detachVolumeOptions = new  DetachVolumeOptions().fromDevice(device).fromInstance(instanceId)
-		ec2Client.elasticBlockStoreServices.attachVolumeInRegion(regionCode, volumeId, instanceId, device)
+		ec2Client.elasticBlockStoreServices.attachVolumeInRegion(region.code, volumeId, instanceId, device)
 
 	}
 
 	void deleteVolume(UserContext userContext, String volumeId) {
-		String regionCode = configService.getCloudProvider() == Provider.AWS ? userContext.region.code : "nova"
 		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
-		ec2Client.elasticBlockStoreServices.deleteVolumeInRegion(regionCode, volumeId)
+		ec2Client.elasticBlockStoreServices.deleteVolumeInRegion(region.code, volumeId)
 		// Do not remove it from the allVolumes map, as this prevents
 		// the list page from showing volumes that are in state "deleting".
 		// Volume deletes can take 20 minutes to process.
@@ -1028,16 +1020,15 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 
 	private Set<Snapshot> retrieveSnapshots(Region region) {
 		log.info 'retrieveSnapshots in region '+ region
-		String regionCode = configService.getCloudProvider() == Provider.AWS ? region.code : "nova"
 		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(region).getContext());
-		def snapshotsInRegion = ec2Client.getElasticBlockStoreServices().describeSnapshotsInRegion(regionCode,null)
+		def snapshotsInRegion = ec2Client.getElasticBlockStoreServices().describeSnapshotsInRegion(region.code,null)
 		log.info 'retrieveSnapshots in region '+ snapshotsInRegion
 		snapshotsInRegion
 
 	}
 
 	Snapshot getSnapshot(UserContext userContext, String snapshotId, From from = From.AWS) {
-		String regionCode = configService.getCloudProvider() == Provider.AWS ? userContext.region.code : "nova"
+		String regionCode = userContext.region.code;
 		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
 
 		if (snapshotId) {
@@ -1060,13 +1051,12 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 
 	Snapshot createSnapshot(UserContext userContext, String volumeId, String description) {
 
-		String regionCode = configService.getCloudProvider() == Provider.AWS ? userContext.region.code : "nova"
 		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
 
 		Snapshot snapshot = null
 		String msg = "Create snapshot for volume '${volumeId}' with description '${description}'"
 		taskService.runTask(userContext, msg, { task ->
-			snapshot = ec2Client.getElasticBlockStoreServices().createSnapshotInRegion(regionCode,volumeId, withDescription(description))
+			snapshot = ec2Client.getElasticBlockStoreServices().createSnapshotInRegion(region.code,volumeId, withDescription(description))
 			task.log("Snapshot ${snapshot.id} created")
 			caches.allSnapshots.by(userContext.region).put(snapshot.id, snapshot)
 		}, Link.to(EntityType.volume, volumeId))
@@ -1074,14 +1064,15 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 	}
 
 	void deleteSnapshot(UserContext userContext, String snapshotId, Task existingTask = null) {
-		String regionCode = configService.getCloudProvider() == Provider.AWS ? userContext.region.code : "nova"
+		 String regionCode = userContext.region.code;
+
 		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
 
 		String msg = "Delete snapshot ${snapshotId}"
 		Closure work = { Task task ->
 			task.tryUntilSuccessful(
 					{
-						ec2Client.getElasticBlockStoreServices().deleteSnapshotInRegion(uregionCode, snapshotId)
+						ec2Client.getElasticBlockStoreServices().deleteSnapshotInRegion(regionCode, snapshotId)
 					},
 					{ Exception e -> e instanceof AmazonServiceException && e.errorCode == 'InvalidSnapshot.InUse' },
 					250
