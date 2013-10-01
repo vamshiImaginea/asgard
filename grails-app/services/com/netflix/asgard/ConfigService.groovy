@@ -103,8 +103,14 @@ class ConfigService {
      *
      * @return Map <String, String> account numbers to account names
      */
-    Map<String, String> getAwsAccountNames() {
-        grailsApplication.config.grails?.awsAccountNames ?: [:]
+        Map<String, String> getAwsAccountNames() {
+		if(getCloudProvider() == Provider.OPENSTACK){
+			Map<String,String> accountNames = new HashMap<String,String>();
+			accountNames.put(grailsApplication.config.openstack.tenentId, grailsApplication.config.openstack.tenentId)
+			accountNames
+		}
+		else
+		grailsApplication.config.grails?.awsAccountNames ?: [:]
     }
 
     /**

@@ -830,10 +830,9 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 
 	String getUserDataForInstance(UserContext userContext, String instanceId) {
 		if (!instanceId) { return null }
-		DescribeInstanceAttributeResult attrResult = computeServiceClientByRegion.by(userContext.region).describeInstanceAttribute(
-				new DescribeInstanceAttributeRequest().withInstanceId(instanceId).withAttribute("userData"))
-		String userData = attrResult.getInstanceAttribute().getUserData()
-		userData ? new String(Base64.decodeBase64(userData.bytes)) : null
+		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
+		ec2Client.instanceServices.getUserDataForInstanceInRegion(userContext.region.code,instanceId)		
+		
 	}
 
 	Boolean checkHostHealth(String url) {

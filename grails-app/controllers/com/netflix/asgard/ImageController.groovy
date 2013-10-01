@@ -42,6 +42,7 @@ class ImageController {
     def mergedInstanceGroupingService
     def taskService
     def grailsApplication
+	def configService
 
     def static allowedMethods = [update: 'POST', delete: ['POST', 'DELETE'], launch: 'POST', addTag: 'POST',
             addTags: 'POST', removeTag: ['POST', 'DELETE'], removeTags: ['POST', 'DELETE'], removeAllTags: 'DELETE',
@@ -84,7 +85,7 @@ class ImageController {
             catch (AmazonServiceException ignored) { /* We may not own the image, so ignore failures here */ }
             /*String snapshotId = image.blockDeviceMappings.findResult { it.ebs?.snapshotId }*/
             String ownerId = image.userMetadata.get("owner")
-            Map<String, String> accounts = grailsApplication.config.grails.awsAccountNames
+            Map<String, String> accounts = configService.awsAccountNames
             Map details = [
                     image: image,
                    /* snapshotId: snapshotId,*/

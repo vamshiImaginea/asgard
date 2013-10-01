@@ -149,7 +149,7 @@ class InstanceController {
     /* can show instance info given: instanceId, appName+instanceId, appName+hostName */
     def show = {
         UserContext userContext = UserContext.of(request)
-        String instanceId = params.id
+        String instanceId = params.id?:params.instanceId
 		instanceId=URLDecoder.decode(instanceId,'UTF-8');
 		
         String appName
@@ -255,7 +255,7 @@ class InstanceController {
     }
 
     def reboot = {
-        String instanceId = EntityType.instance.ensurePrefix(params.instanceId)
+        String instanceId = params.instanceId
         UserContext userContext = UserContext.of(request)
         awsEc2Service.rebootInstance(userContext, instanceId)
 

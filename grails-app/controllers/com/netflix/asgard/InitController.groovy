@@ -60,6 +60,7 @@ class InitController {
 			cmd.openStackUrl = config.openstack.endpoint
 			cmd.openStackPassword = config.openstack.passwd
 			cmd.openStackUsername = config.openstack.username
+			cmd.openstackTenentId = config.openstack.tenentId
 			}
 
 			render(view: 'index', model: [params: cmd])
@@ -98,6 +99,7 @@ class InitializeCommand {
 	String openStackUsername
 	String openStackPassword
 	String cloudService
+	String openstackTenentId
 	boolean showPublicAmazonImages
 	static constraints = {
 
@@ -131,7 +133,8 @@ class InitializeCommand {
 			cloudConfig['publicResourceAccounts'] = showPublicAmazonImages ? ['amazon'] : []
 			rootConfig
 		}else {
-		if(!openStackUrl || !openStackUsername || !openStackPassword) {
+		println openstackTenentId
+		if(!openStackUrl || !openStackUsername || !openStackPassword || !openstackTenentId) {
 				throw new Exception("OpenStack Credentials are not provided")
 			}
 
@@ -139,6 +142,7 @@ class InitializeCommand {
 			secretConfig['passwd'] = openStackPassword.trim()
 			secretConfig['username'] = openStackUsername.trim()
 			secretConfig['endpoint'] = openStackUrl.trim()
+			secretConfig['tenentId'] = openstackTenentId.trim()
 			grailsConfig['currentActiveService'] = cloudService
 			ConfigObject cloudConfig = new ConfigObject()
 			rootConfig['cloud'] = cloudConfig

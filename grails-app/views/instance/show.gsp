@@ -47,7 +47,7 @@
           <g:buttonSubmit class="shutdown" data-warning="Really Reboot: ${instance.id}?"
                   action="reboot" value="Reboot Instance" title="Restart the OS of the instance." />
           <g:link class="cli" action="raw" params="[instanceId: instance.id]" title="Display the operating system console output log.">Console Output (Raw)</g:link>
-          <g:link class="userData" action="userDataHtml" params="[id: instance.id]" title="Display the user data executed by the instance on startup.">User Data</g:link>
+          <g:link class="userData" action="userDataHtml" params="[instanceId: instance.id]" title="Display the user data executed by the instance on startup.">User Data</g:link>
         </div>
         <div class="buttons">
           <h3>Load Balancing:</h3>
