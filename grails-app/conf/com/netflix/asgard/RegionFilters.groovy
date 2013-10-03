@@ -29,7 +29,7 @@ class RegionFilters {
                 Region region = Region.withCode(params.region) ?: regionService.withCode(request.getCookie('region')) ?:
                         Region.defaultRegion()
 
-				if(!defaultRegionSet && null != regionService.values()){
+				if(!defaultRegionSet && null != regionService.values() && null != regionService.values().get(0)){
 					region = regionService.values().get(0)
 					defaultRegionSet = true
 				}

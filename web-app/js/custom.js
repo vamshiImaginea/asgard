@@ -652,9 +652,7 @@ ady
         jQuery('#cloudService').change(function() {
            
             var cloudService = this.value;
-            url = 'home/selectService?cloudService='+cloudService;
-         
-
+            url = '/home/selectService?cloudService='+cloudService;
             window.location = url;
         });
 

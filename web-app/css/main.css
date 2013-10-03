@@ -37,14 +37,14 @@ img          { border: none; }
 .titlebar .region           { float: left; margin: 0 10px 0 0; }
 .titlebar .region form      { float: left; display: inline-block; vertical-align: top; }
 .titlebar .region img       { float: left; display: inline-block; height: 45px; }
-.titlebar .region select    { width: 90px; }
+.titlebar .region select .cloudservice select    { width: 90px; }
 
 .titlebar .region,
 .titlebar .search,
-.titlebar .cloudservice,
 .titlebar .ticket                { padding: 3px 7px 0 8px; background-color: #000; border-radius: 8px; -moz-border-radius: 8px; -webkit-border-radius: 8px; }
+
 .titlebar .ticket                { float: right; }
-.titlebar .cloudservice          { float: left; }
+.titlebar .cloudservice          { float: left; padding: 3px 7px 0 8px;border-radius: 8px; -moz-border-radius: 8px; -webkit-border-radius: 8px; }
 .titlebar .search input          { width: 160px; }
 .titlebar .search input:focus    { width: 200px; }
 .ticket input[name=ticket]       { width: 80px; }

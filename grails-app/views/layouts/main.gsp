@@ -52,7 +52,7 @@
     </div>
       <g:if test="${!pageProperty(name: 'meta.hideNav')}">
  <div class="cloudservice">
-   <g:select id="cloudService" class="noSelect2" name="cloudService" from="${["aws","openstack"]}" value="${provider.toLowerCase()}" />
+   <g:select title="Switch to a different Cloud Servie" id="cloudService" class="noSelect2" name="cloudService" from="${["aws","openstack"]}" value="${provider.toLowerCase()}" />
  </div>
       <div class="region">
         <form action="/" method="GET">
