@@ -356,7 +356,6 @@ class InstanceController {
     }
 
     def associateDo = {
-        //println "associateDo: ${params}"
         String publicIp = params.publicIp
         String instanceId = params.instanceId
         UserContext userContext = UserContext.of(request)
@@ -403,14 +402,15 @@ class InstanceController {
 
     def userData = {
         UserContext userContext = UserContext.of(request)
-        String instanceId = EntityType.instance.ensurePrefix(params.id ?: params.instanceId)
+        String instanceId = params.id ?: params.instanceId
         render awsEc2Service.getUserDataForInstance(userContext, instanceId)
     }
 
     def userDataHtml = {
         UserContext userContext = UserContext.of(request)
-        String instanceId = EntityType.instance.ensurePrefix(params.id ?: params.instanceId)
-        render "<pre>${awsEc2Service.getUserDataForInstance(userContext, instanceId).encodeAsHTML()}</pre>"
+        String instanceId = params.id ?: params.instanceId
+		instanceId=URLDecoder.decode(instanceId,'UTF-8');
+		render "<pre>${awsEc2Service.getUserDataForInstance(userContext, instanceId)}</pre>"
     }
 
     private String runHealthCheck(ApplicationInstance appInst) {
