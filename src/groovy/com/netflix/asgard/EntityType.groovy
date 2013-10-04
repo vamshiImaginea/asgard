@@ -92,7 +92,6 @@ import com.netflix.asgard.push.Cluster
             { it.instanceType.toString() })
     static final EntityType<Image> image = create('Image', { it.id })
     static final EntityType<NodeMetadata> instance = create('Node', { it.id }, 'i-')
-	static final EntityType<Hardware> hardwareProfileTypes = create('hardwarem Profile Types', { it.id })
     static final EntityType<InstanceHealth> instanceHealth = create('Instance Health', { it.instanceId })
     static final EntityType<InstanceTypeData> instanceType = create('Instance Type', { it.name })
     static final EntityType<KeyPair> keyPair = create('Key Pair', { it.keyName })

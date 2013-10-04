@@ -15,6 +15,8 @@
  */
 package com.netflix.asgard
 
+import java.util.Iterator;
+
 import com.amazonaws.services.ec2.model.InstanceType
 import com.google.common.collect.ArrayTable
 import com.google.common.collect.Table
@@ -60,7 +62,8 @@ class InstanceTypeService implements CacheInitializer {
 		caches.allOnDemandPrices.ensureSetUp({ retrieveInstanceTypeOnDemandPricing() })
 		caches.allReservedPrices.ensureSetUp({ retrieveInstanceTypeReservedPricing() })
 		caches.allSpotPrices.ensureSetUp({ retrieveInstanceTypeSpotPricing() })
-		caches.allInstanceTypes.ensureSetUp({ Region region -> 	buildInstanceTypes(region) })
+		caches.allInstanceTypes.ensureSetUp({ Region region -> 	
+			buildInstanceTypes(region) })
 		caches.allHardwareProfiles.ensureSetUp({ retrieveHardwareProfiles() }, {
 			caches.allOnDemandPrices.fill()
 			caches.allReservedPrices.fill()
@@ -85,7 +88,7 @@ class InstanceTypeService implements CacheInitializer {
         caches.allInstanceTypes.by(userContext.region).get(instanceTypeName)
     }
 
-    Collection<Hardware> getInstanceTypes(UserContext userContext) {
+    Collection<InstanceTypeData> getInstanceTypes(UserContext userContext) {
 		   caches.allInstanceTypes.by(userContext.region).list();
     }
 
@@ -110,10 +113,13 @@ class InstanceTypeService implements CacheInitializer {
     private RegionalInstancePrices getSpotPrices(Region region) {
         caches.allSpotPrices.by(region)
     }
-	private Collection<Hardware> buildInstanceTypes(Region region) {
-		
-		awsEc2Service.computeServiceClientByRegion.by(region).listHardwareProfiles() 
-		
+	private Collection<InstanceTypeData> buildInstanceTypes(Region region) {
+		Collection<InstanceTypeData> instanceTypes = new ArrayList<InstanceTypeData>()
+		Collection<Hardware> hardwareProfiles = awsEc2Service.computeServiceClientByRegion.by(region).listHardwareProfiles() 
+		hardwareProfiles.each {
+			it -> instanceTypes.add(new InstanceTypeData(hardware:it))
+		}
+		instanceTypes
 	}
    /* private List<InstanceTypeData> buildInstanceTypes(Region region) {
 

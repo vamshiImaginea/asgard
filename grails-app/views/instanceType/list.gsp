@@ -48,13 +48,13 @@
 				<g:each in="${instanceTypes}" var="instanceType">
 					<tr>
 						<td>
-							${instanceType.id}
+							${instanceType.hardware.id}
 						</td>
 						<td class="description">
-							${instanceType.processors}
+							${instanceType.hardware.processors}
 						</td>
 						<td>
-							${instanceType.ram}
+							${instanceType.hardware.ram}
 						</td>
 						<td>
 							<table>
@@ -64,7 +64,7 @@
 									<th>BootDevice</th>
 									<th>Durable</th>
 								</tr>
-								<g:each in="${instanceType.volumes}" var="volume">
+								<g:each in="${instanceType.hardware.volumes}" var="volume">
 
 									<tr>
 										<td>
@@ -88,12 +88,12 @@
 						<%--<td class="cpu">${instanceType}</td>
             <td class="architecture">${instanceType}</td>
             <td class="ioPerformance">${instanceType}</td>
-            <td><g:formatNumber number="${instanceType.linuxOnDemandPrice}" type="currency" currencyCode="USD" /></td>
-            <td><g:formatNumber number="${instanceType.linuxReservedPrice}" type="currency" currencyCode="USD" /></td>
-            <td><g:formatNumber number="${instanceType.linuxSpotPrice}" type="currency" currencyCode="USD" /></td>
-            <td><g:formatNumber number="${instanceType.windowsOnDemandPrice}" type="currency" currencyCode="USD" /></td>
-            <td><g:formatNumber number="${instanceType.windowsReservedPrice}" type="currency" currencyCode="USD" /></td>
-            <td><g:formatNumber number="${instanceType.windowsSpotPrice}" type="currency" currencyCode="USD" /></td>
+            <td><g:formatNumber number="${instanceType.hardware.linuxOnDemandPrice}" type="currency" currencyCode="USD" /></td>
+            <td><g:formatNumber number="${instanceType.hardware.linuxReservedPrice}" type="currency" currencyCode="USD" /></td>
+            <td><g:formatNumber number="${instanceType.hardware.linuxSpotPrice}" type="currency" currencyCode="USD" /></td>
+            <td><g:formatNumber number="${instanceType.hardware.windowsOnDemandPrice}" type="currency" currencyCode="USD" /></td>
+            <td><g:formatNumber number="${instanceType.hardware.windowsReservedPrice}" type="currency" currencyCode="USD" /></td>
+            <td><g:formatNumber number="${instanceType.hardware.windowsSpotPrice}" type="currency" currencyCode="USD" /></td>
           --%>
 					</tr>
 				</g:each>

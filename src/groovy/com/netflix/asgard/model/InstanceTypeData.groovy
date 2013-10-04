@@ -17,46 +17,49 @@ package com.netflix.asgard.model
 
 import com.amazonaws.services.ec2.model.InstanceType
 import java.text.NumberFormat
+import org.jclouds.compute.domain.Hardware
 
 /**
  * Hardware specifications and multiple types of pricing data for a type of machine available to use as an EC2 instance.
  */
-final class InstanceTypeData {
+class InstanceTypeData {
 
     /**
      * Technical specifications for a type of physical or virtual machine.
      */
+	Hardware hardware
+	
     HardwareProfile hardwareProfile
 
     /**
      * Fixed hourly cost in dollars for a Linux machine to use promptly and for which there is no reservation.
      */
-    BigDecimal linuxOnDemandPrice
+    BigDecimal linuxOnDemandPrice = BigDecimal.ZERO
 
     /**
      * Fixed hourly cost in dollars for a Linux machine to use promptly and which has a reservation.
      */
-    BigDecimal linuxReservedPrice
+    BigDecimal linuxReservedPrice = BigDecimal.ZERO
 
     /**
      * Recent market-based hourly cost in dollars for a Linux machine to use eventually, not promptly.
      */
-    BigDecimal linuxSpotPrice
+    BigDecimal linuxSpotPrice = BigDecimal.ZERO
 
     /**
      * Fixed hourly cost in dollars for a Windows machine to use promptly and for which there is no reservation.
      */
-    BigDecimal windowsOnDemandPrice
+    BigDecimal windowsOnDemandPrice = BigDecimal.ZERO
 
     /**
      * Fixed hourly cost in dollars for a Windows machine to use promptly and which has a reservation.
      */
-    BigDecimal windowsReservedPrice
+    BigDecimal windowsReservedPrice = BigDecimal.ZERO
 
     /**
      * Recent market-based hourly cost in dollars for a Windows machine to use eventually, not promptly.
      */
-    BigDecimal windowsSpotPrice
+    BigDecimal windowsSpotPrice = BigDecimal.ZERO
 
     /**
      * Gets the canonical name of the instance type.
@@ -64,7 +67,7 @@ final class InstanceTypeData {
      * @return String instance type name such as m1.large
      */
     String getName() {
-        hardwareProfile.name
+        hardware.id
     }
 
     /**

@@ -32,7 +32,7 @@ class InstanceTypeController {
 
     def list = {
         UserContext userContext = UserContext.of(request)
-        Collection<Hardware> instanceTypes = instanceTypeService.getInstanceTypes(userContext)
+        Collection<InstanceTypeData> instanceTypes = instanceTypeService.getInstanceTypes(userContext)
         Map details = [instanceTypes: instanceTypes]
         withFormat {
             html { details }
