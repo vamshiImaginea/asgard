@@ -267,6 +267,10 @@ class ConfigService {
     List<String> getAwsAccounts() {
         grailsApplication.config.grails?.awsAccounts ?: []
     }
+	
+	List<String> getAccounts() {
+		getCloudProvider() == Provider.AWS? grailsApplication.config.grails?.awsAccounts:[grailsApplication.config.openstack.tenentId]?:[]
+	}
 
     /**
      * Gets the optional list of accounts whose public resources such as AMIs should be used.

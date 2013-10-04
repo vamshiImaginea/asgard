@@ -23,6 +23,7 @@ import static org.jclouds.ec2.options.CreateSnapshotOptions.Builder.*
 import static org.jclouds.ec2.options.DescribeImagesOptions.Builder.*
 import static org.jclouds.ec2.options.DescribeSnapshotsOptions.Builder.*
 import static org.jclouds.ec2.options.DetachVolumeOptions.Builder.*
+import static org.jclouds.ec2.domain.IpPermission.Builder.*
 import groovyx.gpars.GParsExecutorsPool
 
 import java.util.regex.Matcher
@@ -40,12 +41,15 @@ import org.jclouds.domain.Location
 import org.jclouds.ec2.EC2Client
 import org.jclouds.ec2.domain.Attachment
 import org.jclouds.ec2.domain.AvailabilityZoneInfo
+import org.jclouds.ec2.domain.IpPermission
+import org.jclouds.ec2.domain.IpProtocol;
 import org.jclouds.ec2.domain.KeyPair
 import org.jclouds.ec2.domain.PublicIpInstanceIdPair
 import org.jclouds.ec2.domain.Reservation
 import org.jclouds.ec2.domain.SecurityGroup
 import org.jclouds.ec2.domain.Snapshot
 import org.jclouds.ec2.domain.Subnet
+import org.jclouds.ec2.domain.UserIdGroupPair
 import org.jclouds.ec2.domain.Volume
 import org.jclouds.ec2.features.SubnetApi
 import org.jclouds.ec2.options.DescribeImagesOptions
@@ -67,14 +71,12 @@ import com.amazonaws.services.ec2.model.DescribeSpotInstanceRequestsResult
 import com.amazonaws.services.ec2.model.DescribeSpotPriceHistoryRequest
 import com.amazonaws.services.ec2.model.DescribeSpotPriceHistoryResult
 import com.amazonaws.services.ec2.model.InstanceStateChange
-import com.amazonaws.services.ec2.model.IpPermission
 import com.amazonaws.services.ec2.model.RequestSpotInstancesRequest
 import com.amazonaws.services.ec2.model.RequestSpotInstancesResult
 import com.amazonaws.services.ec2.model.ReservedInstances
 import com.amazonaws.services.ec2.model.RunInstancesRequest
 import com.amazonaws.services.ec2.model.RunInstancesResult
 import com.amazonaws.services.ec2.model.Tag
-import com.amazonaws.services.ec2.model.UserIdGroupPair
 import com.amazonaws.services.ec2.model.Vpc
 import com.google.common.base.Predicates
 import com.google.common.collect.HashMultiset
@@ -115,14 +117,14 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 			jcloudsComputeService.getComputeServiceForProvider(region)
 		})
 
-		accounts = configService.awsAccounts
+		accounts = configService.getAccounts()
 	}
 	void initialiseComputeServiceClients() {
 		computeServiceClientByRegion = new MultiRegionAwsClient<ComputeService>({ Region region ->
 			jcloudsComputeService.getComputeServiceForProvider(region)
 		},regionService)
 
-		accounts = configService.awsAccounts
+		accounts = configService.getAccounts()
 	}
 
 	void initializeCaches() {
@@ -370,6 +372,7 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 	}
 
 	Collection<SecurityGroup> getSecurityGroups(UserContext userContext) {
+		log.info 'list ' + caches.allSecurityGroups.by(userContext.region).list()
 		caches.allSecurityGroups.by(userContext.region).list()
 	}
 
@@ -403,27 +406,27 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 	SecurityGroup getSecurityGroup(UserContext userContext, String name, From from = From.AWS) {
 		Region region = userContext.region
 		Check.notNull(name, SecurityGroup, "name")
-		String groupName
+		String groupName = name
 		String groupId = ''
-		if (name ==~ SECURITY_GROUP_ID_PATTERN) {
+		/*if (name ==~ SECURITY_GROUP_ID_PATTERN) {
 			groupId = name
 			SecurityGroup cachedSecurityGroup = caches.allSecurityGroups.by(region).list().find { it.name == name }
 			groupName = cachedSecurityGroup?.name
 		} else {
 			groupName = name
-		}
-		if (from == From.CACHE) {
+		}*/
+		/*if (from == From.CACHE) {
 			return caches.allSecurityGroups.by(region).get(name)
-		}
+		}*/
 		Set<SecurityGroup> groups = null
 		EC2Client ec2Client=null
 		String regionCode = region.code
 		try {
 			ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(region).getContext());
 			groups= ec2Client.securityGroupServices.describeSecurityGroupsInRegion(regionCode, groupName);
-			groups = Check.lone(groups, SecurityGroup)
+			return Check.lone(groups, SecurityGroup)
 			//groupName = groups?.name
-		} catch (IllegalStateException e) {
+		} catch (IllegalStateException e) {/*
 			log.error 'security group not found ' + e.printStackTrace()
 			 if (e.getCause() == 'InvalidParameterValue' && !groupId) {
 				// It's likely a VPC security group which we can't reference by name. Maybe it has an ID in the cache.
@@ -437,11 +440,8 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 					
 				}
 			}
-		}
-		if (groupName && !groups.empty) {
-			return caches.allSecurityGroups.by(region).put(groupName, groups)
-		}
-		null
+		*/}
+		
 	}
 
 	/**
@@ -453,9 +453,7 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 	 * @return list of security group options for display
 	 */
 	List<SecurityGroupOption> getSecurityGroupOptionsForTarget(UserContext userContext, SecurityGroup targetGroup) {
-		Collection<SecurityGroup> sourceGroups = getEffectiveSecurityGroups(userContext).findAll {
-			targetGroup.vpcId == it.vpcId
-		}
+		Collection<SecurityGroup> sourceGroups = getEffectiveSecurityGroups(userContext);
 		String guessedPorts = bestIngressPortsFor(targetGroup)
 		sourceGroups.collect { SecurityGroup sourceGroup ->
 			buildSecurityGroupOption(sourceGroup, targetGroup, guessedPorts)
@@ -471,9 +469,7 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 	 * @return list of security group options for display
 	 */
 	List<SecurityGroupOption> getSecurityGroupOptionsForSource(UserContext userContext, SecurityGroup sourceGroup) {
-		Collection<SecurityGroup> targetGroups = getEffectiveSecurityGroups(userContext).findAll {
-			sourceGroup.vpcId == it.vpcId
-		}
+		Collection<SecurityGroup> targetGroups = getEffectiveSecurityGroups(userContext)
 		targetGroups.collect { SecurityGroup targetGroup ->
 			String guessedPorts = bestIngressPortsFor(targetGroup)
 			buildSecurityGroupOption(sourceGroup, targetGroup, guessedPorts)
@@ -487,7 +483,7 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 		boolean accessible = accessiblePorts ? true : false
 		String ports = accessiblePorts ?: defaultPorts
 		String groupName = targetGroup.name
-		new SecurityGroupOption(source: sourceGroup.get, target: groupName, allowed: accessible, ports: ports)
+		new SecurityGroupOption(source: sourceGroup.name, target: groupName, allowed: accessible, ports: ports)
 	}
 
 	// mutators
@@ -498,7 +494,6 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 		String groupId = null
 		String regionCode = userContext.region.code
 		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
-		ec2Client.securityGroupServices.createSecurityGroupInRegion(regionCode, name, description);
 		
 		taskService.runTask(userContext, "Create Security Group ${name}", { task ->
 		    ec2Client.securityGroupServices.createSecurityGroupInRegion(regionCode, name, description)
@@ -509,9 +504,8 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 	void removeSecurityGroup(UserContext userContext, String name, String id) {
 		String regionCode = userContext.region.code
 		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
-
 		taskService.runTask(userContext, "Remove Security Group ${name}", { task ->
-			ec2Client.securityGroupServices.deleteSecurityGroupInRegionById(regionCode, id)
+			ec2Client.securityGroupServices.deleteSecurityGroupInRegion(regionCode, name)
 		}, Link.to(EntityType.security, name))
 		caches.allSecurityGroups.by(userContext.region).remove(name)
 	}
@@ -519,7 +513,7 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 	/** High-level permission update for a group pair: given the desired state, make it so. */
 	void updateSecurityGroupPermissions(UserContext userContext, SecurityGroup targetGroup, SecurityGroup sourceGroup,
 			List<IpPermission> wantPerms) {
-		List<IpPermission> havePerms = getIngressFrom(targetGroup, sourceGroup)
+		Collection<IpPermission> havePerms = getIngressFrom(targetGroup, sourceGroup)
 		if (!havePerms && !wantPerms) {
 			return
 		}
@@ -540,7 +534,7 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 		}
 		// This method gets called hundreds of times for one user request so don't call Amazon unless necessary.
 		if (somethingChanged) {
-			getSecurityGroup(userContext, targetGroup.id)
+			getSecurityGroup(userContext, targetGroup.name)
 		}
 	}
 
@@ -572,7 +566,7 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 					def rangeParts = m[0]  // 0:all 1:from 2:dashAndTo 3:to
 					String fromPort = rangeParts[1]
 					String toPort = rangeParts[3] ?: fromPort
-					perms += new IpPermission().withFromPort(fromPort.toInteger()).withToPort(toPort.toInteger())
+					perms += IpPermission.builder().fromPort(fromPort.toInteger()).toPort(toPort.toInteger())
 				}
 			}
 		}
@@ -582,7 +576,7 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 	/** Returns the ingress permissions from one group to another. Assumes tcp and groups, not cidrs. */
 	static Collection<IpPermission> getIngressFrom(SecurityGroup targetGroup, SecurityGroup sourceGroup) {
 		targetGroup.ipPermissions.findAll {
-			it.userIdGroupPairs.any { it.groupId == sourceGroup.i }
+			it.userIdGroupPairs.any { it.containsKey(sourceGroup.name) }
 		}
 	}
 
@@ -605,17 +599,11 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 	private void authorizeSecurityGroupIngress(UserContext userContext, SecurityGroup targetgroup, SecurityGroup sourceGroup, String ipProtocol, int fromPort, int toPort) {
 		String groupName = targetgroup.name
 		String sourceGroupName = sourceGroup.name
-		UserIdGroupPair sourcePair = new UserIdGroupPair().withUserId(accounts[0]).withGroupId(sourceGroup.id)
+		UserIdGroupPair sourcePair = new UserIdGroupPair(accounts[0],sourceGroup.name)
 		String regionCode = userContext.region.code
 		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
-
-		List<IpPermission> perms = [
-			new IpPermission()
-			.withUserIdGroupPairs(sourcePair)
-			.withIpProtocol(ipProtocol).withFromPort(fromPort).withToPort(toPort)
-		]
 		taskService.runTask(userContext, "Authorize Security Group Ingress to ${groupName} from ${sourceGroupName} on ${fromPort}-${toPort}", { task ->
-			ec2Client.securityGroupServices.authorizeSecurityGroupIngressInRegion(regionCode, targetgroup.id, perms)
+			ec2Client.securityGroupServices.authorizeSecurityGroupIngressInRegion(regionCode, targetgroup.name, IpProtocol.fromValue(ipProtocol),fromPort,toPort,"")
 		}, Link.to(EntityType.security, groupName))
 	}
 
@@ -626,7 +614,7 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
 
 
-		UserIdGroupPair sourcePair = new UserIdGroupPair().withUserId(accounts[0]).withGroupId(sourceGroup.id)
+		UserIdGroupPair sourcePair = new UserIdGroupPair(accounts[0],sourceGroup.id)
 		List<IpPermission> perms = [
 			new IpPermission()
 			.withUserIdGroupPairs(sourcePair)

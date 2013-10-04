@@ -28,8 +28,8 @@
       <div class="message">${flash.message}</div>
     </g:if>
     <g:form method="post">
-      <input type="hidden" name="name" value="${group.groupName}"/>
-      <input type="hidden" name="id" value="${group.groupId}"/>
+      <input type="hidden" name="name" value="${group.name}"/>
+      <input type="hidden" name="id" value="${group.id}"/>
       <div class="dialog">
         <table>
           <tbody>
@@ -38,7 +38,7 @@
               Name:
             </td>
             <td class="value">
-              ${group.groupName}
+              ${group.name}
             </td>
           </tr>
           <tr class="prop">
