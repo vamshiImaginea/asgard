@@ -15,8 +15,11 @@
  */
 package com.netflix.asgard
 
+import org.jclouds.compute.domain.Hardware;
+
 import com.netflix.asgard.model.InstanceTypeData
 import com.netflix.grails.contextParam.ContextParam
+
 import grails.converters.JSON
 import grails.converters.XML
 
@@ -29,7 +32,7 @@ class InstanceTypeController {
 
     def list = {
         UserContext userContext = UserContext.of(request)
-        List<InstanceTypeData> instanceTypes = instanceTypeService.getInstanceTypes(userContext)
+        Collection<Hardware> instanceTypes = instanceTypeService.getInstanceTypes(userContext)
         Map details = [instanceTypes: instanceTypes]
         withFormat {
             html { details }

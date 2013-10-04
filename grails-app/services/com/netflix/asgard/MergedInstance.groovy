@@ -83,7 +83,7 @@ class MergedInstance {
             status        = ec2Instance.status
             instanceId    = ec2Instance.id
             amiId         = ec2Instance.imageId
-            instanceType  = ec2Instance.type
+            instanceType  = ec2Instance.hardware.providerId
             zone          = ec2Instance.location
             launchTime    = new Date()
         }

@@ -111,10 +111,10 @@ class InitService implements ApplicationContextAware {
 			!it.filled
 			 }
 		
+		
 	}
 	void removeCaches() {
 		regionService.reloadRegions = true
-		RegionFilters.defaultRegionSet = false
 		cachedMapBuilder.regions = regionService.values()
 		caches.rebuild(cachedMapBuilder,configService)
 	/*	cachedMapBuilder.regions = regionService.values()

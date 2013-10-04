@@ -870,8 +870,8 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 
 	String getConsoleOutput(UserContext userContext, String instanceId) {
 		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
-		String output =  ec2Client.instanceServices.getConsoleOutputForInstanceInRegion(userContext.region.code, instanceId);
-		output ? new String(Base64.decodeBase64(output.bytes)) : null
+		ec2Client.instanceServices.getConsoleOutputForInstanceInRegion(userContext.region.code, instanceId);
+		
 	}
 
 
@@ -977,18 +977,17 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
 		DetachVolumeOptions detachVolumeOptions = new  DetachVolumeOptions().fromDevice(device).fromInstance(instanceId)
 		ec2Client.elasticBlockStoreServices.detachVolumeInRegion(regionCode, volumeId, false,detachVolumeOptions)
-		return null
 	}
 
 	Attachment attachVolume(UserContext userContext, String volumeId, String instanceId, String device) {
 		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());		DetachVolumeOptions detachVolumeOptions = new  DetachVolumeOptions().fromDevice(device).fromInstance(instanceId)
-		ec2Client.elasticBlockStoreServices.attachVolumeInRegion(region.code, volumeId, instanceId, device)
+		ec2Client.elasticBlockStoreServices.attachVolumeInRegion(userContext.region.code, volumeId, instanceId, device)
 
 	}
 
 	void deleteVolume(UserContext userContext, String volumeId) {
 		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
-		ec2Client.elasticBlockStoreServices.deleteVolumeInRegion(region.code, volumeId)
+		ec2Client.elasticBlockStoreServices.deleteVolumeInRegion(userContext.region.code, volumeId)
 		// Do not remove it from the allVolumes map, as this prevents
 		// the list page from showing volumes that are in state "deleting".
 		// Volume deletes can take 20 minutes to process.
@@ -1056,7 +1055,7 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 		Snapshot snapshot = null
 		String msg = "Create snapshot for volume '${volumeId}' with description '${description}'"
 		taskService.runTask(userContext, msg, { task ->
-			snapshot = ec2Client.getElasticBlockStoreServices().createSnapshotInRegion(region.code,volumeId, withDescription(description))
+			snapshot = ec2Client.getElasticBlockStoreServices().createSnapshotInRegion(userContext.region.code,volumeId, withDescription(description))
 			task.log("Snapshot ${snapshot.id} created")
 			caches.allSnapshots.by(userContext.region).put(snapshot.id, snapshot)
 		}, Link.to(EntityType.volume, volumeId))

@@ -18,7 +18,6 @@ package com.netflix.asgard
 class RegionFilters {
 
     private static MONTH_IN_SECONDS = 60 * 60 * 24 * 30
-    private static boolean defaultRegionSet = false;
     def configService
     def grailsApplication
     def regionService
@@ -27,12 +26,7 @@ class RegionFilters {
             before = {
                 // Choose a region based on request parameter, then cookie, then default
                 Region region = Region.withCode(params.region) ?: regionService.withCode(request.getCookie('region')) ?:
-                        Region.defaultRegion()
-
-				if(!defaultRegionSet && null != regionService.values() && null != regionService.values().get(0)){
-					region = regionService.values().get(0)
-					defaultRegionSet = true
-				}
+                       regionService.values().size()>0?regionService.values().get(0):Region.defaultRegion()
                 // Store the region in the cookie and in the request
                 response.setCookie('region', region.code, MONTH_IN_SECONDS)
                 request.region = region

@@ -23,7 +23,7 @@
 </head>
 <body>
   <div class="body">
-    <h1>Instance types and hourly prices</h1>
+    <h1>Instance types</h1>
     <g:if test="${flash.message}">
       <div class="message">${flash.message}</div>
     </g:if>
@@ -33,9 +33,9 @@
         <tr>
           <th>Name</th>
           <th>Description</th>
-          <th class="sorttable_nosort">Mem</th>
-          <th class="sorttable_nosort">Storage</th>
-          <th class="sorttable_nosort">CPU</th>
+          <th>Ram</th>
+          <th class="sorttable_nosort" colspan="2">Volumes</th>
+         <%--
           <th>Arch</th>
           <th>IO Perf</th>
           <th>Linux<br/>On<br/>Dem</th>
@@ -44,25 +44,60 @@
           <th>Win<br/>On<br/>Dem</th>
           <th>Win<br/>Res</th>
           <th>Win<br/>Spot</th>
-        </tr>
-        <g:each in="${instanceTypes}" var="instanceType">
-          <tr>
-            <td>${instanceType.name}</td>
-            <td class="description">${instanceType.hardwareProfile?.description}</td>
-            <td>${instanceType.hardwareProfile?.memory}</td>
-            <td class="storage">${instanceType.hardwareProfile?.storage}</td>
-            <td class="cpu">${instanceType.hardwareProfile?.cpuSummary}<br/>${instanceType.hardwareProfile?.cpuDetail}</td>
-            <td class="architecture">${instanceType.hardwareProfile?.architecture}</td>
-            <td class="ioPerformance">${instanceType.hardwareProfile?.ioPerformance}</td>
+        --%></tr>
+				<g:each in="${instanceTypes}" var="instanceType">
+					<tr>
+						<td>
+							${instanceType.id}
+						</td>
+						<td class="description">
+							${instanceType.processors}
+						</td>
+						<td>
+							${instanceType.ram}
+						</td>
+						<td>
+							<table>
+								<tr>
+									<th>Device</th>
+									<th>Size</th>
+									<th>BootDevice</th>
+									<th>Durable</th>
+								</tr>
+								<g:each in="${instanceType.volumes}" var="volume">
+
+									<tr>
+										<td>
+											${volume.device}
+										</td>
+
+										<td>
+											${volume.size}
+										</td>
+										<td>
+											${volume.bootDevice}
+										</td>
+										<td>
+											${volume.durable}
+										</td>
+									</tr>
+
+								</g:each>
+							</table>
+						</td>
+						<%--<td class="cpu">${instanceType}</td>
+            <td class="architecture">${instanceType}</td>
+            <td class="ioPerformance">${instanceType}</td>
             <td><g:formatNumber number="${instanceType.linuxOnDemandPrice}" type="currency" currencyCode="USD" /></td>
             <td><g:formatNumber number="${instanceType.linuxReservedPrice}" type="currency" currencyCode="USD" /></td>
             <td><g:formatNumber number="${instanceType.linuxSpotPrice}" type="currency" currencyCode="USD" /></td>
             <td><g:formatNumber number="${instanceType.windowsOnDemandPrice}" type="currency" currencyCode="USD" /></td>
             <td><g:formatNumber number="${instanceType.windowsReservedPrice}" type="currency" currencyCode="USD" /></td>
             <td><g:formatNumber number="${instanceType.windowsSpotPrice}" type="currency" currencyCode="USD" /></td>
-          </tr>
-        </g:each>
-      </table>
+          --%>
+					</tr>
+				</g:each>
+			</table>
     </div>
   </div>
 </body>

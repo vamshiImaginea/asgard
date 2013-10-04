@@ -142,9 +142,9 @@
          <li class="menuButton"><g:link class="dbSecurity" controller="dbSecurity" action="list">DB Security</g:link></li>
          <li class="menuButton"><g:link class="dbSnapshot" controller="dbSnapshot" action="list">DB Snapshots</g:link></li>
        </ul>
-     </li>
+     </li>--%>
      <li class="menuButton"><g:link class="tasks" controller="task" action="list">Task</g:link></li>
-   --%></ul>
+   </ul>
   </g:if>
   <div class="clear"></div>
   <g:if test="${bleskDataUrl}">

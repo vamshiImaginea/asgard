@@ -23,8 +23,10 @@ import java.lang.reflect.Modifier
 import org.codehaus.jackson.annotate.JsonAutoDetect
 import org.codehaus.jackson.annotate.JsonCreator
 import org.codehaus.jackson.annotate.JsonProperty
+import org.jclouds.compute.domain.Hardware
 import org.jclouds.compute.domain.Image
 import org.jclouds.compute.domain.NodeMetadata;
+import org.jclouds.compute.domain.internal.HardwareImpl;
 import org.jclouds.domain.Location
 import org.jclouds.ec2.domain.AvailabilityZoneInfo
 import org.jclouds.ec2.domain.KeyPair
@@ -90,6 +92,7 @@ import com.netflix.asgard.push.Cluster
             { it.instanceType.toString() })
     static final EntityType<Image> image = create('Image', { it.id })
     static final EntityType<NodeMetadata> instance = create('Node', { it.id }, 'i-')
+	static final EntityType<Hardware> hardwareProfileTypes = create('hardwarem Profile Types', { it.id })
     static final EntityType<InstanceHealth> instanceHealth = create('Instance Health', { it.instanceId })
     static final EntityType<InstanceTypeData> instanceType = create('Instance Type', { it.name })
     static final EntityType<KeyPair> keyPair = create('Key Pair', { it.keyName })

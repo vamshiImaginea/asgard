@@ -43,6 +43,7 @@ import com.netflix.asgard.model.SimpleQueue
 import com.netflix.asgard.model.TopicData
 import com.netflix.asgard.push.Cluster
 
+import org.jclouds.compute.domain.Hardware;
 import org.jclouds.compute.domain.Image
 import org.jclouds.compute.domain.NodeMetadata;
 import org.jclouds.domain.Location
@@ -82,7 +83,7 @@ class Caches {
      MultiRegionCachedMap<Image> allImages
      MultiRegionCachedMap<NodeMetadata> allInstances
      MultiRegionCachedMap<InstanceHealth> allSignificantStackInstanceHealthChecks
-     MultiRegionCachedMap<InstanceTypeData> allInstanceTypes
+     MultiRegionCachedMap<Hardware> allInstanceTypes
      MultiRegionCachedMap<KeyPair> allKeyPairs
      MultiRegionCachedMap<LaunchConfiguration> allLaunchConfigurations
      MultiRegionCachedMap<LoadBalancerDescription> allLoadBalancers
@@ -153,7 +154,7 @@ class Caches {
 		allOnDemandPrices = MultiRegionInstancePrices.create('On Demand Prices')
 		allReservedPrices = MultiRegionInstancePrices.create('Reserved Prices')
 		allSpotPrices = MultiRegionInstancePrices.create('Spot Prices')
-		allInstanceTypes = cachedMapBuilder.of(EntityType.instanceType).buildMultiRegionCachedMap()
+		allInstanceTypes = cachedMapBuilder.of(EntityType.hardwareProfileTypes).buildMultiRegionCachedMap()
 		allTerminationPolicyTypes = cachedMapBuilder.of(EntityType.terminationPolicyType, 3600).buildCachedMap()
 	}
 	void rebuild(CachedMapBuilder cachedMapBuilder, ConfigService configService = null){

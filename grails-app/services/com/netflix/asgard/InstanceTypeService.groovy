@@ -24,9 +24,13 @@ import com.netflix.asgard.model.HardwareProfile
 import com.netflix.asgard.model.InstancePriceType
 import com.netflix.asgard.model.InstanceProductType
 import com.netflix.asgard.model.InstanceTypeData
+
 import groovy.transform.Immutable
+
 import org.codehaus.groovy.grails.web.json.JSONArray
 import org.codehaus.groovy.grails.web.json.JSONElement
+import org.jclouds.compute.domain.Hardware
+import org.jclouds.compute.domain.internal.HardwareImpl;
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.Node
@@ -56,7 +60,7 @@ class InstanceTypeService implements CacheInitializer {
 		caches.allOnDemandPrices.ensureSetUp({ retrieveInstanceTypeOnDemandPricing() })
 		caches.allReservedPrices.ensureSetUp({ retrieveInstanceTypeReservedPricing() })
 		caches.allSpotPrices.ensureSetUp({ retrieveInstanceTypeSpotPricing() })
-		caches.allInstanceTypes.ensureSetUp({ Region region -> buildInstanceTypes(region) })
+		caches.allInstanceTypes.ensureSetUp({ Region region -> 	buildInstanceTypes(region) })
 		caches.allHardwareProfiles.ensureSetUp({ retrieveHardwareProfiles() }, {
 			caches.allOnDemandPrices.fill()
 			caches.allReservedPrices.fill()
@@ -81,8 +85,8 @@ class InstanceTypeService implements CacheInitializer {
         caches.allInstanceTypes.by(userContext.region).get(instanceTypeName)
     }
 
-    Collection<InstanceTypeData> getInstanceTypes(UserContext userContext) {
-        caches.allInstanceTypes.by(userContext.region).list().sort { it.linuxOnDemandPrice }
+    Collection<Hardware> getInstanceTypes(UserContext userContext) {
+		   caches.allInstanceTypes.by(userContext.region).list();
     }
 
     private JSONElement fetchPricingJsonData(InstancePriceType instancePriceType) {
@@ -106,8 +110,12 @@ class InstanceTypeService implements CacheInitializer {
     private RegionalInstancePrices getSpotPrices(Region region) {
         caches.allSpotPrices.by(region)
     }
-
-    private List<InstanceTypeData> buildInstanceTypes(Region region) {
+	private Collection<Hardware> buildInstanceTypes(Region region) {
+		
+		awsEc2Service.computeServiceClientByRegion.by(region).listHardwareProfiles() 
+		
+	}
+   /* private List<InstanceTypeData> buildInstanceTypes(Region region) {
 
         Map<String, InstanceTypeData> namesToInstanceTypeDatas = [:]
         Set<InstanceType> enumInstanceTypes = InstanceType.values() as Set
@@ -161,7 +169,7 @@ class InstanceTypeService implements CacheInitializer {
         List<InstanceTypeData> instanceTypeDatas = namesToInstanceTypeDatas.values() as List
         instanceTypeDatas.sort { a, b -> a.name <=> b.name }
         instanceTypeDatas.sort { a, b -> a.linuxOnDemandPrice <=> b.linuxOnDemandPrice }
-    }
+    }*/
 
     private Document fetchLocalInstanceTypesDocument() {
         MockFileUtils.parseHtmlFile('instance-types.html')
