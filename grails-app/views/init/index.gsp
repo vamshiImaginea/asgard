@@ -79,7 +79,28 @@
 									maxlength='40' id="openStackPassword" name="openStackPassword"
 									value="${params.openStackPassword}"  /></td>
 							</tr>
-
+								<tr class="prop">
+								<td class="name"><label for="mdbUrl">M/DB URL:
+								</label></td>
+								<td class="value"><input type="text" size='25'
+									maxlength='40' id="mdbUrl" name="mdbUrl"
+									value="${params.mdbUrl}"  /></td>
+							</tr>
+								<tr class="prop">
+								<td class="name"><label for="mdbUserName">M/DB UserName:
+								</label></td>
+								<td class="value"><input type="text" size='25'
+									maxlength='40' id="mdbUserName" name="mdbUserName"
+									value="${params.mdbUserName}"  /></td>
+							</tr>
+								<tr class="prop">
+								<td class="name"><label for="mdbPassword">M/DB Password:
+								</label></td>
+								<td class="value"><input type="password" size='25'
+									maxlength='40' id="mdbPassword" name="mdbPassword"
+									value="${params.mdbPassword}"  /></td>
+							</tr>
+                            
 						</tbody>
 					</table>
 				</div>

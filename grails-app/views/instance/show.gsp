@@ -172,7 +172,7 @@
           </tr>
           <tr class="prop">
             <td class="name"><g:link controller="instanceType" action="list">Instance Type:</g:link></td>
-            <td class="value">${instance.hardware}</td>
+            <td class="value">${instance.hardware?:instance.type}</td>
           </tr>
           <tr class="prop">
             <td class="name">Zone:</td>

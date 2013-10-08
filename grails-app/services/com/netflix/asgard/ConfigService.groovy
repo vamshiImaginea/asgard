@@ -112,6 +112,14 @@ class ConfigService {
 		else
 		grailsApplication.config.grails?.awsAccountNames ?: [:]
     }
+		
+		Map<String, String> getMdbCredentials() {
+			
+				
+				grailsApplication.config.openstack.mdbCredentials?:[:]
+				
+			
+		}
 
     /**
      * Gets the maximum number of times to perform a DNS lookup without receiving a new result. This is useful to tune

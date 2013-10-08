@@ -15,8 +15,12 @@
  */
 package com.netflix.asgard
 
+import java.util.Map;
+
 import com.amazonaws.AmazonServiceException
+import com.amazonaws.auth.BasicAWSCredentials
 import com.amazonaws.services.simpledb.AmazonSimpleDB
+import com.amazonaws.services.simpledb.AmazonSimpleDBClient
 import com.amazonaws.services.simpledb.model.Attribute
 import com.amazonaws.services.simpledb.model.AttributeDoesNotExistException
 import com.amazonaws.services.simpledb.model.CreateDomainRequest
@@ -32,6 +36,7 @@ import com.amazonaws.services.simpledb.model.ReplaceableAttribute
 import com.amazonaws.services.simpledb.model.RequestTimeoutException
 import com.amazonaws.services.simpledb.model.UpdateCondition
 import com.netflix.asgard.model.SimpleDbSequenceLocator
+
 import org.springframework.beans.factory.InitializingBean
 
 class AwsSimpleDbService implements InitializingBean {
@@ -40,12 +45,22 @@ class AwsSimpleDbService implements InitializingBean {
 
     MultiRegionAwsClient<AmazonSimpleDB> awsClient
     def awsClientService
+	def configService
 
     void afterPropertiesSet() {
         awsClient = new MultiRegionAwsClient<AmazonSimpleDB>( { Region region ->
-            AmazonSimpleDB client = awsClientService.create(AmazonSimpleDB)
+            AmazonSimpleDB client 
             // Unconventional SDB endpoints. http://docs.amazonwebservices.com/general/latest/gr/index.html?rande.html
-            if (!region.equals(Region.US_EAST_1)) { client.setEndpoint("sdb.${region}.amazonaws.com") }
+            if (configService.cloudProvider == Provider.AWS) { 
+				client = awsClientService.create(AmazonSimpleDB)
+				client.setEndpoint("sdb.${region}.amazonaws.com") 
+				
+				}
+			else if(configService.mdbCredentials.size() > 0){
+				Map<String, String> openStackSimpleDBCredentials = configService.mdbCredentials
+				client = new AmazonSimpleDBClient(new BasicAWSCredentials(openStackSimpleDBCredentials.get('username'), openStackSimpleDBCredentials.get('password')))
+				client.setEndpoint(openStackSimpleDBCredentials.get('url'))
+			}
             client
         })
     }

@@ -16,7 +16,9 @@
 package com.netflix.asgard
 
 import com.amazonaws.AmazonServiceException
+import com.amazonaws.auth.BasicAWSCredentials
 import com.amazonaws.services.simpledb.AmazonSimpleDB
+import com.amazonaws.services.simpledb.AmazonSimpleDBClient
 import com.amazonaws.services.simpledb.model.CreateDomainRequest
 import com.amazonaws.services.simpledb.model.DeleteAttributesRequest
 import com.amazonaws.services.simpledb.model.Item
@@ -55,6 +57,17 @@ class ApplicationService implements CacheInitializer, InitializingBean {
 
         // Applications are stored only in the default region, so no multi region support needed here.
         simpleDbClient = simpleDbClient ?: awsClientService.create(AmazonSimpleDB)
+		
+			if (configService.cloudProvider == Provider.AWS) {
+			 simpleDbClient = simpleDbClient ?: awsClientService.create(AmazonSimpleDB)				
+				}
+			else if(configService.mdbCredentials.size() > 0){				
+				simpleDbClient = new AmazonSimpleDBClient(new BasicAWSCredentials(configService.mdbCredentials.get('username'), configService.mdbCredentials.get('password')))
+				simpleDbClient.setEndpoint(configService.mdbCredentials.get('url'))
+			}
+			
+
+		
     }
 
     void initializeCaches() {
@@ -99,7 +112,7 @@ class ApplicationService implements CacheInitializer, InitializingBean {
     }
 
     List<AppRegistration> getRegisteredApplications(UserContext userContext) {
-        caches.allApplications.list().sort { it.name }
+        retrieveApplications();
     }
 
     List<AppRegistration> getRegisteredApplicationsForLoadBalancer(UserContext userContext) {

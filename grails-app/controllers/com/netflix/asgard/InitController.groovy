@@ -52,15 +52,22 @@ class InitController {
 		if(params.get('cloudService')) {
 			def config = new ConfigSlurper().parse(configFile.toURL())
 			if(null != config.secret && config.secret.size() > 0){
-			cmd.accessId = config.secret.accessId
-			cmd.secretKey = config.secret.secretKey
-			cmd.accountNumber = config.secret.accountNumber
+				cmd.accessId = config.secret.accessId
+				cmd.secretKey = config.secret.secretKey
+				cmd.accountNumber = config.secret.accountNumber
 			}
 			if(null != config.openstack && config.openstack.size() > 0){
-			cmd.openStackUrl = config.openstack.endpoint
-			cmd.openStackPassword = config.openstack.passwd
-			cmd.openStackUsername = config.openstack.username
-			cmd.openstackTenentId = config.openstack.tenentId
+				cmd.openStackUrl = config.openstack.endpoint
+				cmd.openStackPassword = config.openstack.passwd
+				cmd.openStackUsername = config.openstack.username
+				if(config.openstack.tenentId){
+					cmd.openstackTenentId = config.openstack.tenentId
+				}
+				if(config.openstack.mdbCredentials && config.openstack.mdbCredentials.size() > 0){
+					cmd.mdbUrl = config.openstack.mdbCredentials.get('url')
+					cmd.mdbUserName = config.openstack.mdbCredentials.get('username')
+					cmd.mdbPassword = config.openstack.mdbCredentials.get('password')
+				}
 			}
 
 			render(view: 'index', model: [params: cmd])
@@ -100,6 +107,9 @@ class InitializeCommand {
 	String openStackPassword
 	String cloudService
 	String openstackTenentId
+	String mdbUrl
+	String mdbUserName
+	String mdbPassword
 	boolean showPublicAmazonImages
 	static constraints = {
 
@@ -122,7 +132,7 @@ class InitializeCommand {
 			grailsConfig['awsAccounts'] =  [accountNumber]
 			grailsConfig['awsAccountNames'] = [(accountNumber): 'prod']
 			grailsConfig['currentActiveService'] = cloudService
-			
+
 			rootConfig['secret'] = secretConfig
 			secretConfig['accessId'] = accessId.trim()
 			secretConfig['secretKey'] = secretKey.trim()
@@ -133,8 +143,7 @@ class InitializeCommand {
 			cloudConfig['publicResourceAccounts'] = showPublicAmazonImages ? ['amazon'] : []
 			rootConfig
 		}else {
-		println openstackTenentId
-		if(!openStackUrl || !openStackUsername || !openStackPassword || !openstackTenentId) {
+			if(!openStackUrl || !openStackUsername || !openStackPassword || !openstackTenentId) {
 				throw new Exception("OpenStack Credentials are not provided")
 			}
 
@@ -143,6 +152,9 @@ class InitializeCommand {
 			secretConfig['username'] = openStackUsername.trim()
 			secretConfig['endpoint'] = openStackUrl.trim()
 			secretConfig['tenentId'] = openstackTenentId.trim()
+			if(mdbUrl && mdbUserName && mdbPassword){
+				secretConfig['mdbCredentials'] = ['url':mdbUrl,'username':mdbUserName,'password':mdbPassword]
+			}
 			grailsConfig['currentActiveService'] = cloudService
 			ConfigObject cloudConfig = new ConfigObject()
 			rootConfig['cloud'] = cloudConfig
