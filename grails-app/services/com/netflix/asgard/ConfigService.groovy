@@ -106,7 +106,7 @@ class ConfigService {
         Map<String, String> getAwsAccountNames() {
 		if(getCloudProvider() == Provider.OPENSTACK){
 			Map<String,String> accountNames = new HashMap<String,String>();
-			accountNames.put(grailsApplication.config.openstack.tenentId, grailsApplication.config.openstack.tenentId)
+			accountNames.put(grailsApplication.config.openstack.tenantId, grailsApplication.config.openstack.tenantId)
 			accountNames
 		}
 		else
@@ -277,7 +277,7 @@ class ConfigService {
     }
 	
 	List<String> getAccounts() {
-		getCloudProvider() == Provider.AWS? grailsApplication.config.grails?.awsAccounts:[grailsApplication.config.openstack.tenentId]?:[]
+		getCloudProvider() == Provider.AWS? grailsApplication.config.grails?.awsAccounts:[grailsApplication.config.openstack.tenantId]?:[]
 	}
 
     /**

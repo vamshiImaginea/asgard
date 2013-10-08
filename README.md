@@ -10,6 +10,10 @@ Grab the [latest binary release](http://netflix.box.com/asgard)
 
 (We are using Box to host binaries now, not GitHub.)
 
+## PREREQUISITE
+
+Incase of usng asgard with openstack, to support applications and simple-db operations [M/DB](http://gradvs1.mgateway.com/main/) needs to be installed and configured.
+
 ## DETAILS
 
 Please see the [wiki](https://github.com/Netflix/asgard/wiki).

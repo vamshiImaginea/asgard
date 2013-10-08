@@ -60,8 +60,8 @@ class InitController {
 				cmd.openStackUrl = config.openstack.endpoint
 				cmd.openStackPassword = config.openstack.passwd
 				cmd.openStackUsername = config.openstack.username
-				if(config.openstack.tenentId){
-					cmd.openstackTenentId = config.openstack.tenentId
+				if(config.openstack.tenantId){
+					cmd.openstackTenantId = config.openstack.tenantId
 				}
 				if(config.openstack.mdbCredentials && config.openstack.mdbCredentials.size() > 0){
 					cmd.mdbUrl = config.openstack.mdbCredentials.get('url')
@@ -106,7 +106,7 @@ class InitializeCommand {
 	String openStackUsername
 	String openStackPassword
 	String cloudService
-	String openstackTenentId
+	String openstackTenantId
 	String mdbUrl
 	String mdbUserName
 	String mdbPassword
@@ -143,7 +143,7 @@ class InitializeCommand {
 			cloudConfig['publicResourceAccounts'] = showPublicAmazonImages ? ['amazon'] : []
 			rootConfig
 		}else {
-			if(!openStackUrl || !openStackUsername || !openStackPassword || !openstackTenentId) {
+			if(!openStackUrl || !openStackUsername || !openStackPassword || !openstackTenantId) {
 				throw new Exception("OpenStack Credentials are not provided")
 			}
 
@@ -151,7 +151,7 @@ class InitializeCommand {
 			secretConfig['passwd'] = openStackPassword.trim()
 			secretConfig['username'] = openStackUsername.trim()
 			secretConfig['endpoint'] = openStackUrl.trim()
-			secretConfig['tenentId'] = openstackTenentId.trim()
+			secretConfig['teneatId'] = openstackTenantId.trim()
 			if(mdbUrl && mdbUserName && mdbPassword){
 				secretConfig['mdbCredentials'] = ['url':mdbUrl,'username':mdbUserName,'password':mdbPassword]
 			}

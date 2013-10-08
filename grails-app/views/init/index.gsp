@@ -61,10 +61,10 @@
 									value="${params.openStackUrl}"  /></td>
 							</tr>
 							<tr class="prop">
-								<td class="name"><label for="tenentId">Tenent ID: </label></td>
+								<td class="name"><label for="tenantId">Tenant ID: </label></td>
 								<td class="value"><input type="text" size='25'
-									maxlength='40' id="openstackTenentId" name="openstackTenentId"
-									value="${params.openstackTenentId}" /></td>
+									maxlength='40' id="openstackTenantId" name="openstackTenantId"
+									value="${params.openstackTenantId}" /></td>
 							</tr>
 							<tr class="prop">
 								<td class="name"><label for="openStackUsername">UserName: </label></td>
