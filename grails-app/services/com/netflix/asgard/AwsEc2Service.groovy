@@ -287,9 +287,9 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 		Closure work = { Task task ->
 			Image image = getImage(userContext, imageId)
 			if (image) {
-				ec2Client.getAMIServices().deregisterImageInRegion(userContext.region.code,  imageIds)
+				ec2Client.getAMIServices().deregisterImageInRegion(userContext.region.code,  image.providerId)
 			}
-			getImage(userContext, imageId)
+			caches.allImages.by(userContext.region).remove(imageId)
 		}
 		taskService.runTask(userContext, msg, work, Link.to(EntityType.image, imageId), existingTask)
 	}
@@ -1049,7 +1049,7 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 		}, Link.to(EntityType.volume, volumeId))
 		snapshot
 	}
-
+	
 	void deleteSnapshot(UserContext userContext, String snapshotId, Task existingTask = null) {
 		 String regionCode = userContext.region.code;
 

@@ -34,10 +34,10 @@
     </g:hasErrors>
     <div class="buttons">
       <g:form>
-        <input type="hidden" name="id" value="${image.id}"/>
+        <input type="hidden" name="id" value="${java.net.URLEncoder.encode(image.id)}"/>
         <g:link class="edit" action="edit" params="[id:java.net.URLEncoder.encode(image.id,'UTF-8')]">Edit Image Attributes</g:link>
-        <g:if test="${accountName == env}">
-          <g:buttonSubmit  disabled="true" class="delete" action="delete" value="Delete Image"
+        <g:if test="${accountName == env || provider == 'OPENSTACK'}">
+          <g:buttonSubmit class="delete" action="delete" value="Delete Image"
                           data-warning="Really delete image '${image.id}' with name '${image.name}'?" />
         </g:if>
         <g:else>

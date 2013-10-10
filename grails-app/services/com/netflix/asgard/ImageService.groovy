@@ -32,6 +32,7 @@ import org.jclouds.compute.domain.Image
 import org.jclouds.compute.domain.NodeMetadata
 import org.jclouds.compute.domain.TemplateBuilder
 import org.jclouds.compute.domain.internal.ImageImpl
+import org.jclouds.ec2.EC2Client
 import org.jclouds.ec2.domain.Tag
 import org.jclouds.ec2.domain.Tag.ResourceType
 import org.joda.time.DateTime
@@ -383,12 +384,23 @@ class ImageService implements BackgroundProcessInitializer {
                 task.log("Unable to find image '${imageId}'")
                 return
             }
-            String snapshotId = image.blockDeviceMappings.findResult { it.ebs?.snapshotId }
+        /*    String snapshotId = image.blockDeviceMappings.findResult { it.ebs?.snapshotId }
             String location = image.imageLocation
             if (location.contains('/') && location.endsWith(AwsS3Service.MANIFEST_SUFFIX)) {
                 task.log("Deleting S3 bundle ${location}")
                 awsS3Service.deleteBundle(userContext, location)
-            }
+            }*/
+			String snapshotId  = awsEc2Service.getEC2Client(userContext).AMIServices.getBlockDeviceMappingsForImageInRegion(userContext.region.code, image.providerId).findResult { it.ebs?.snapshotId }
+			if(configService.cloudProvider == Provider.AWS){
+				// Need to check equivalant of Aws imageLocation, Assuming id to be equal to the imageLocation of AWS API
+				String location = image.getLocation().id
+				if (location.contains('/') && location.endsWith(AwsS3Service.MANIFEST_SUFFIX)) {
+					task.log("Deleting S3 bundle ${location}")
+					awsS3Service.deleteBundle(userContext, location)
+				}
+
+			}
+			
             awsEc2Service.deregisterImage(userContext, imageId, task)
             if (snapshotId) {
                 try {

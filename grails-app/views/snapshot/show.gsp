@@ -34,7 +34,7 @@
       <g:form>
         <input type="hidden" name="snapshotId" value="${snapshot.id}"/>
         <div class="buttons">
-          <g:if test="${accountName == env}">
+          <g:if test="${accountName == env || provider == 'OPENSTACK'}">
             <g:buttonSubmit class="delete" action="delete" value="Delete Snapshot"
                             data-warning="Really delete Snapshot '${snapshot.id}'?" />
           </g:if>
@@ -45,11 +45,12 @@
         </div>
       </g:form>
       <g:form class="validate">
-        <div class="buttons"><%--
+       <input type="hidden" name="snapshotId" value="${snapshot.id}"/>
+        <div class="buttons">
           <g:buttonSubmit class="create requireLogin" action="restore" value="Create Volume From Snapshot"/><br/>
           Volume Size (in GB): <g:textField name="volumeSize" size="15" placeholder="--ENTER SIZE--" class="required requireLogin" />
-          Availability Zone: <g:select name="zone" from="${zoneList.}" class="requireLogin" />
-        --%></div>
+          Availability Zone: <g:select name="zone" from="${zoneList.zone}" class="requireLogin" />
+        </div>
       </g:form>
     </g:if>
     <div class="dialog">

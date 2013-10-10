@@ -117,7 +117,7 @@ class SnapshotController {
                     params.zone,
                     snapshotId
                 )
-                redirect(controller:"volume", action:'show', params:[id:volume.volumeId])
+                redirect(controller:"volume", action:'show', params:[id:volume.id])
             } catch (Exception e) {
                 flash.message = "Could not restore from EBS Snapshot: ${e}"
                 redirect(action: 'show', params:[id:snapshotId])
