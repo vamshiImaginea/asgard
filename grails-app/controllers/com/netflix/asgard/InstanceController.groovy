@@ -42,9 +42,7 @@ class InstanceController {
 
     def index = { redirect(action: 'list', params:params) }
 
-    def awsAutoScalingService
     def awsEc2Service
-    def awsLoadBalancerService
     def configService
     def discoveryService
     def mergedInstanceGroupingService
@@ -210,25 +208,6 @@ class InstanceController {
     def terminate = {
         UserContext userContext = UserContext.of(request)
         List<String> instanceIds = Requests.ensureList(params.selectedInstances ?: params.instanceId)
-
-        // All this deregister-before-terminate logic is complicated because it needs to be done in large batches to
-        // reduce Amazon errors. When Amazon fixes their ELB bugs a lot of this code should be removed for simplicity.
-        Map<String, Collection<String>> asgNamesToInstanceIdSets = new HashMap<String, Collection<String>>()
-        for (String instanceId in instanceIds) {
-            String asg = awsAutoScalingService.getAutoScalingGroupFor(userContext, instanceId)?.autoScalingGroupName
-            if (asg) {
-                if (!asgNamesToInstanceIdSets.containsKey(asg)) {
-                    asgNamesToInstanceIdSets.put(asg, new HashSet<String>())
-                }
-                asgNamesToInstanceIdSets[asg].add(instanceId)
-            }
-        }
-        for (String asg in asgNamesToInstanceIdSets.keySet()) {
-            Collection<String> instanceIdsForAsg = asgNamesToInstanceIdSets[asg]
-            awsAutoScalingService.deregisterInstancesInAutoScalingGroupFromLoadBalancers(userContext, asg,
-                    instanceIdsForAsg)
-        }
-
         awsEc2Service.terminateInstances(userContext, instanceIds)
         flash.message = "Terminated ${instanceIds.size()} instance${instanceIds.size() == 1 ? '' : 's'}: ${instanceIds}"
         chooseRedirect(params.autoScalingGroupName, instanceIds, params.appNames)

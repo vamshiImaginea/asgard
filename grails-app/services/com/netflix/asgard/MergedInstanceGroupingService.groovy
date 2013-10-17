@@ -32,8 +32,6 @@ class MergedInstanceGroupingService {
     static transactional = false
 
     def awsEc2Service
-    def awsAutoScalingService
-    def discoveryService
 
     /**
      * Returns the merged instances for a given application. appName may be null for all.
@@ -47,23 +45,10 @@ class MergedInstanceGroupingService {
      */
     List<MergedInstance> getMergedInstances(UserContext userContext) {
         Collection<NodeMetadata> ec2List = awsEc2Service.getInstances(userContext)
-        Collection<ApplicationInstance> discList = discoveryService.getAppInstances(userContext)
-        Map<String, ApplicationInstance> idsToDiscInstances = discList.inject([:]) { map, discoveryInstance ->
-            map << [(discoveryInstance.instanceId): discoveryInstance]
-        } as Map<String, ApplicationInstance>
-
-        // All the ec2 instances, with Discovery pair when available.
         List<MergedInstance> instances = ec2List.collect { NodeMetadata ec2Inst ->
-            ApplicationInstance appInst = idsToDiscInstances[ec2Inst.id]
-            new MergedInstance(ec2Inst, appInst)
+            new MergedInstance(ec2Inst, null)
         }
-        // All the remaining Discovery-only instances.
-        for (ApplicationInstance appInst : discList) {
-            if (!appInst.instanceId) {
-                instances += new MergedInstance(null, appInst)
-            }
-        }
-        injectGroupNames(userContext, instances, null)
+      instances
     }
 
     /**

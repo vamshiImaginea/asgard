@@ -37,23 +37,12 @@
         <tbody>
         <tr>
           <td>
-            Manage <g:link controller="application" action="list"
-                      title="An Application is an interrelated set of AWS components identified by standard naming patterns.">Applications</g:link>
-            <ul>
-              <li>Push images to one or more Application AutoScaling Groups</li>
-              <li>Configure outbound security access for Applications</li>
-            </ul>
-          </td>
+          
+                   </td>
           <td>
             <ul>
               <li>Manage <g:link controller="image" action="list"
                                  title="An 'Amazon Machine Image' is a snapshot if a running machine used to create new instances.">Images</g:link></li>
-              <li>Manage <g:link controller="autoScaling" action="list"
-                                 title="An 'Auto Scaling Group' is where an Application defines its scaling parameters.">Auto Scaling</g:link> Groups</li>
-              <li>Manage <g:link controller="loadBalancer" action="list"
-                                 title="A 'Load Balancer' is where an Application defines its load balancing parameters for either frontend or middle tier.">Load Balancers</g:link></li>
-              <li>Manage <g:link controller="launchConfiguration" action="list"
-                                 title="A 'Launch Configuration' is an Application's instance factory used by Auto Scaling to launch new instances.">Launch Configurations</g:link></li>
               <li>Manage <g:link controller="security" action="list"
                                  title="A 'Security Group' is the collection of network ingress rules for an Application.">Security Groups</g:link></li>
               <li>Manage Running <g:link controller="instance" action="list"

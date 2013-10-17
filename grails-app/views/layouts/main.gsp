@@ -95,13 +95,13 @@
      <li class="menuButton">
        <g:link class="applications" controller="application" action="list">App</g:link>
        <ul>
-         --%><li class="menuButton"><g:link class="applications" controller="application" action="list">Applications</g:link></li>
+         --%><%--<li class="menuButton"><g:link class="applications" controller="application" action="list">Applications</g:link></li>
          <li class="menuButton"><g:link class="stacks" controller="stack" action="list">Stacks</g:link></li>
          <li class="menuButton"><g:link class="users" controller="application" action="owner">Owners</g:link></li>
-         <li class="menuButton"><g:link class="securityGroups" controller="security" action="list">Security Groups</g:link></li>
-         <g:if test="${platformserviceExists}">
+         --%><li class="menuButton"><g:link class="securityGroups" controller="security" action="list">Security Groups</g:link></li>
+         <g:if test="${platformserviceExists}"><%--
            <li class="menuButton"><g:link class="fastProperties" controller="fastProperty" action="apps">Fast Properties</g:link></li>
-         </g:if><%--
+         --%></g:if><%--
        </ul>
      </li>
      --%><li class="menuButton"><g:link class="images" controller="image" action="list">AMI</g:link></li><%--
@@ -116,17 +116,17 @@
          <li class="menuButton"><g:link class="alarm" controller="alarm" action="list">CloudWatch Alarms</g:link></li>
        </ul>
      </li>
-     --%><li class="menuButton"><g:link class="loadBalancers" controller="loadBalancer" action="list">ELB</g:link></li>
-     <li class="menuButton">
+     --%><%--<li class="menuButton"><g:link class="loadBalancers" controller="loadBalancer" action="list">ELB</g:link></li>
+     --%><li class="menuButton">
          <g:link class="instances" controller="instance" action="list">EC2</g:link>
         
      </li>
      <%--<li class="menuButton"><g:link class="instances" controller="instance" action="list">Instances</g:link></li>
       
            <li class="menuButton"><g:link class="instanceTypes" controller="instanceType" action="list">Instance Types</g:link></li>
-           --%><g:if test="${spotInstancesAreAppropriate}">
+           --%><g:if test="${spotInstancesAreAppropriate}"><%--
              <li class="menuButton"><g:link class="spotInstanceRequest" controller="spotInstanceRequest" action="list">Spot Instance Requests</g:link></li>
-           </g:if>
+           --%></g:if>
            <li class="menuButton"><g:link class="volumes" controller="volume" action="list">EBS Volumes</g:link></li>
            <li class="menuButton"><g:link class="volumeSnapshot" controller="snapshot" action="list">EBS Snapshots</g:link></li>
      <%--

@@ -926,7 +926,7 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 	//Volumes
 
 	Collection<Volume> getVolumes(UserContext userContext) {
-		caches.allVolumes.by(userContext.region).list()
+		retrieveVolumes(userContext.region)
 	}
 
 	private Set<Volume> retrieveVolumes(Region region) {

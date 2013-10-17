@@ -61,7 +61,6 @@ class Caches {
      CachedMap<ActivityTypeInfo> allActivityTypes
      CachedMap<WorkflowExecutionInfo> allClosedWorkflowExecutions
      CachedMap<WorkflowExecutionInfo> allOpenWorkflowExecutions
-     CachedMap<AppRegistration> allApplications
      CachedMap<MetricId> allCustomMetrics
      CachedMap<HardwareProfile> allHardwareProfiles
      CachedMap<String> allTerminationPolicyTypes
@@ -143,7 +142,6 @@ class Caches {
 		allActivityTypes = cachedMapBuilder.of(EntityType.activityType, 120).buildCachedMap()
 		allOpenWorkflowExecutions = cachedMapBuilder.of(EntityType.workflowExecution, 30).buildCachedMap()
 		allClosedWorkflowExecutions = cachedMapBuilder.of(EntityType.workflowExecution, 30).buildCachedMap()
-		allApplications = cachedMapBuilder.of(EntityType.application, 120).buildCachedMap()
 		allCustomMetrics = cachedMapBuilder.of(EntityType.metric, 120).buildCachedMap()
 		allWorkflowTypes = cachedMapBuilder.of(EntityType.workflowType, 120).buildCachedMap()
 		allWorkflowDomains = cachedMapBuilder.of(EntityType.workflowDomain, 3600).buildCachedMap()

@@ -36,10 +36,8 @@ import org.jclouds.compute.domain.NodeMetadata;
 class ImageController {
 
     def awsEc2Service
-    def awsAutoScalingService
     def imageService
     def instanceTypeService
-    def launchTemplateService
     def mergedInstanceGroupingService
     def taskService
     def grailsApplication
@@ -424,7 +422,6 @@ class ImageController {
 
 class ImageDeleteCommand {
     String id
-    AwsAutoScalingService awsAutoScalingService
     AwsEc2Service awsEc2Service
     RestClientService restClientService
     def grailsApplication
@@ -441,10 +438,9 @@ class ImageDeleteCommand {
             // If AMI is in use by a launch config or instance in the current region-env then report those references.
             Collection<String> instances = command.awsEc2Service.
                     getInstancesUsingImageId(userContext, value).collect { it.id }
-            Collection<String> launchConfigurations = command.awsAutoScalingService.
-                    getLaunchConfigurationsUsingImageId(userContext, value).collect { it.launchConfigurationName }
-            if (instances || launchConfigurations) {
-                String reason = constructReason(instances, launchConfigurations)
+            
+            if (instances) {
+                String reason = constructReason(instances)
                 return ['image.imageId.used', value, env, reason]
             } else if (promotionTargetServer) {
                 // If the AMI is not in use on master server, check promoted data.
@@ -466,8 +462,7 @@ class ImageDeleteCommand {
         
     }
 
-    static constructReason(Collection<String> instanceIds, Collection<String> launchConfigurationNames) {
-        instanceIds ? "instance${instanceIds.size() == 1 ? '' : 's'} $instanceIds" :
-            "launch configuration${launchConfigurationNames.size() == 1 ? '' : 's'} $launchConfigurationNames"
+    static constructReason(Collection<String> instanceIds ) {
+        instanceIds ? "instance${instanceIds.size() == 1 ? '' : 's'} $instanceIds" :""
     }
 }

@@ -53,14 +53,12 @@ class ImageService implements BackgroundProcessInitializer {
 
     static transactional = false
 	def jcloudsComputeService	
-    def awsAutoScalingService
     def awsEc2Service
     def awsS3Service
     def configService
     def emailerService
     def grailsApplication
     def instanceTypeService
-    def launchTemplateService
     def restClientService
     def spotInstanceRequestService
     def mergedInstanceGroupingService
@@ -383,13 +381,7 @@ class ImageService implements BackgroundProcessInitializer {
             if (!image) {
                 task.log("Unable to find image '${imageId}'")
                 return
-            }
-        /*    String snapshotId = image.blockDeviceMappings.findResult { it.ebs?.snapshotId }
-            String location = image.imageLocation
-            if (location.contains('/') && location.endsWith(AwsS3Service.MANIFEST_SUFFIX)) {
-                task.log("Deleting S3 bundle ${location}")
-                awsS3Service.deleteBundle(userContext, location)
-            }*/
+            }      
 			String snapshotId  = awsEc2Service.getEC2Client(userContext).AMIServices.getBlockDeviceMappingsForImageInRegion(userContext.region.code, image.providerId).findResult { it.ebs?.snapshotId }
 			if(configService.cloudProvider == Provider.AWS){
 				// Need to check equivalant of Aws imageLocation, Assuming id to be equal to the imageLocation of AWS API
