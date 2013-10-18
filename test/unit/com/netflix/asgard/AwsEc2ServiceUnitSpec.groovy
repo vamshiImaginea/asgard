@@ -15,6 +15,12 @@
  */
 package com.netflix.asgard
 
+import org.jclouds.compute.ComputeService;
+import org.jclouds.compute.domain.NodeMetadata
+import org.jclouds.compute.domain.NodeMetadata.Status;
+import org.jclouds.compute.domain.internal.NodeMetadataImpl
+import org.jclouds.ec2.domain.SecurityGroup
+
 import com.amazonaws.AmazonServiceException
 import com.amazonaws.services.ec2.AmazonEC2
 import com.amazonaws.services.ec2.model.AuthorizeSecurityGroupIngressRequest
@@ -28,7 +34,6 @@ import com.amazonaws.services.ec2.model.IpPermission
 import com.amazonaws.services.ec2.model.Placement
 import com.amazonaws.services.ec2.model.ReservedInstances
 import com.amazonaws.services.ec2.model.RevokeSecurityGroupIngressRequest
-import com.amazonaws.services.ec2.model.SecurityGroup
 import com.amazonaws.services.ec2.model.Subnet
 import com.amazonaws.services.ec2.model.Tag
 import com.amazonaws.services.ec2.model.UserIdGroupPair
@@ -37,13 +42,14 @@ import com.netflix.asgard.model.SecurityGroupOption
 import com.netflix.asgard.model.SubnetData
 import com.netflix.asgard.model.SubnetTarget
 import com.netflix.asgard.model.ZoneAvailability
+
 import spock.lang.Specification
 import spock.lang.Unroll
 
 class AwsEc2ServiceUnitSpec extends Specification {
 
     UserContext userContext
-    AmazonEC2 mockAmazonEC2
+    ComputeService computeService
     CachedMap mockSecurityGroupCache
     CachedMap mockInstanceCache
     CachedMap mockReservationCache
@@ -51,7 +57,7 @@ class AwsEc2ServiceUnitSpec extends Specification {
 
     def setup() {
         userContext = UserContext.auto(Region.US_EAST_1)
-        mockAmazonEC2 = Mock(AmazonEC2)
+        computeService = Mock(ComputeService)
         mockSecurityGroupCache = Mock(CachedMap)
         mockInstanceCache = Mock(CachedMap)
         mockReservationCache = Mock(CachedMap)
@@ -65,57 +71,23 @@ class AwsEc2ServiceUnitSpec extends Specification {
                 work(new Task())
             }
         }
-        awsEc2Service = new AwsEc2Service(awsClient: new MultiRegionAwsClient({ mockAmazonEC2 }), caches: caches,
+        awsEc2Service = new AwsEc2Service(computeServiceClientByRegion: new MultiRegionAwsClient({ computeService }), caches: caches,
                 taskService: taskService)
     }
 
-    @Unroll("""getInstancesWithSecurityGroup should return #instanceIds when groupId is #groupId \
-and groupName is #groupName""")
-    def 'should get the instances for a specified security group by name or id'() {
-        GroupIdentifier apiGroup = new GroupIdentifier(groupName: 'api')
-        GroupIdentifier cassGroup = new GroupIdentifier(groupName: 'cass')
-        GroupIdentifier idGroup = new GroupIdentifier(groupId: 'sg-12345678')
-        awsEc2Service = Spy(AwsEc2Service) {
-            getInstances(_) >> {
-                [
-                        new Instance(instanceId: 'i-deadbeef', securityGroups: [apiGroup, idGroup]),
-                        new Instance(instanceId: 'i-ba5eba11', securityGroups: []),
-                        new Instance(instanceId: 'i-cafebabe', securityGroups: [apiGroup, cassGroup]),
-                        new Instance(instanceId: 'i-f005ba11', securityGroups: [apiGroup]),
-                        new Instance(instanceId: 'i-ca55e77e', securityGroups: [apiGroup, cassGroup]),
-                        new Instance(instanceId: 'i-b01dface', securityGroups: [idGroup])
-                ]
-            }
-        }
-        SecurityGroup securityGroup = new SecurityGroup(groupName: groupName, groupId: groupId)
-        UserContext userContext = UserContext.auto(Region.US_WEST_1)
 
-        expect:
-        instanceIds == awsEc2Service.getInstancesWithSecurityGroup(userContext, securityGroup)*.instanceId
-
-        where:
-        groupId       | groupName | instanceIds
-        'sg-12345678' | null      | ['i-deadbeef', 'i-b01dface']
-        null          | 'api'     | ['i-deadbeef', 'i-cafebabe', 'i-f005ba11', 'i-ca55e77e']
-        null          | 'cass'    | ['i-cafebabe', 'i-ca55e77e']
-    }
 
     def 'active instances should only include pending and running states'() {
         mockInstanceCache.list() >> [
-                new Instance(instanceId: 'i-papa', state: new InstanceState(name: 'pending')),
-                new Instance(instanceId: 'i-smurfette', state: new InstanceState(name: 'running')),
-                new Instance(instanceId: 'i-brainy', state: new InstanceState(name: 'shutting-down')),
-                new Instance(instanceId: 'i-jokey', state: new InstanceState(name: 'terminated')),
-                new Instance(instanceId: 'i-hefty', state: new InstanceState(name: 'stopping')),
-                new Instance(instanceId: 'i-barber', state: new InstanceState(name: 'stopped')),
-                new Instance(instanceId: 'i-grouchy', state: new InstanceState(name: 'running'))
-        ]
+               new NodeMetadataImpl('i-deadbeef', 'i-deadbeef', 'i-deadbeef', null, null, [:], new HashSet<String>(), null, null, 'i-deadbeef', null, Status.RUNNING, null, 80, [],[], null, ''),
+			   new NodeMetadataImpl('i-1231', 'i-1231', 'i-1231', null, null, [:], new HashSet<String>(), null, null, 'i-1231', null, Status.RUNNING, null, 80, [],[], null, '')
+			   ]
 
         when:
-        Collection<Instance> instances = awsEc2Service.getActiveInstances(userContext)
+        Collection<NodeMetadata> instances = awsEc2Service.getActiveInstances(userContext)
 
         then:
-        instances*.instanceId.sort() == ['i-grouchy', 'i-papa', 'i-smurfette']
+        instances*.id.sort() == [ 'i-1231','i-deadbeef']
     }
 
     def 'zone availabilities should sum, group, and filter reservation counts and instance counts'() {

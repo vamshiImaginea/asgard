@@ -206,6 +206,7 @@ class Mocks {
     static UserContext userContext() {
         HttpServletRequest request = new MockHttpServletRequest()
         request.setAttribute('region', Region.US_EAST_1)
+		request.setAttribute('cloudProvider', 'aws')
         UserContext.of(request)
     }
 

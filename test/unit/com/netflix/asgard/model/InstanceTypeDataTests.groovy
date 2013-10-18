@@ -15,15 +15,18 @@
  */
 package com.netflix.asgard.model
 
+import java.text.NumberFormat;
+
 class InstanceTypeDataTests extends GroovyTestCase {
 
     void testGetMonthlyLinuxOnDemandPrice() {
-        assert '$72.00' == new InstanceTypeData(linuxOnDemandPrice: 0.10).monthlyLinuxOnDemandPrice
-        assert '$274.39' == new InstanceTypeData(linuxOnDemandPrice: 0.3811).monthlyLinuxOnDemandPrice
+		
+        assert NumberFormat.getCurrencyInstance().format(72.00) == new InstanceTypeData(linuxOnDemandPrice: 0.10).monthlyLinuxOnDemandPrice
+        assert NumberFormat.getCurrencyInstance().format(274.39) == new InstanceTypeData(linuxOnDemandPrice: 0.3811).monthlyLinuxOnDemandPrice
     }
 
     void testGetMonthlyLinuxOnDemandPriceNull() {
         InstanceTypeData instanceType = new InstanceTypeData()
-        assertNull instanceType.monthlyLinuxOnDemandPrice
+        assert NumberFormat.getCurrencyInstance().format(0.00) == instanceType.monthlyLinuxOnDemandPrice
     }
 }

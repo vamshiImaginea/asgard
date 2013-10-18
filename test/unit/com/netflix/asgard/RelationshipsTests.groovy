@@ -35,53 +35,6 @@ class RelationshipsTests extends GrailsUnitTestCase {
         }.sort(Relationships.PUSH_SEQUENCE_COMPARATOR).collect { it.autoScalingGroupName }
     }
 
-    void testPushSequenceComparator() {
-
-        Mocks.awsAutoScalingService()
-
-        assertPushSequenceSortResult(["discovery-dev",
-                "discovery-dev-v997",
-                "discovery-dev-v998",
-                "discovery-dev-v999",
-                "discovery-dev-v000",
-                "discovery-dev-v001",
-                "discovery-dev-v002",
-                "discovery-dev-v003"
-        ], [
-                "discovery-dev-v997",
-                "discovery-dev-v003",
-                "discovery-dev-v999",
-                "discovery-dev-v001",
-                "discovery-dev",
-                "discovery-dev-v998",
-                "discovery-dev-v002",
-                "discovery-dev-v000"
-        ])
-
-        assertPushSequenceSortResult(["discovery-dev", "discovery-dev-v000"], ["discovery-dev", "discovery-dev-v000"])
-        assertPushSequenceSortResult(["discovery-dev", "discovery-dev-v000"], ["discovery-dev-v000", "discovery-dev"])
-        assertPushSequenceSortResult(
-                ["discovery-dev", "discovery-dev-v000", "discovery-dev-v001"],
-                ["discovery-dev-v001", "discovery-dev", "discovery-dev-v000"])
-        assertPushSequenceSortResult([
-                "discovery-dev-v001", "discovery-dev-v002"],
-                ["discovery-dev-v001", "discovery-dev-v002"])
-        assertPushSequenceSortResult(
-                ["discovery-dev-v001", "discovery-dev-v002"],
-                ["discovery-dev-v002", "discovery-dev-v001"])
-        assertPushSequenceSortResult(
-                ["discovery-dev-v563", "discovery-dev-v564", "discovery-dev-v565"],
-                ["discovery-dev-v563", "discovery-dev-v565", "discovery-dev-v564"])
-        assertPushSequenceSortResult(
-                ["discovery-dev-v998", "discovery-dev-v999", "discovery-dev-v000"],
-                ["discovery-dev-v000", "discovery-dev-v998", "discovery-dev-v999"])
-        assertPushSequenceSortResult(
-                ["discovery-dev-v998", "discovery-dev-v999", "discovery-dev-v000"],
-                ["discovery-dev-v000", "discovery-dev-v999", "discovery-dev-v998"])
-        assertPushSequenceSortResult(
-                ["discovery-dev-v999", "discovery-dev-v000", "discovery-dev-v001"],
-                ["discovery-dev-v000", "discovery-dev-v999", "discovery-dev-v001"])
-    }
 
     void testBuildNextAutoScalingGroupName() {
         assert "discovery-dev-v000" == Relationships.buildNextAutoScalingGroupName("discovery-dev")

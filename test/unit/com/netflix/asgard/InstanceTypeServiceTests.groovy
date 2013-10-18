@@ -97,7 +97,7 @@ class InstanceTypeServiceTests extends GroovyTestCase {
         assert 1.04 == usEastReservedPricing.get(InstanceType.Cg14xlarge, InstanceProductType.WINDOWS)
 
         // Europe
-        RegionalInstancePrices euWestReservedPricing = reservedPricing.get(Region.EU_WEST_1)
+        RegionalInstancePrices euWestReservedPricing = reservedPricing.get(Region.US_EAST_1)
         assert 0.08 == euWestReservedPricing.get(InstanceType.C1Medium, InstanceProductType.LINUX_UNIX)
         assert 0.32 == euWestReservedPricing.get(InstanceType.C1Xlarge, InstanceProductType.LINUX_UNIX)
         assert 0.16 == euWestReservedPricing.get(InstanceType.M1Large, InstanceProductType.LINUX_UNIX)

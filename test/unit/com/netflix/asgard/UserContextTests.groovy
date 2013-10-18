@@ -26,8 +26,8 @@ class UserContextTests extends GroovyTestCase {
         assert 'localhost' == userContext.clientIpAddress
         assert null == userContext.ticket
 
-        UserContext singaporeContext = userContext.withRegion(Region.AP_SOUTHEAST_1)
-        assert Region.AP_SOUTHEAST_1 == singaporeContext.region
+        UserContext singaporeContext = userContext.withRegion(Region.US_EAST_1)
+        assert Region.US_EAST_1 == singaporeContext.region
         assert 'localhost' == singaporeContext.clientHostName
         assert 'localhost' == singaporeContext.clientIpAddress
         assert null == singaporeContext.ticket

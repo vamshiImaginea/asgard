@@ -42,29 +42,21 @@ class EntityTypeSpec extends Specification {
     def 'should return name of type'() {
         expect:
         EntityType.instance.name() == 'instance'
-        EntityType.autoScaling.name() == 'autoScaling'
         EntityType.applicationInstance.name() == 'applicationInstance'
-        EntityType.application.name() == 'application'
-        EntityType.cluster.name() == 'cluster'
     }
 
     def 'should return type from valid name'() {
         expect:
         EntityType.fromName('instance') == EntityType.instance
-        EntityType.fromName('autoScaling') == EntityType.autoScaling
         EntityType.fromName('applicationInstance') == EntityType.applicationInstance
-        EntityType.fromName('application') == EntityType.application
-        EntityType.fromName('cluster') == EntityType.cluster
     }
 
     def 'should ensure prefix'() {
         expect:
         EntityType.instance.ensurePrefix('i-1bd7b278') == 'i-1bd7b278'
-        EntityType.spotInstanceRequest.ensurePrefix('sir-cd1a3e14') == 'sir-cd1a3e14'
         EntityType.image.ensurePrefix('ami-8ceb1be5') == 'ami-8ceb1be5'
         EntityType.volume.ensurePrefix('vol-06892b6c') == 'vol-06892b6c'
         EntityType.snapshot.ensurePrefix('snap-00b46468') == 'snap-00b46468'
-
         EntityType.instance.ensurePrefix('1bd7b278') == 'i-1bd7b278'
         EntityType.instance.ensurePrefix('blah') == 'i-blah'
         EntityType.instance.ensurePrefix('') == ''

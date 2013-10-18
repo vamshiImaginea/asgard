@@ -113,9 +113,9 @@ class InitializeCommand {
 	boolean showPublicAmazonImages
 	static constraints = {
 
-		/*	 accessId(nullable: true, blank: false, matches: /[A-Z0-9]{20}/)
-		 secretKey(nullable: true, blank: false, matches: /[A-Za-z0-9\+\/]{40}/)
-		 accountNumber(nullable: true, blank: false, matches: /\d{4}-?\d{4}-?\d{4}/)*/
+		 accessId(nullable: true, blank: true, matches: /[A-Z0-9]{20}/)
+		 secretKey(nullable: true, blank: true, matches: /[A-Za-z0-9\+\/]{40}/)
+		 accountNumber(nullable: true, blank: true, matches: /\d{4}-?\d{4}-?\d{4}/)
 
 	}
 

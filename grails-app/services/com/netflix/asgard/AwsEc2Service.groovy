@@ -37,6 +37,7 @@ import org.jclouds.compute.ComputeService
 import org.jclouds.compute.domain.ComputeMetadata
 import org.jclouds.compute.domain.Image
 import org.jclouds.compute.domain.NodeMetadata
+import org.jclouds.compute.domain.NodeMetadata.Status;
 import org.jclouds.domain.Location
 import org.jclouds.ec2.EC2Client
 import org.jclouds.ec2.domain.Attachment
@@ -86,6 +87,7 @@ import com.google.common.collect.TreeMultiset
 import com.netflix.asgard.cache.CacheInitializer
 import com.netflix.asgard.model.AutoScalingGroupData
 import com.netflix.asgard.model.SecurityGroupOption
+import com.netflix.asgard.model.StackAsg;
 import com.netflix.asgard.model.Subnets
 import com.netflix.asgard.model.ZoneAvailability
 import com.netflix.frigga.ami.AppVersion
@@ -107,7 +109,7 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 	def regionService
 	List<String> accounts = [] // main account is accounts[0]
 	/** The state names for instances that count against reservation usage. */
-	private static final List<String> ACTIVE_INSTANCE_STATES = ['pending', 'running'].asImmutable()
+	private static final List<Status> ACTIVE_INSTANCE_STATES = [Status.PENDING,Status.RUNNING]
 
 	/** Maximum number of image ids to send in a single create tags request. See ASGARD-895. */
 	private static final int TAG_IMAGE_CHUNK_SIZE = 250
@@ -694,7 +696,7 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 	 * @return Collection < Instance > active instances
 	 */
 	Set<NodeMetadata> getActiveInstances(UserContext userContext) {
-		getInstances(userContext).findAll { it.getStatus().name in ACTIVE_INSTANCE_STATES }
+		getInstances(userContext).findAll { it.getStatus() in ACTIVE_INSTANCE_STATES }
 	}
 
 	Set<NodeMetadata> getInstancesByIds(UserContext userContext, List<String> instanceIds, From from = From.CACHE) {
