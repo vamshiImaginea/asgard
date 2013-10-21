@@ -15,10 +15,16 @@
  */
 package com.netflix.asgard
 
+import java.util.Date;
+
 import com.amazonaws.services.ec2.model.Image
 import com.netflix.asgard.mock.Mocks
 import com.netflix.asgard.model.MassDeleteRequest
+
 import grails.test.mixin.TestFor
+
+import org.jclouds.cloudservers.domain.ImageStatus;
+import org.jclouds.javax.annotation.Nullable;
 import org.junit.Before
 
 @TestFor(ImageController)
@@ -28,7 +34,6 @@ class ImageControllerTests {
     void setUp() {
         Mocks.createDynamicMethods() 
         TestUtils.setUpMockRequest()
-        controller.awsAutoScalingService = Mocks.awsAutoScalingService()
         controller.awsEc2Service = Mocks.awsEc2Service()
         controller.grailsApplication = Mocks.grailsApplication()
     }

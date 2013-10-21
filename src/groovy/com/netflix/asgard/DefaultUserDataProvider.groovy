@@ -25,14 +25,14 @@ class DefaultUserDataProvider implements UserDataProvider {
     @Autowired
     ConfigService configService
 
-    @Autowired
-    ApplicationService applicationService
+/*    @Autowired
+    ApplicationService applicationService*/
 
     String buildUserDataForVariables(UserContext userContext, String appName, String autoScalingGroupName,
             String launchConfigName) {
         Names names = Relationships.dissectCompoundName(autoScalingGroupName)
         String result = exportVar('ENVIRONMENT', configService.accountName) +
-            exportVar('MONITOR_BUCKET', applicationService.getMonitorBucket(userContext, appName, names.cluster)) +
+           // exportVar('MONITOR_BUCKET', applicationService.getMonitorBucket(userContext, appName, names.cluster)) +
             exportVar('APP', appName) +
             exportVar('STACK', names.stack) +
             exportVar('CLUSTER', names.cluster) +

@@ -18,14 +18,9 @@ package com.netflix.asgard
 class RegionTests extends GroovyTestCase {
 
     void testWithCode() {
-        assert new Region(code:'us-west-1') == Region.withCode('us-west-1')
-        assert 'us-west-1' == Region.withCode('us-west-1').code
-        assert 'eu-west-1' == Region.withCode('eu-west-1').code
-        assertNotNull Region.withCode('us-east')
-        assertNotNull Region.withCode('blah')
-        assertNotNull Region.withCode('')
-        assertNotNull Region.withCode(null)
-        assertNotNull Region.withCode('  us-east-1  ')
+        assert Region.US_EAST_1 == Region.defaultRegion()
+        assertTrue(new Region(code:'us-west-1').equals(new Region(code:'us-west-1')))
+		assertFalse(new Region(code:'us-west-1').equals(new Region(code:'us-west-2')))
     }
 
   

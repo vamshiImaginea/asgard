@@ -16,8 +16,11 @@
 package com.netflix.asgard
 
 import com.netflix.asgard.cache.CacheInitializer
+
 import grails.test.MockUtils
+
 import org.springframework.context.ApplicationContext
+
 import spock.lang.AutoCleanup
 import spock.lang.Specification
 
@@ -39,6 +42,8 @@ class InitServiceSpec extends Specification {
         MockUtils.mockLogging(InitService)
         initService = new InitService(applicationContext: applicationContext, configService: configService,
                 grailsApplication: [config: config])
+		// Override Caches Removal
+		initService.metaClass.removeCaches = {}
     }
 
     def 'should create config file'() {
@@ -50,6 +55,8 @@ class InitServiceSpec extends Specification {
         applicationContext.getBeansOfType(CacheInitializer) >> [cacheInitializer: cacheInitializer]
         applicationContext.getBeansOfType(BackgroundProcessInitializer) >>
                 [backgroundProcessInitializer: backgroundProcessInitializer]
+		
+				
 
         when:
         initService.writeConfig(newConfig)

@@ -33,75 +33,13 @@ import com.google.common.cache.LocalCache.Values;
 @Immutable
 class Region {
 
-	static final Region US_EAST_1 = new Region(code:'us-east-1'/*,
-	pricingJsonCode:'us-east',
-	mapImageFileName: 'us-east-1.png',
-	location: 'Virginia'*/)/*,
-	 US_WEST_1('us-west-1',
-	 'us-west',
-	 'us-west-1.png',
-	 'California'
-	 ),
-	 US_WEST_2('us-west-2',
-	 'us-west-2',
-	 'us-west-2.png',
-	 'Oregon'
-	 ),
-	 EU_WEST_1('eu-west-1',
-	 'eu-ireland',
-	 'eu-west-1.png',
-	 'Ireland'
-	 ),
-	 AP_NORTHEAST_1('ap-northeast-1',
-	 'apac-tokyo',
-	 'ap-northeast-1.png',
-	 'Tokyo'
-	 ),
-	 AP_SOUTHEAST_1('ap-southeast-1',
-	 'apac-sin',
-	 'ap-southeast-1.png',
-	 'Singapore'
-	 ),
-	 AP_SOUTHEAST_2('ap-southeast-2',
-	 'apac-syd',
-	 'ap-southeast-2.png',
-	 'Sydney'
-	 ),
-	 SA_EAST_1('sa-east-1',
-	 'sa-east-1',
-	 'sa-east-1.png',
-	 'Sao Paulo'
-	 )*/
+	static final Region US_EAST_1 = new Region(code:'us-east-1')
 
 	String code
 	String endpoint
-/*	String pricingJsonCode
-	String mapImageFileName
-	String location*/
 
-	/*   Region(String code, String pricingJsonCode, mapImageFileName, location) {
-	 this.code = code
-	 this.pricingJsonCode = pricingJsonCode
-	 this.mapImageFileName = mapImageFileName
-	 this.location = location
-	 }*/
 	static List<Region> values(){
-
-/*		JcloudsComputeService cloudsComputeService = new JcloudsComputeService()
-		ComputeService computeService = cloudsComputeService.getOpenStackComputeService()
-		EC2Client ec2Client = cloudsComputeService.getProivderClient(computeService.getContext())
-		Set<Entry<String, URI>> entry = ec2Client.getAvailabilityZoneAndRegionServices().describeRegions(null).entrySet();*/
-
-	
-		
-		List<Region> regions = [new Region(code:'us-east-1',endpoint:''/*,
-			pricingJsonCode:'us-east',
-			mapImageFileName: 'us-east-1.png',
-			location: 'Virginia'*/)/*new Region('us-west-1',
-			 'us-west',
-			 'us-west-1.png',
-			 'California')*/]
-		regions
+		[new Region(code:'us-east-1',endpoint:'')]
 	}
 	@Override
 	boolean equals( param0) {
