@@ -81,53 +81,6 @@ class AwsEc2ServiceTests extends GrailsUnitTestCase {
         assertNull awsEc2Service.getImage(Mocks.userContext(), "doesn't exist")
     }
 
-    @SuppressWarnings("GroovyAccessibility")
-    void testgetCountedAppVersionsForInstancesAndImages() {
-
-        AwsEc2Service service = new AwsEc2Service()
-
-        Multiset<AppVersion> noAppVersions = service.getCountedAppVersionsForInstancesAndImages([], [:])
-        assert noAppVersions.isEmpty()
-
-        String appVersionString1 = "app-1.2.3-456789.h321/WE-WAPP-app/321"
-        String appVersionString2 = "app-1.2.4-567890.h432/WE-WAPP-app/432"
-
-        AppVersion appVersion1 = Relationships.dissectAppVersion(appVersionString1)
-        AppVersion appVersion2 = Relationships.dissectAppVersion(appVersionString2)
-
-        Image image1 = (new Image()).withImageId("image-1").withTags(new Tag("appversion", appVersionString1))
-        Image image2 = (new Image()).withImageId("image-2").withTags(new Tag("appversion", appVersionString2))
-        Image imageNoApp = (new Image()).withImageId("image-noapp")
-
-        Instance img1_inst1 = (new Instance()).withImageId(image1.imageId)
-        Instance img1_inst2 = (new Instance()).withImageId(image1.imageId)
-        Instance img2_inst1 = (new Instance()).withImageId(image2.imageId)
-        Instance img2_inst2 = (new Instance()).withImageId(image2.imageId)
-        Instance imgNoApp_inst1 = (new Instance()).withImageId(imageNoApp.imageId)
-
-        Multiset<AppVersion> oneAppOneInstance = service.getCountedAppVersionsForInstancesAndImages([img1_inst1], [(image1.imageId): image1])
-        assert 1 == oneAppOneInstance.size()
-        assert 1 == oneAppOneInstance.count(appVersion1)
-        assert 0 == oneAppOneInstance.count(appVersion2)
-
-        Multiset<AppVersion> oneAppTwoInstance = service.getCountedAppVersionsForInstancesAndImages([img1_inst1, img1_inst2],
-            [(image1.imageId): image1])
-        assert 2 == oneAppTwoInstance.size()
-        assert 2 == oneAppTwoInstance.count(appVersion1)
-        assert 0 == oneAppTwoInstance.count(appVersion2)
-
-        Multiset<AppVersion> twoAppThreeInstance = service.getCountedAppVersionsForInstancesAndImages([img1_inst1, img2_inst1, img2_inst2],
-            [(image1.imageId): image1, (image2.imageId): image2])
-        assert 3 == twoAppThreeInstance.size()
-        assert 1 == twoAppThreeInstance.count(appVersion1)
-        assert 2 == twoAppThreeInstance.count(appVersion2)
-
-        Multiset<AppVersion> threeAppThreeInstance = service.getCountedAppVersionsForInstancesAndImages([img1_inst1, img2_inst1, imgNoApp_inst1],
-            [(image1.imageId): image1, (image2.imageId): image2, (imageNoApp.imageId): imageNoApp])
-        assert 2 == threeAppThreeInstance.size()
-        assert 1 == threeAppThreeInstance.count(appVersion1)
-        assert 1 == threeAppThreeInstance.count(appVersion2)
-    }
 
     void testRetrieveImagesWithTags() {
         Mocks.monkeyPatcherService()
@@ -172,19 +125,4 @@ class AwsEc2ServiceTests extends GrailsUnitTestCase {
         assert images == [image1WithTags, image2]
     }
 
-    void testCreateTags() {
-        def imageRange = 1..600
-        Collection<String> sixHundredImageIds = imageRange.collect { "image${it}"}
-        AwsEc2Service awsEc2Service = new AwsEc2Service()
-        def mockAmazonEC2 = mockFor(AmazonEC2)
-        awsEc2Service.awsClient = new MultiRegionAwsClient({ mockAmazonEC2.createMock() })
-        mockAmazonEC2.demand.createTags(3..3) { CreateTagsRequest request ->
-            int imageIdListSize = request.resources.size
-            assert imageIdListSize == 250 || imageIdListSize == 100
-            assert request.tags == [new Tag('tag', 'value')]
-        }
-
-        awsEc2Service.createImageTags(Mocks.userContext(), sixHundredImageIds, 'tag', 'value')
-        mockAmazonEC2.verify()
-    }
 }

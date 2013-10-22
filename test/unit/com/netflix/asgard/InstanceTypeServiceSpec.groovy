@@ -15,13 +15,32 @@
  */
 package com.netflix.asgard
 
+import java.net.URI;
+import java.util.Map;
+import java.util.Set;
+
 import com.amazonaws.services.ec2.model.InstanceType
+import com.google.common.base.Predicate;
 import com.google.common.collect.ArrayTable
 import com.google.common.collect.Table
 import com.netflix.asgard.model.HardwareProfile
 import com.netflix.asgard.model.InstanceProductType
 import com.netflix.asgard.model.InstanceTypeData
+
+import org.jclouds.javax.annotation.Nullable;
+import org.jclouds.openstack.nova.ec2.NovaEC2Client;
+
 import grails.test.MockUtils
+
+import org.jclouds.compute.ComputeService;
+import org.jclouds.compute.domain.Hardware
+import org.jclouds.compute.domain.Image;
+import org.jclouds.compute.domain.Processor;
+import org.jclouds.compute.domain.Volume;
+import org.jclouds.compute.domain.internal.HardwareImpl
+import org.jclouds.domain.Location;
+import org.jclouds.ec2.EC2Client
+
 import spock.lang.Specification
 
 class InstanceTypeServiceSpec extends Specification {
@@ -31,54 +50,53 @@ class InstanceTypeServiceSpec extends Specification {
     InstanceTypeService instanceTypeService
     ConfigService mockConfigService
     CachedMap mockHardwareProfilesCache
-
+	AwsEc2Service awsEc2Service
+	JcloudsComputeService jcloudsComputeService
+	MultiRegionAwsClient<ComputeService> client
+	ComputeService computeService
     def setup() {
         userContext = UserContext.auto(Region.US_EAST_1)
         mockConfigService = Mock(ConfigService)
         mockHardwareProfilesCache = Mock(CachedMap)
+		awsEc2Service = Mock(AwsEc2Service)
+		jcloudsComputeService = Mock(JcloudsComputeService)
+		client = Mock(MultiRegionAwsClient)
+		computeService = Mock(ComputeService)
         caches = new Caches(new MockCachedMapBuilder([
                 (EntityType.hardwareProfile): mockHardwareProfilesCache,
         ]))
         MockUtils.mockLogging(InstanceTypeService)
-        instanceTypeService = new InstanceTypeService(caches: caches, configService: mockConfigService)
+        instanceTypeService = new InstanceTypeService(caches: caches, configService: mockConfigService, awsEc2Service:awsEc2Service)
     }
 
     @SuppressWarnings("GroovyAccessibility")
     def 'instance types should include ordered combo of public and custom instance types'() {
+		EC2Client ec2client = Mock(NovaEC2Client)
+		def securityGroupClient = Mock(org.jclouds.ec2.services.SecurityGroupClient)
+		awsEc2Service.computeServiceClientByRegion >> client
+		client.by(_) >> computeService
+		Predicate<Image> imagePredicate = new Predicate<Image>() {
+					public boolean apply(Image image) {
+						return image!=null;
+					}
+				};
 
-        List<InstanceProductType> products = InstanceProductType.valuesForOnDemandAndReserved()
-        Table<InstanceType, InstanceProductType, BigDecimal> pricesByHardwareAndProduct =
-            ArrayTable.create(InstanceType.values() as List, products)
-        pricesByHardwareAndProduct.put(InstanceType.M1Small, InstanceProductType.LINUX_UNIX, 0.05)
-        pricesByHardwareAndProduct.put(InstanceType.M1Medium, InstanceProductType.LINUX_UNIX, 0.23)
-        pricesByHardwareAndProduct.put(InstanceType.M1Large, InstanceProductType.LINUX_UNIX, 0.68)
-        RegionalInstancePrices regionalInstancePrices = RegionalInstancePrices.create(pricesByHardwareAndProduct)
-        caches.allReservedPrices.regionsToRegionalPrices.put(Region.US_EAST_1, regionalInstancePrices)
-        caches.allOnDemandPrices.regionsToRegionalPrices.put(Region.US_EAST_1, regionalInstancePrices)
-        caches.allSpotPrices.regionsToRegionalPrices.put(Region.US_EAST_1, regionalInstancePrices)
-
-        mockHardwareProfilesCache.list() >> [
-                new HardwareProfile(instanceType: 'm1.small', description: 'Small instance'),
-                new HardwareProfile(instanceType: 'm1.medium', description: 'Medium instance'),
-                new HardwareProfile(instanceType: 'm1.large', description: 'Large instance')
+		computeService.listHardwareProfiles() >>  [
+		
+                new HardwareImpl('m1.small','Small instance','m1.small',null,null,[:],new HashSet<String>(),[],102,[],imagePredicate,null),
+                new HardwareImpl('m1.medium','Small instance','m1.medium',null,null,[:],new HashSet<String>(),[],1024,[],imagePredicate,null),
+                new HardwareImpl('m1.large','Small instance','m1.large',null,null,[:],new HashSet<String>(),[],10244,[],imagePredicate,null),
         ]
-        mockConfigService.getCustomInstanceTypes() >> [
-                new InstanceTypeData(linuxOnDemandPrice: 3.10, hardwareProfile:
-                        new HardwareProfile(instanceType: 'superduper.4xlarge', description: 'SSD')),
-                new InstanceTypeData(linuxOnDemandPrice: 1.00, hardwareProfile:
-                        new HardwareProfile(instanceType: 'm1.medium', description: 'Custom medium description')),
-        ]
+    
 
         when:
         List<InstanceTypeData> instanceTypes = instanceTypeService.buildInstanceTypes(Region.defaultRegion())
 
         then:
-        ['c1.medium', 'c1.xlarge', 'cc1.4xlarge', 'cc2.8xlarge', 'cg1.4xlarge', 'hi1.4xlarge', 'm1.xlarge',
-                'm2.2xlarge', 'm2.4xlarge', 'm2.xlarge', 'm3.2xlarge', 'm3.xlarge', 't1.micro', 'm1.small', 'm1.medium',
-                'm1.large', 'superduper.4xlarge'] == instanceTypes*.name
-        [null, null, null, null, null, null, null, null, null, null, null, null, null, 'Small instance',
-                'Medium instance', 'Large instance', 'SSD'] == instanceTypes*.hardwareProfile*.description
-        [null, null, null, null, null, null, null, null, null, null, null, null, null, 0.05, 0.23, 0.68, 3.10
-                ] == instanceTypes*.linuxOnDemandPrice
+        (instanceTypes*.name).size() == 3
+		instanceTypes*.name.each {
+			['m1.small','m1.medium','m1.large'].contains(it)
+		}
+       
     }
 }
