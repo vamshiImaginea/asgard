@@ -37,14 +37,14 @@ import com.netflix.asgard.model.ZoneAvailability
 import spock.lang.Specification
 import spock.lang.Unroll
 
-class AwsEc2ServiceUnitSpec extends Specification {
+class Ec2ServiceUnitSpec extends Specification {
 
     UserContext userContext
     ComputeService computeService
     CachedMap mockSecurityGroupCache
     CachedMap mockInstanceCache
     CachedMap mockReservationCache
-    AwsEc2Service awsEc2Service
+    Ec2Service ec2Service
 	JcloudsComputeService jcloudsComputeService
 
     def setup() {
@@ -64,7 +64,7 @@ class AwsEc2ServiceUnitSpec extends Specification {
                 work(new Task())
             }
         }
-        awsEc2Service = new AwsEc2Service(computeServiceClientByRegion: new MultiRegionAwsClient({ computeService }), caches: caches,
+        ec2Service = new Ec2Service(computeServiceClientByRegion: new MultiRegionAwsClient({ computeService }), caches: caches,
                 taskService: taskService, jcloudsComputeService:jcloudsComputeService)
     }
 
@@ -77,7 +77,7 @@ class AwsEc2ServiceUnitSpec extends Specification {
 			   ]
 
         when:
-        Collection<NodeMetadata> instances = awsEc2Service.getActiveInstances(userContext)
+        Collection<NodeMetadata> instances = ec2Service.getActiveInstances(userContext)
 
         then:
         instances*.id.sort() == [ 'i-1231','i-deadbeef']
@@ -90,7 +90,7 @@ class AwsEc2ServiceUnitSpec extends Specification {
 		EC2Client ec2client = Mock(NovaEC2Client)
 		def securityGroupClient = Mock(org.jclouds.ec2.services.SecurityGroupClient)
         when:
-        SecurityGroup actualSecurityGroup = awsEc2Service.getSecurityGroup(userContext, 'super_secure')
+        SecurityGroup actualSecurityGroup = ec2Service.getSecurityGroup(userContext, 'super_secure')
         then:
 		actualSecurityGroup == expectedSecurityGroup
         1 * jcloudsComputeService.getProivderClient(_) >> ec2client
@@ -112,9 +112,9 @@ class AwsEc2ServiceUnitSpec extends Specification {
                 new IpPermission(IpProtocol.TCP,1,1, ArrayListMultimap.create(),[],[]),
                 new IpPermission(IpProtocol.TCP,1,1, ArrayListMultimap.create(),[],[]),
         ])
-awsEc2Service.accounts =['1']
+ec2Service.accounts =['1']
         when:
-        awsEc2Service.updateSecurityGroupPermissions(userContext, target, source, [
+        ec2Service.updateSecurityGroupPermissions(userContext, target, source, [
                 new IpPermission(IpProtocol.TCP,1,1, ArrayListMultimap.create(),[],[]),
                 new IpPermission(IpProtocol.TCP,1,1, ArrayListMultimap.create(),[],[])
         ])

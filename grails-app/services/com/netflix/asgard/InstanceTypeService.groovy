@@ -51,7 +51,7 @@ class InstanceTypeService implements CacheInitializer {
     final BigDecimal highPrioritySpotPriceFactor = 1.04
 
     def grailsApplication
-    def awsEc2Service
+    def ec2Service
     Caches caches
     def configService
     def emailerService
@@ -115,67 +115,13 @@ class InstanceTypeService implements CacheInitializer {
     }
 	private Collection<InstanceTypeData> buildInstanceTypes(Region region) {
 		Collection<InstanceTypeData> instanceTypes = new ArrayList<InstanceTypeData>()
-		Collection<Hardware> hardwareProfiles = awsEc2Service.computeServiceClientByRegion.by(region).listHardwareProfiles() 
+		Collection<Hardware> hardwareProfiles = ec2Service.computeServiceClientByRegion.by(region).listHardwareProfiles() 
 		hardwareProfiles.each {
 			it -> instanceTypes.add(new InstanceTypeData(hardware:it))
 		}
 		instanceTypes
 	}
-   /* private List<InstanceTypeData> buildInstanceTypes(Region region) {
-
-        Map<String, InstanceTypeData> namesToInstanceTypeDatas = [:]
-        Set<InstanceType> enumInstanceTypes = InstanceType.values() as Set
-
-        // Compile standard instance types, first without optional hardware and pricing metadata.
-        for (InstanceType instanceType in enumInstanceTypes) {
-            String name = instanceType.toString()
-            namesToInstanceTypeDatas[name] = new InstanceTypeData(
-                    hardwareProfile: new HardwareProfile(instanceType: name)
-            )
-        }
-
-        // Add any custom instance types that are still missing from the InstanceType enum.
-        Collection<InstanceTypeData> customInstanceTypes = configService.customInstanceTypes
-        for (InstanceTypeData customInstanceTypeData in customInstanceTypes) {
-            String name = customInstanceTypeData.name
-            namesToInstanceTypeDatas[name] = customInstanceTypeData
-        }
-
-        // If hardware metadata is available, replace bare-bones objects in map of namesToInstanceTypeDatas.
-        try {
-            Collection<HardwareProfile> hardwareProfiles = getHardwareProfiles()
-            RegionalInstancePrices onDemandPrices = getOnDemandPrices(region)
-            RegionalInstancePrices reservedPrices = getReservedPrices(region)
-            RegionalInstancePrices spotPrices = getSpotPrices(region)
-
-            for (InstanceType instanceType in enumInstanceTypes) {
-                String name = instanceType.toString()
-                HardwareProfile hardwareProfile = hardwareProfiles.find { it.instanceType == name }
-                if (hardwareProfile) {
-                    InstanceTypeData instanceTypeData = new InstanceTypeData(
-                            hardwareProfile: hardwareProfile,
-                            linuxOnDemandPrice: onDemandPrices.get(instanceType, InstanceProductType.LINUX_UNIX),
-                            linuxReservedPrice: reservedPrices?.get(instanceType, InstanceProductType.LINUX_UNIX),
-                            linuxSpotPrice: spotPrices.get(instanceType, InstanceProductType.LINUX_UNIX),
-                            windowsOnDemandPrice: onDemandPrices.get(instanceType, InstanceProductType.WINDOWS),
-                            windowsReservedPrice: reservedPrices?.get(instanceType, InstanceProductType.WINDOWS),
-                            windowsSpotPrice: spotPrices.get(instanceType, InstanceProductType.WINDOWS)
-                    )
-                    namesToInstanceTypeDatas[name] = instanceTypeData
-                } else {
-                    log.info "Unable to resolve ${instanceType}"
-                }
-            }
-        } catch (Exception e) {
-            log.error(e)
-            emailerService.sendExceptionEmail('Error parsing Amazon instance data', e)
-        }
-
-        // Sort based on Linux price if possible. Otherwise sort by name.
-        List<InstanceTypeData> instanceTypeDatas = namesToInstanceTypeDatas.values() as List
-        instanceTypeDatas.sort { a, b -> a.name <=> b.name }
-        instanceTypeDatas.sort { a, b -> a.linuxOnDemandPrice <=> b.linuxOnDemandPrice }
-    }*/
+   
 
     private Document fetchLocalInstanceTypesDocument() {
         MockFileUtils.parseHtmlFile('instance-types.html')

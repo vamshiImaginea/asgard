@@ -28,7 +28,7 @@ class FastPropertyController {
     private final String NO_APP_ID = '_noapp'
 
     def awsAutoScalingService
-    def awsEc2Service
+    def ec2Service
     def configService
     def fastPropertyService
     def regionService
@@ -89,7 +89,7 @@ class FastPropertyController {
         regionOptions.addAll(configService.specialCaseRegions)
         List<String> asgNames = awsAutoScalingService.getAutoScalingGroups(userContext)*.autoScalingGroupName.sort()
         List<String> clusterNames = awsAutoScalingService.getClusters(userContext)*.name.sort()
-        List<String> zoneNames = awsEc2Service.getAvailabilityZones(userContext)*.zoneName.sort()
+        List<String> zoneNames = ec2Service.getAvailabilityZones(userContext)*.zoneName.sort()
         Map result = [
                 updatedBy: params.updatedBy ?: userContext.username,
                 appNames: appNames,
@@ -97,7 +97,7 @@ class FastPropertyController {
                 asgNames: asgNames,
                 clusterNames: clusterNames,
                 zoneNames: zoneNames,
-                images: awsEc2Service.getAccountImages(userContext).sort { it.imageLocation.toLowerCase() },
+                images: ec2Service.getAccountImages(userContext).sort { it.imageLocation.toLowerCase() },
                 ttlUnits: FastProperty.TTL_UNITS,
                 fastPropertyInfoUrl: configService.fastPropertyInfoUrl
         ]

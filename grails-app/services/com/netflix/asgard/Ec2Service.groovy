@@ -92,7 +92,7 @@ import com.netflix.asgard.model.Subnets
 import com.netflix.asgard.model.ZoneAvailability
 import com.netflix.frigga.ami.AppVersion
 
-class AwsEc2Service implements CacheInitializer, InitializingBean {
+class Ec2Service implements CacheInitializer, InitializingBean {
 
 	static transactional = false
 

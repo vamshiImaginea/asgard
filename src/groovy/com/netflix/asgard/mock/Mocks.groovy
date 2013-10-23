@@ -38,7 +38,7 @@ import com.amazonaws.services.simpledb.model.Item
 import com.amazonaws.services.sns.AmazonSNS
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Module;
-import com.netflix.asgard.AwsEc2Service
+import com.netflix.asgard.Ec2Service
 import com.netflix.asgard.CachedMapBuilder
 import com.netflix.asgard.Caches
 import com.netflix.asgard.ConfigService
@@ -179,7 +179,7 @@ class Mocks extends Specification{
         if (mergedInstanceService == null) {
             MockUtils.mockLogging(MergedInstanceService, false)
             mergedInstanceService = new MergedInstanceService()
-            mergedInstanceService.awsEc2Service = awsEc2Service()
+            mergedInstanceService.ec2Service = awsEc2Service()
             mergedInstanceService.discoveryService = discoveryService()
             mergedInstanceService
         }
@@ -192,7 +192,7 @@ class Mocks extends Specification{
             MockUtils.mockLogging(MergedInstanceGroupingService, false)
             mergedInstanceGroupingService = new MergedInstanceGroupingService()
             mergedInstanceGroupingService.awsAutoScalingService = awsAutoScalingService()
-            mergedInstanceGroupingService.awsEc2Service = awsEc2Service()
+            mergedInstanceGroupingService.ec2Service = awsEc2Service()
             mergedInstanceGroupingService.discoveryService = discoveryService()
             mergedInstanceGroupingService.metaClass.getMergedInstances = { UserContext userContext -> [] }
         }
@@ -246,7 +246,7 @@ class Mocks extends Specification{
             MockUtils.mockLogging(InstanceTypeService, false)
             instanceTypeService = new InstanceTypeService()
             instanceTypeService.grailsApplication = grailsApplication()
-            instanceTypeService.awsEc2Service = awsEc2Service()
+            instanceTypeService.ec2Service = ec2Service()
             instanceTypeService.configService = configService()
             instanceTypeService.emailerService = emailerService()
             instanceTypeService.caches = caches()
@@ -342,12 +342,12 @@ class Mocks extends Specification{
     }
 
 
-    private static AwsEc2Service awsEc2Service
-    static AwsEc2Service awsEc2Service() {
-        if (awsEc2Service == null) {
-            awsEc2Service = newAwsEc2Service()
+    private static Ec2Service ec2Service
+    static Ec2Service ec2Service() {
+        if (ec2Service == null) {
+            ec2Service = newAwsEc2Service()
         }
-        awsEc2Service
+        ec2Service
     }
 	private static ComputeService computeService
 	static ComputeService computeService() {
@@ -357,11 +357,11 @@ class Mocks extends Specification{
 		computeService
 	}
 
-    static AwsEc2Service newAwsEc2Service() {
-        MockUtils.mockLogging(AwsEc2Service, false)
-        AwsEc2Service awsEc2Service = new AwsEc2Service()
+    static Ec2Service newAwsEc2Service() {
+        MockUtils.mockLogging(Ec2Service, false)
+        Ec2Service ec2Service = new Ec2Service()
 		
-        awsEc2Service.with() {
+        ec2Service.with() {
             configService = configService()
             caches = caches()
             taskService = taskService()
@@ -370,7 +370,7 @@ class Mocks extends Specification{
 			})
 			initializeCachesForEachREgion()
         }
-        awsEc2Service
+        ec2Service
     }
 	static ComputeService newcomputeService() {
 		Iterable<Module> modules = ImmutableSet.<Module> of(new SLF4JLoggingModule());

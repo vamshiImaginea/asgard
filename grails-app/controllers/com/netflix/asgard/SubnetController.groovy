@@ -22,13 +22,13 @@ import grails.converters.XML
 
 class SubnetController {
 
-    def awsEc2Service
+    def ec2Service
 
     def index = { redirect(action: 'list', params: params) }
 
     def list = {
         UserContext userContext = UserContext.of(request)
-        Subnets subnets = awsEc2Service.getSubnets(userContext)
+        Subnets subnets = ec2Service.getSubnets(userContext)
         OrderBy<SubnetData> orderBy = new OrderBy<SubnetData>([{ it.availabilityZone }, { it.purpose }, { it.target }])
         Collection<SubnetData> allSubnets = Lists.newArrayList(subnets.allSubnets).sort(orderBy)
         withFormat {

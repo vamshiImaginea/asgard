@@ -96,13 +96,13 @@ class PushOperationTests extends GrailsUnitTestCase {
     private RollingPushOperation mockPushOperation(RollingPushOptions options) {
         // Mock the AwsEc2Service with necessary methods.
         // Ranges dictate how many times the method is expected to be called.
-        def awsEc2Control = mockFor(AwsEc2Service)
+        def awsEc2Control = mockFor(Ec2Service)
         awsEc2Control.demand.getInstances(0..0) { UserContext userContext -> mockEc2Instances}
         awsEc2Control.demand.getInstance(4..4) { UserContext userContext, instanceId->
             mockEc2Instances.find{it.instanceId == instanceId}
         }
         RollingPushOperation pushOperation = new RollingPushOperation(options)
-        pushOperation.awsEc2Service = awsEc2Control.createMock()
+        pushOperation.ec2Service = awsEc2Control.createMock()
         pushOperation.task = new Task()
         return pushOperation
     }

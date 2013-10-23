@@ -25,7 +25,7 @@ abstract class ImageServiceSpec extends Specification {
 
     static final String IMAGE_ID = 'imageId'
 
-    AwsEc2Service awsEc2Service = Mock(AwsEc2Service)
+    Ec2Service ec2Service = Mock(Ec2Service)
     ConfigService configService = Mock(ConfigService)
     EmailerService emailerService = Mock(EmailerService)
     RestClientService restClientService = Mock(RestClientService)
@@ -35,7 +35,7 @@ abstract class ImageServiceSpec extends Specification {
 
     def setup() {
         MockUtils.mockLogging(ImageService)
-        imageService = new ImageService(awsEc2Service: awsEc2Service,
+        imageService = new ImageService(ec2Service: ec2Service,
             configService: configService,
             emailerService: emailerService,
             restClientService: restClientService,
@@ -44,7 +44,7 @@ abstract class ImageServiceSpec extends Specification {
     }
 
     void setupLastReferencedDefaults() {
-        awsEc2Service.getInstances(_) >> []
+        ec2Service.getInstances(_) >> []
         restClientService.getAsJson({ it =~ /\/image\/used.json/ }) >> JSON.parse('[]')
     }
 

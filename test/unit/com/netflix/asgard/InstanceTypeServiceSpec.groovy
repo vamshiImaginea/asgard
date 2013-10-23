@@ -50,7 +50,7 @@ class InstanceTypeServiceSpec extends Specification {
     InstanceTypeService instanceTypeService
     ConfigService mockConfigService
     CachedMap mockHardwareProfilesCache
-	AwsEc2Service awsEc2Service
+	Ec2Service ec2Service
 	JcloudsComputeService jcloudsComputeService
 	MultiRegionAwsClient<ComputeService> client
 	ComputeService computeService
@@ -58,7 +58,7 @@ class InstanceTypeServiceSpec extends Specification {
         userContext = UserContext.auto(Region.US_EAST_1)
         mockConfigService = Mock(ConfigService)
         mockHardwareProfilesCache = Mock(CachedMap)
-		awsEc2Service = Mock(AwsEc2Service)
+		ec2Service = Mock(Ec2Service)
 		jcloudsComputeService = Mock(JcloudsComputeService)
 		client = Mock(MultiRegionAwsClient)
 		computeService = Mock(ComputeService)
@@ -66,14 +66,14 @@ class InstanceTypeServiceSpec extends Specification {
                 (EntityType.hardwareProfile): mockHardwareProfilesCache,
         ]))
         MockUtils.mockLogging(InstanceTypeService)
-        instanceTypeService = new InstanceTypeService(caches: caches, configService: mockConfigService, awsEc2Service:awsEc2Service)
+        instanceTypeService = new InstanceTypeService(caches: caches, configService: mockConfigService, ec2Service:ec2Service)
     }
 
     @SuppressWarnings("GroovyAccessibility")
     def 'instance types should include ordered combo of public and custom instance types'() {
 		EC2Client ec2client = Mock(NovaEC2Client)
 		def securityGroupClient = Mock(org.jclouds.ec2.services.SecurityGroupClient)
-		awsEc2Service.computeServiceClientByRegion >> client
+		ec2Service.computeServiceClientByRegion >> client
 		client.by(_) >> computeService
 		Predicate<Image> imagePredicate = new Predicate<Image>() {
 					public boolean apply(Image image) {

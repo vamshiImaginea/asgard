@@ -35,7 +35,7 @@ import org.apache.commons.logging.LogFactory
 class GroupCreateOperation extends AbstractPushOperation {
     private static final log = LogFactory.getLog(this)
 
-    def awsEc2Service
+    def ec2Service
     def discoveryService
     private final GroupCreateOptions options
     Task task

@@ -34,7 +34,7 @@ class ImageControllerTests {
     void setUp() {
         Mocks.createDynamicMethods() 
         TestUtils.setUpMockRequest()
-        controller.awsEc2Service = Mocks.awsEc2Service()
+        controller.ec2Service = Mocks.ec2Service()
         controller.grailsApplication = Mocks.grailsApplication()
     }
 

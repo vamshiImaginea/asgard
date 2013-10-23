@@ -18,14 +18,14 @@ package com.netflix.asgard.retriever
 import com.amazonaws.services.ec2.model.DescribeSpotPriceHistoryRequest
 import com.amazonaws.services.ec2.model.DescribeSpotPriceHistoryResult
 import com.amazonaws.services.ec2.model.SpotPrice
-import com.netflix.asgard.AwsEc2Service
+import com.netflix.asgard.Ec2Service
 import com.netflix.asgard.Region
 import spock.lang.Specification
 
 class AwsResultsRetrieverSpec extends Specification {
 
     def 'should retrieve for all tokens'() {
-        AwsEc2Service service = Mock(AwsEc2Service)
+        Ec2Service service = Mock(Ec2Service)
 
         when:
         final retriever = new AwsResultsRetriever<SpotPrice, DescribeSpotPriceHistoryRequest,
@@ -84,7 +84,7 @@ class AwsResultsRetrieverSpec extends Specification {
     }
 
     def 'should retrieve only once if no tokens exist'() {
-        AwsEc2Service service = Mock(AwsEc2Service)
+        Ec2Service service = Mock(Ec2Service)
 
         when:
         final retriever = new AwsResultsRetriever<SpotPrice, DescribeSpotPriceHistoryRequest,
@@ -123,7 +123,7 @@ class AwsResultsRetrieverSpec extends Specification {
     }
 
     def 'should retrieve up to limit'() {
-        AwsEc2Service service = Mock(AwsEc2Service)
+        Ec2Service service = Mock(Ec2Service)
 
         when:
         final retriever = new AwsResultsRetriever<SpotPrice, DescribeSpotPriceHistoryRequest,
@@ -169,7 +169,7 @@ class AwsResultsRetrieverSpec extends Specification {
     }
 
     def 'should not enforce limit if limitRetrieval is not implemented'() {
-        AwsEc2Service service = Mock(AwsEc2Service)
+        Ec2Service service = Mock(Ec2Service)
 
         when:
         final retriever = new AwsResultsRetriever<SpotPrice, DescribeSpotPriceHistoryRequest,

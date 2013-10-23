@@ -31,7 +31,7 @@ class MergedInstanceGroupingService {
 
     static transactional = false
 
-    def awsEc2Service
+    def ec2Service
 
     /**
      * Returns the merged instances for a given application. appName may be null for all.
@@ -44,7 +44,7 @@ class MergedInstanceGroupingService {
      * Returns the merged instances for all instances.
      */
     List<MergedInstance> getMergedInstances(UserContext userContext) {
-        Collection<NodeMetadata> ec2List = awsEc2Service.getInstances(userContext)
+        Collection<NodeMetadata> ec2List = ec2Service.getInstances(userContext)
         List<MergedInstance> instances = ec2List.collect { NodeMetadata ec2Inst ->
             new MergedInstance(ec2Inst, null)
         }
@@ -60,7 +60,7 @@ class MergedInstanceGroupingService {
         List<MergedInstance> instances = discList.collect { appInst ->
             NodeMetadata ec2Inst = null
             if (appInst.instanceId) {
-                ec2Inst = awsEc2Service.getInstance(userContext, appInst.instanceId, From.CACHE)
+                ec2Inst = ec2Service.getInstance(userContext, appInst.instanceId, From.CACHE)
             }
             new MergedInstance(ec2Inst, appInst)
         }

@@ -28,14 +28,14 @@ class MergedInstanceService {
 
     static transactional = false
 
-    def awsEc2Service
+    def ec2Service
     def discoveryService
 
     /**
      * Returns the merged instances for a given list of instance ids
      */
     List<MergedInstance> getMergedInstancesByIds(UserContext userContext, List<String> instanceIds) {
-        Collection<Instance> ec2List = awsEc2Service.getInstancesByIds(userContext, instanceIds)
+        Collection<Instance> ec2List = ec2Service.getInstancesByIds(userContext, instanceIds)
         List<ApplicationInstance> discList = discoveryService.getAppInstancesByIds(userContext, instanceIds)
         List<MergedInstance> instances = ec2List.collect { Instance ec2Inst ->
             ApplicationInstance discInst = discList.find { ApplicationInstance appInst ->
@@ -55,7 +55,7 @@ class MergedInstanceService {
      */
     MergedInstance findHealthyInstance(UserContext userContext, List<String> instanceIds) {
         if (!instanceIds) { return null }
-        List<String> runningInstanceIds = awsEc2Service.getInstancesByIds(userContext, instanceIds).
+        List<String> runningInstanceIds = ec2Service.getInstancesByIds(userContext, instanceIds).
                 findAll { it.state.name == 'running'}*.instanceId
         List<MergedInstance> mergedInstances = getMergedInstancesByIds(userContext, runningInstanceIds)
         List<MergedInstance> upMergedInstances = mergedInstances.findAll { it.status == 'UP' }

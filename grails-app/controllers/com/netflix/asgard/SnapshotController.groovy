@@ -24,13 +24,13 @@ import org.jclouds.ec2.domain.Volume
 @ContextParam('region')
 class SnapshotController {
 
-    def awsEc2Service
+    def ec2Service
 
     def index = { redirect(action: 'list', params: params) }
 
     def list = {
         UserContext userContext = UserContext.of(request)
-        Set<Snapshot> snapshots = awsEc2Service.getSnapshots(userContext)
+        Set<Snapshot> snapshots = ec2Service.getSnapshots(userContext)
         Set<String> appNames = Requests.ensureList(params.id).collect { it.split(',') }.flatten() as Set<String>
        if (appNames) {
             snapshots = snapshots.findAll { Snapshot snapshot ->
@@ -47,7 +47,7 @@ class SnapshotController {
     def show = {
         UserContext userContext = UserContext.of(request)
         String snapshotId = EntityType.snapshot.ensurePrefix(params.snapshotId ?: params.id)
-        def snapshot = awsEc2Service.getSnapshot(userContext, snapshotId)
+        def snapshot = ec2Service.getSnapshot(userContext, snapshotId)
         if (!snapshot) {
             Requests.renderNotFound('EBS Snapshot', snapshotId, this)
         } else {
@@ -55,7 +55,7 @@ class SnapshotController {
             String accountName = grailsApplication.config.grails.awsAccountNames[ownerId] ?: "${ownerId}"
             def details = [
                     'snapshot': snapshot,
-                    'zoneList': awsEc2Service.getAvailabilityZones(userContext),
+                    'zoneList': ec2Service.getAvailabilityZones(userContext),
                     'accountName': accountName
             ]
             withFormat {
@@ -68,7 +68,7 @@ class SnapshotController {
 
     def create = {
         UserContext userContext = UserContext.of(request)
-        def snapshot = awsEc2Service.createSnapshot(userContext, params.volumeId, params.description)
+        def snapshot = ec2Service.createSnapshot(userContext, params.volumeId, params.description)
         redirect(action: 'show', params:[id:snapshot?.id])
     }
 
@@ -82,8 +82,8 @@ class SnapshotController {
         String message = ''
         try {
             snapshotIds.each {
-                if (awsEc2Service.getSnapshot(userContext, it)) {
-                    awsEc2Service.deleteSnapshot(userContext, it)
+                if (ec2Service.getSnapshot(userContext, it)) {
+                    ec2Service.deleteSnapshot(userContext, it)
                     deletedSnapshotIds << it
                 } else {
                     nonexistentSnapshotIds << it
@@ -111,7 +111,7 @@ class SnapshotController {
         } else {
             String snapshotId = EntityType.snapshot.ensurePrefix(params.snapshotId ?: params.id)
             try {
-                Volume volume = awsEc2Service.createVolumeFromSnapshot(
+                Volume volume = ec2Service.createVolumeFromSnapshot(
                     userContext,
                     params.volumeSize as Integer,
                     params.zone,

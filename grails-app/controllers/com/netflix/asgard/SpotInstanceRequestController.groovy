@@ -25,7 +25,7 @@ import grails.converters.XML
 @ContextParam('region')
 class SpotInstanceRequestController {
 
-    def awsEc2Service
+    def ec2Service
     def spotInstanceRequestService
 
     final static allowedMethods = [cancel: 'POST']

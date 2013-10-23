@@ -31,7 +31,7 @@ import com.netflix.frigga.ami.AppVersion
 import grails.test.GrailsUnitTestCase
 import grails.test.MockUtils
 
-class AwsEc2ServiceTests extends GrailsUnitTestCase {
+class Ec2ServiceTests extends GrailsUnitTestCase {
 
     void setUp() {
         Mocks.createDynamicMethods()
@@ -39,17 +39,17 @@ class AwsEc2ServiceTests extends GrailsUnitTestCase {
 
  
     void testIsSecurityGroupEditable() {
-        AwsEc2Service awsEc2Service = new AwsEc2Service()
-        assert awsEc2Service.isSecurityGroupEditable("nf-infrastructure")
-        assert awsEc2Service.isSecurityGroupEditable("nf-datacenter")
-        assert !awsEc2Service.isSecurityGroupEditable("default")
-        assert awsEc2Service.isSecurityGroupEditable("nccp")
+        Ec2Service ec2Service = new Ec2Service()
+        assert ec2Service.isSecurityGroupEditable("nf-infrastructure")
+        assert ec2Service.isSecurityGroupEditable("nf-datacenter")
+        assert !ec2Service.isSecurityGroupEditable("default")
+        assert ec2Service.isSecurityGroupEditable("nccp")
     }
 
 
     void testGetImage() {
-        AwsEc2Service awsEc2Service = Mocks.awsEc2Service()
-        assertNull awsEc2Service.getImage(Mocks.userContext(), "doesn't exist")
+        Ec2Service ec2Service = Mocks.ec2Service()
+        assertNull ec2Service.getImage(Mocks.userContext(), "doesn't exist")
     }
 
     
