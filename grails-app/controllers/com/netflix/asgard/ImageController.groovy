@@ -42,6 +42,7 @@ class ImageController {
     def taskService
     def grailsApplication
 	def configService
+	def launchTemplateService
 
     def static allowedMethods = [update: 'POST', delete: ['POST', 'DELETE'], launch: 'POST', addTag: 'POST',
             addTags: 'POST', removeTag: ['POST', 'DELETE'], removeTags: ['POST', 'DELETE'], removeAllTags: 'DELETE',

@@ -37,13 +37,7 @@ class AwsEc2ServiceTests extends GrailsUnitTestCase {
         Mocks.createDynamicMethods()
     }
 
-    void testGetSpotInstanceRequests() {
-        AwsEc2Service awsEc2Service = Mocks.awsEc2Service()
-        Region region = Region.defaultRegion()
-        List<SpotInstanceRequest> spotInstanceRequests = awsEc2Service.retrieveSpotInstanceRequests(region)
-        assert spotInstanceRequests.size() >= 1
-    }
-
+ 
     void testIsSecurityGroupEditable() {
         AwsEc2Service awsEc2Service = new AwsEc2Service()
         assert awsEc2Service.isSecurityGroupEditable("nf-infrastructure")
@@ -52,77 +46,11 @@ class AwsEc2ServiceTests extends GrailsUnitTestCase {
         assert awsEc2Service.isSecurityGroupEditable("nccp")
     }
 
-    void testGetEffectiveSecurityGroups() {
-        AwsEc2Service awsEc2Service = new AwsEc2Service()
-        awsEc2Service.metaClass.getSecurityGroups = { UserContext userContext ->
-            return ['nf-infrastructure', 'default', 'nf-datacenter', 'nccp', 'mickeymouse'].
-                    collect { new SecurityGroup().withGroupName(it) }
-        }
-
-        def allSecurityGroups = awsEc2Service.getSecurityGroups(Mocks.userContext())
-        def effectiveSecurityGroups = awsEc2Service.getEffectiveSecurityGroups(Mocks.userContext())
-
-        assertEquals 5, allSecurityGroups.size()
-        assert allSecurityGroups.any { it.groupName == "nf-infrastructure" }
-        assert allSecurityGroups.any { it.groupName == "default" }
-        assert allSecurityGroups.any { it.groupName == "nf-datacenter" }
-        assert allSecurityGroups.any { it.groupName == "nccp" }
-        assert allSecurityGroups.any { it.groupName == "mickeymouse" }
-
-        assertEquals 4, effectiveSecurityGroups.size()
-        assert effectiveSecurityGroups.any { it.groupName == "nccp" }
-        assert effectiveSecurityGroups.any { it.groupName == "mickeymouse" }
-        assert effectiveSecurityGroups.any { it.groupName == "nf-infrastructure" }
-        assert !effectiveSecurityGroups.any { it.groupName == "default" }
-    }
 
     void testGetImage() {
         AwsEc2Service awsEc2Service = Mocks.awsEc2Service()
         assertNull awsEc2Service.getImage(Mocks.userContext(), "doesn't exist")
     }
 
-
-    void testRetrieveImagesWithTags() {
-        Mocks.monkeyPatcherService()
-        Image image1 = new Image(imageId: 'imageId1', tags: [new Tag()])
-        Image image2 = new Image(imageId: 'imageId2', tags: [new Tag()])
-        AwsEc2Service awsEc2Service = new AwsEc2Service()
-        awsEc2Service.configService = Mocks.configService()
-        def mockAmazonEC2 = mockFor(AmazonEC2)
-        awsEc2Service.awsClient = new MultiRegionAwsClient({ mockAmazonEC2.createMock() })
-        DescribeImagesResult describeImagesResult = new DescribeImagesResult(images: [image1, image2])
-        mockAmazonEC2.demand.describeImages { DescribeImagesRequest request -> describeImagesResult }
-        //noinspection GroovyAccessibility
-        Collection<Image> images = awsEc2Service.retrieveImages(Region.US_EAST_1)
-
-        assert images == [image1, image2]
-    }
-
-    void testRetrieveImagesWithTagsMissing() {
-        Mocks.monkeyPatcherService()
-        Image image1 = new Image(imageId: 'imageId1')
-        Image image2 = new Image(imageId: 'imageId2')
-        AwsEc2Service awsEc2Service = new AwsEc2Service()
-        MockUtils.mockLogging(AwsEc2Service)
-        awsEc2Service.configService = Mocks.configService()
-        def mockAmazonEC2 = mockFor(AmazonEC2)
-        awsEc2Service.awsClient = new MultiRegionAwsClient({ mockAmazonEC2.createMock() })
-        DescribeImagesResult describeImagesResultMissingTags = new DescribeImagesResult(images: [image1, image2])
-        Image image1WithTags = new Image(imageId: 'imageId1', tags: [new Tag()])
-        DescribeImagesResult describeImagesResultWithTags = new DescribeImagesResult().withImages(image1WithTags)
-        // Can only specify behavior for a mockFor method once as per http://jira.grails.org/browse/GRAILS-4611
-        mockAmazonEC2.demand.describeImages(2..2) { DescribeImagesRequest request ->
-            if (request.filters == [new Filter('tag-key', ['*'])]) {
-                describeImagesResultWithTags
-            } else {
-                describeImagesResultMissingTags
-            }
-        }
-
-        //noinspection GroovyAccessibility
-        Collection<Image> images = awsEc2Service.retrieveImages(Region.US_EAST_1)
-
-        assert images == [image1WithTags, image2]
-    }
-
+    
 }

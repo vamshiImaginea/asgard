@@ -65,6 +65,7 @@ class ImageService implements BackgroundProcessInitializer {
     def taskService
 	def scheduledfuture
 	def regionService
+	def launchTemplateService
     private ScheduledExecutorService replicationExecutor
 	
 

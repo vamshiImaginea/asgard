@@ -28,28 +28,18 @@ class InstanceTypeControllerTests {
         TestUtils.setUpMockRequest()
         controller.instanceTypeService = Mocks.instanceTypeService()
     }
-
     void testList() {
         def attrs = controller.list()
-        List<InstanceTypeData> types = attrs.instanceTypes
-        assert 17 == types.size()
-        assert 't1.micro' == types[2].name
-        InstanceTypeData m1Small = types[3]
-        assert 'M1 Small' == m1Small.hardwareProfile.description
-        assert '3.75 GiB' == types.find { it.name == 'm1.medium'}.hardwareProfile.memory
-        assert '68.4 GiB' == types.find { it.name == 'm2.4xlarge' }.hardwareProfile.memory
-        InstanceTypeData c1medium = types.find { it.name == 'c1.medium' }
-        assert '5 EC2 Compute Units (2 virtual cores with 2.5 EC2 Compute Units each)' == c1medium.hardwareProfile.cpu
-        assert '5 EC2 Compute Units' == c1medium.hardwareProfile.cpuSummary
-        assert '(2 virtual cores with 2.5 EC2 Compute Units each)' == c1medium.hardwareProfile.cpuDetail
-        assert '64-bit' == types.find { it.name == 'm1.large' }.hardwareProfile.architecture
-        assert 'Moderate' == types.find { it.name == 'm2.xlarge' }.hardwareProfile.ioPerformance
+        List<InstanceTypeData> types = attrs.instanceTypes as List
+		println types
+        assert 3 == types.size()
+        assert 'large' == types[0].hardware.id
+		assert 'medium' == types[1].hardware.id
+		assert 'small' == types[2].hardware.id
+		assert 15360 == types[0].hardware.ram
+		assert 7680 == types[1].hardware.ram
+		assert 1740 == types[2].hardware.ram
+		
 
-        assert 0.065 == m1Small.linuxOnDemandPrice
-        assert 0.03 == m1Small.linuxReservedPrice
-        assert 0.007 == m1Small.linuxSpotPrice
-        assert 0.115 == m1Small.windowsOnDemandPrice
-        assert 0.05 == m1Small.windowsReservedPrice
-        assert 0.017 == m1Small.windowsSpotPrice
     }
 }

@@ -41,9 +41,15 @@ class ImageControllerTests {
     void testShow() {
         controller.params.imageId = 'ami-8ceb1be5'
         def attrs = controller.show()
-        assert 'ami-8ceb1be5' == attrs.image.imageId
-        assert 'test' == attrs['accounts']['179000000000']
+        assertEquals(attrs, null)
     }
+	
+	void testList() {
+		controller.params.imageId = 'ami-8ceb1be5'
+		def attrs = controller.list()
+		assert attrs.size()>0
+		
+	}
 
     void testShowNonExistent() {
         controller.params.imageId ='ami-doesntexist'

@@ -100,7 +100,6 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 
 	MultiRegionAwsClient<ComputeService> computeServiceClientByRegion
 	def jcloudsComputeService
-	def awsClientService
 	Caches caches
 	def configService
 	def restClientService
@@ -131,6 +130,10 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 
 	void initializeCaches() {
 		initialiseComputeServiceClients()
+		initializeCachesForEachREgion()
+
+	}
+	void initializeCachesForEachREgion(){
 		caches.allKeyPairs.ensureSetUp({ Region region -> retrieveKeys(region) })
 		caches.allAvailabilityZones.ensureSetUp({ Region region -> retrieveAvailabilityZones(region) },{ Region region -> caches.allKeyPairs.by(region).fill() })
 		caches.allImages.ensureSetUp({ Region region -> retrieveImages(region) })
@@ -138,12 +141,6 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 		caches.allSecurityGroups.ensureSetUp({ Region region -> retrieveSecurityGroups(region) })
 		caches.allSnapshots.ensureSetUp({ Region region -> retrieveSnapshots(region) })
 		caches.allVolumes.ensureSetUp({ Region region -> retrieveVolumes(region) })
-
-		/// not supported in jclouds
-		//caches.allSubnets.ensureSetUp({ Region region -> retrieveSubnets(region) })			
-		/*caches.allVpcs.ensureSetUp({ Region region -> retrieveVpcs(region) })
-		 caches.allReservedInstancesGroups.ensureSetUp({ Region region -> retrieveReservations(region) })
-		 caches.allSubnets.ensureSetUp({ Region region -> retrieveSubnets(region) })*/
 	}
 
 	// Availability Zones
@@ -410,16 +407,6 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 		Check.notNull(name, SecurityGroup, "name")
 		String groupName = name
 		String groupId = ''
-		/*if (name ==~ SECURITY_GROUP_ID_PATTERN) {
-			groupId = name
-			SecurityGroup cachedSecurityGroup = caches.allSecurityGroups.by(region).list().find { it.name == name }
-			groupName = cachedSecurityGroup?.name
-		} else {
-			groupName = name
-		}*/
-		/*if (from == From.CACHE) {
-			return caches.allSecurityGroups.by(region).get(name)
-		}*/
 		Set<SecurityGroup> groups = null
 		EC2Client ec2Client=null
 		String regionCode = region.code
@@ -428,21 +415,9 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 			groups= ec2Client.securityGroupServices.describeSecurityGroupsInRegion(regionCode, groupName);
 			return Check.lone(groups, SecurityGroup)
 			//groupName = groups?.name
-		} catch (IllegalStateException e) {/*
-			log.error 'security group not found ' + e.printStackTrace()
-			 if (e.getCause() == 'InvalidParameterValue' && !groupId) {
-				// It's likely a VPC security group which we can't reference by name. Maybe it has an ID in the cache.
-				SecurityGroup cachedGroup = caches.allSecurityGroups.by(region).get(groupName)
-				if (cachedGroup) {
-					List<String> grooupIds= cachedGroup.id;
-					groups  = ec2Client.securityGroupServices.describeSecurityGroupsInRegion(regionCode,cachedGroup.id)
-					if(!groups.empty && groups.size()==1){
-						groups = Check.lone(groups, SecurityGroup)
-					}
-					
-				}
-			}
-		*/}
+		} catch (IllegalStateException e) {
+		log.error 'security group not found ' + e.printStackTrace()
+		}
 		
 	}
 
@@ -664,25 +639,13 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 	private Set<NodeMetadata> retrieveInstances(Region region) {
 		Set<ComputeMetadata> listNodes = computeServiceClientByRegion.by(region).listNodes()
 		Set<NodeMetadata> nodes= new HashSet<NodeMetadata>(listNodes.size())
-
-		/*def result = computeServiceClientByRegion.by(region).describeInstances(new DescribeInstancesRequest())
-		 def reservations = result.getReservations()
-		 for (res in reservations) {
-		 for (ri in res.getInstances()) {
-		 instances.add(ri)
-		 }
-		 }*/
 		log.info 'retrieveInstances in region '+ region
-
 		for(ComputeMetadata computeMetadata : listNodes){
 			NodeMetadata nodeMetadata=	computeServiceClientByRegion.by(region).getNodeMetadata(computeMetadata.getId());
 			nodes.add(nodeMetadata)
-
 		}
 		log.info 'retrieveInstances in region '+ nodes
 		nodes
-
-
 	}
 
 	Set<NodeMetadata> getInstances(UserContext userContext) {
