@@ -85,8 +85,6 @@ import com.netflix.asgard.push.Cluster
     static final EntityType<String> domain = create('SimpleDB Domain', { it }, '',
             'Show metadata about this SimpleDB domain')
     static final EntityType<String> eurekaAddress = create('Eureka Address', { it })
-    static final EntityType<FastProperty> fastProperty = create('Fast Property', { it.id }, '', '',
-            { Map attrs, String objectId -> attrs.params = [name: objectId] })
     static final EntityType<HardwareProfile> hardwareProfile = create('Hardware Profile',
             { it.instanceType.toString() })
     static final EntityType<Image> image = create('Image', { it.id })

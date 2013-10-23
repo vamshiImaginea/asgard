@@ -46,8 +46,6 @@ import com.netflix.asgard.DefaultUserDataProvider
 import com.netflix.asgard.DiscoveryService
 import com.netflix.asgard.DnsService
 import com.netflix.asgard.EmailerService
-import com.netflix.asgard.EurekaAddressCollectorService
-import com.netflix.asgard.FlagService
 import com.netflix.asgard.InstanceTypeService
 import com.netflix.asgard.LaunchTemplateService
 import com.netflix.asgard.Link
@@ -58,8 +56,6 @@ import com.netflix.asgard.MultiRegionAwsClient
 import com.netflix.asgard.Region
 import com.netflix.asgard.RestClientService
 import com.netflix.asgard.SecretService
-import com.netflix.asgard.ServerService
-import com.netflix.asgard.StackService
 import com.netflix.asgard.Task
 import com.netflix.asgard.TaskService
 import com.netflix.asgard.ThreadScheduler
@@ -210,19 +206,6 @@ class Mocks extends Specification{
         dnsService
     }
 
-    private static EurekaAddressCollectorService eurekaAddressCollectorService
-    static EurekaAddressCollectorService eurekaAddressCollectorService() {
-        if (eurekaAddressCollectorService == null) {
-            MockUtils.mockLogging(EurekaAddressCollectorService, false)
-            eurekaAddressCollectorService = new EurekaAddressCollectorService()
-            eurekaAddressCollectorService.caches = caches()
-            eurekaAddressCollectorService.configService = configService()
-            eurekaAddressCollectorService.restClientService = restClientService()
-            eurekaAddressCollectorService.dnsService = dnsService()
-            eurekaAddressCollectorService.initializeCaches()
-        }
-        eurekaAddressCollectorService
-    }
 
     private static DiscoveryService discoveryService
     static DiscoveryService discoveryService() {
@@ -286,15 +269,6 @@ class Mocks extends Specification{
         emailerService
     }
 
-    private static FlagService flagService
-    static FlagService flagService() {
-        if (flagService == null) {
-            MockUtils.mockLogging(FlagService, false)
-            flagService = new FlagService()
-        }
-        flagService
-    }
-
 
     private static RestClientService restClientService
     static RestClientService restClientService() {
@@ -310,15 +284,7 @@ class Mocks extends Specification{
         newRestClientService
     }
 
-    private static StackService stackService
-    static StackService stackService() {
-        if (stackService == null) {
-            MockUtils.mockLogging(StackService, false)
-            stackService = new StackService()
-            stackService.awsAutoScalingService = awsAutoScalingService()
-        }
-        stackService
-    }
+    
 
     private static LaunchTemplateService launchTemplateService
     static LaunchTemplateService launchTemplateService() {
@@ -392,16 +358,7 @@ class Mocks extends Specification{
         configService
     }
 
-    private static ServerService serverService
-    static ServerService serverService() {
-        if (serverService == null) {
-            serverService = new ServerService()
-            serverService.grailsApplication = grailsApplication()
-        }
-        serverService
-    }
-
-
+    
     static AmazonServiceException makeAmazonServiceException(String message, int statusCode, String errorCode,
                                                              String requestId) {
         AmazonServiceException e = new AmazonServiceException(message)

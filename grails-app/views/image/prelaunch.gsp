@@ -82,8 +82,10 @@
             <td class="name">
               <label for="pricing">Pricing:</label>
             </td>
-            <td class="value">
+            <td class="value"><%--
               <g:select from="['Spot (cheaper)', 'On Demand (faster start)']" keys="['spot', 'ondemand']" name="pricing" />
+            --%>
+             <g:select from="['On Demand (faster start)']" keys="['ondemand']" name="pricing" />
             </td>
           </tr>
           </tbody>

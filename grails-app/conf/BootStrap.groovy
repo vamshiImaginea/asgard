@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import com.netflix.asgard.FastProperty
 import grails.converters.JSON
 
 class BootStrap {
@@ -30,10 +29,6 @@ class BootStrap {
     def init = { servletContext ->
         if (configService.appConfigured) { // Only start warming the caches if Asgard has been configured
             initService.initializeApplication()
-        }
-
-        JSON.registerObjectMarshaller(FastProperty) {
-            it.properties.subMap(FastProperty.ALL_ATTRIBUTES)
         }
     }
 }
