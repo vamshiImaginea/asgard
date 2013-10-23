@@ -122,7 +122,7 @@ ec2Service.accounts =['1']
         then:
 		3 * jcloudsComputeService.getProivderClient(_) >> ec2client
 		3 * ec2client.getSecurityGroupServices() >> securityGroupClient
-		1 * securityGroupClient.describeSecurityGroupsInRegion(_,_) >> []
+		1 * securityGroupClient.describeSecurityGroupsInRegion(_,_) >> [source]
 		2 * securityGroupClient.authorizeSecurityGroupIngressInRegion('us-east-1', 'group', _, 1, 1, '')
      
     }
