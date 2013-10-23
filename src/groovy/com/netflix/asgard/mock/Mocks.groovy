@@ -326,7 +326,6 @@ class Mocks extends Specification{
             MockUtils.mockLogging(LaunchTemplateService, false)
             launchTemplateService = new LaunchTemplateService()
             launchTemplateService.grailsApplication = grailsApplication()
-            launchTemplateService.applicationService = applicationService()
             launchTemplateService.configService = configService()
             launchTemplateService.pluginService = [ userDataProvider: userDataProvider() ]
         }
@@ -337,7 +336,6 @@ class Mocks extends Specification{
     static UserDataProvider userDataProvider() {
         if (userDataProvider == null) {
             userDataProvider = new DefaultUserDataProvider()
-            userDataProvider.applicationService = applicationService()
             userDataProvider.configService = configService()
         }
         userDataProvider
