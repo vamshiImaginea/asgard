@@ -132,14 +132,14 @@
           <tr class="prop">
             <td class="name">Instance ID:</td>
             <td class="value">${instance.id}</td>
-          </tr>
+          </tr><%--
           <g:if test="${instance.id}">
             <tr class="prop">
               <td class="name">Spot Instance Request:</td>
               <td class="value"><g:linkObject type="spotInstanceRequest" name="${java.net.URLEncoder.encode(instance.id,'UTF-8')}" >${instance.id}</g:linkObject></td>
             </tr>
           </g:if>
-          <tr class="prop">
+          --%><tr class="prop">
             <td class="name">Public DNS/IP:</td>
             <td class="value">${instance.publicAddresses}</td>
           </tr>

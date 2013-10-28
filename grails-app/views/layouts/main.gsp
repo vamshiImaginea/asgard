@@ -121,9 +121,10 @@
          <g:link class="instances" controller="instance" action="list">EC2</g:link>
         
      </li>
+     <li class="menuButton"><g:link class="instanceTypes" controller="instanceType" action="list">Instance Types</g:link></li>
      <%--<li class="menuButton"><g:link class="instances" controller="instance" action="list">Instances</g:link></li>
       
-           <li class="menuButton"><g:link class="instanceTypes" controller="instanceType" action="list">Instance Types</g:link></li>
+           
            --%><g:if test="${spotInstancesAreAppropriate}"><%--
              <li class="menuButton"><g:link class="spotInstanceRequest" controller="spotInstanceRequest" action="list">Spot Instance Requests</g:link></li>
            --%></g:if>
