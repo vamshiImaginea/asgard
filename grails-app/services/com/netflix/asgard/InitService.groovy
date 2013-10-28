@@ -69,7 +69,7 @@ class InitService implements ApplicationContextAware {
 		grailsApplication.config.appConfigured = true
 		grailsApplication.config.merge(config)
 
-	//	initializeApplication()
+		initializeApplication()
 	}
 
 	/**
@@ -83,7 +83,7 @@ class InitService implements ApplicationContextAware {
 		for (CacheInitializer cacheInitializer in cacheInitializers) {
 			cacheInitializer.initializeCaches()
 		}
-		log.info 'Starting background threads'
+		/*log.info 'Starting background threads'
 		Collection<BackgroundProcessInitializer> backgroundProcessInitializers =
 				applicationContext.getBeansOfType(BackgroundProcessInitializer).values()
 		for (BackgroundProcessInitializer backgroundProcessInitializer in backgroundProcessInitializers) {
@@ -98,7 +98,7 @@ class InitService implements ApplicationContextAware {
 
 			}
 			backgroundProcessInitializer.initializeBackgroundProcess()
-		}
+		}*/
 	}
 
 	/**

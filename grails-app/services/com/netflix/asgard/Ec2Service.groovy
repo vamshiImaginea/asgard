@@ -130,7 +130,7 @@ class Ec2Service implements CacheInitializer, InitializingBean {
 
 	void initializeCaches() {
 		initialiseComputeServiceClients()
-		initializeCachesForEachREgion()
+		//initializeCachesForEachREgion()
 
 	}
 	void initializeCachesForEachREgion(){
@@ -256,7 +256,6 @@ class Ec2Service implements CacheInitializer, InitializingBean {
 			if (image) {
 				ec2Client.getAMIServices().deregisterImageInRegion(userContext.region.code,  image.providerId)
 			}
-			caches.allImages.by(userContext.region).remove(imageId)
 		}
 		taskService.runTask(userContext, msg, work, Link.to(EntityType.image, imageId), existingTask)
 	}
@@ -339,7 +338,7 @@ class Ec2Service implements CacheInitializer, InitializingBean {
 	}
 
 	Collection<SecurityGroup> getSecurityGroups(UserContext userContext) {
-		log.info 'list ' + caches.allSecurityGroups.by(userContext.region).list()
+		log.info 'Retriving Security Groups for ' + userContext.region
 		retrieveSecurityGroups(userContext.region)
 	}
 
@@ -617,7 +616,7 @@ class Ec2Service implements CacheInitializer, InitializingBean {
 	}
 
 	Set<NodeMetadata> getInstances(UserContext userContext) {
-		caches.allInstances.by(userContext.region)?.list() ?: []
+		retrieveInstances(userContext.region) ?: []
 	}
 
 	/**
