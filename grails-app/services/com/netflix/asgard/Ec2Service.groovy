@@ -140,7 +140,6 @@ class Ec2Service implements CacheInitializer, InitializingBean {
 		caches.allInstances.ensureSetUp({ Region region -> retrieveInstances(region) })
 		caches.allSecurityGroups.ensureSetUp({ Region region -> retrieveSecurityGroups(region) })
 		caches.allSnapshots.ensureSetUp({ Region region -> retrieveSnapshots(region) })
-		caches.allVolumes.ensureSetUp({ Region region -> retrieveVolumes(region) })
 	}
 
 	// Availability Zones
@@ -152,7 +151,7 @@ class Ec2Service implements CacheInitializer, InitializingBean {
 	}
 
 	Collection<AvailabilityZoneInfo> getAvailabilityZones(UserContext userContext) {
-		caches.allAvailabilityZones.by(userContext.region).list().sort { it.id }
+		caches.allAvailabilityZones.by(userContext.region).list()//.sort { it.id }
 	}
 
 	Collection<AvailabilityZoneInfo> getRecommendedAvailabilityZones(UserContext userContext) {
@@ -915,7 +914,6 @@ class Ec2Service implements CacheInitializer, InitializingBean {
 				def volumes = ec2Client.elasticBlockStoreServices.describeVolumesInRegion(regionCode,volumeId )
 				if (volumes.size() > 0) {
 					def volume = Check.lone(volumes, Volume)
-					caches.allVolumes.by(userContext.region).put(volumeId, volume)
 					return volume
 				}
 			} catch (AmazonServiceException ase) {
