@@ -69,7 +69,7 @@ class InitService implements ApplicationContextAware {
 		grailsApplication.config.appConfigured = true
 		grailsApplication.config.merge(config)
 
-		initializeApplication()
+	//	initializeApplication()
 	}
 
 	/**

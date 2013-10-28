@@ -29,9 +29,6 @@
     <h1>Running Tasks</h1>
     <g:form method="post">
       <div class="list">
-        <div class="buttons">
-          <g:buttonSubmit class="stop" data-warning="Really stop the selected task?" action="cancel" value="Stop Selected Task"/>
-        </div>
         <table class="sortable">
           <thead>
           <tr>

@@ -340,7 +340,7 @@ class Ec2Service implements CacheInitializer, InitializingBean {
 
 	Collection<SecurityGroup> getSecurityGroups(UserContext userContext) {
 		log.info 'list ' + caches.allSecurityGroups.by(userContext.region).list()
-		retrieveSecurityGroups(userContext.region).list()
+		retrieveSecurityGroups(userContext.region)
 	}
 
 	/**
@@ -916,7 +916,6 @@ class Ec2Service implements CacheInitializer, InitializingBean {
 	Volume createVolume(UserContext userContext, Integer size, String zone) {
 		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
 		def volume=	ec2Client.elasticBlockStoreServices.createVolumeInAvailabilityZone(zone, size)
-		caches.allVolumes.by(userContext.region).put(volume.id, volume)
 		return volume
 	}
 
@@ -927,14 +926,13 @@ class Ec2Service implements CacheInitializer, InitializingBean {
 	Volume createVolume(UserContext userContext, Integer size, String zone, String snapshotId) {
 		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
 		def volume=	ec2Client.elasticBlockStoreServices.createVolumeFromSnapshotInAvailabilityZone(zone, size, snapshotId);
-		caches.allVolumes.by(userContext.region).put(volume.id, volume)
 		return volume
 	}
 
 	// Snapshots
 
 	Collection<Snapshot> getSnapshots(UserContext userContext) {
-		caches.allSnapshots.by(userContext.region).list()
+		retrieveSnapshots(userContext.region) as List
 	}
 
 	private Set<Snapshot> retrieveSnapshots(Region region) {
@@ -958,7 +956,6 @@ class Ec2Service implements CacheInitializer, InitializingBean {
 				Set<Snapshot> snapshots =ec2Client.getElasticBlockStoreServices().describeSnapshotsInRegion(regionCode,snapshotIds(snapshotId))
 				if (snapshots.size() > 0) {
 					Snapshot snapshot = Check.lone(snapshots, Snapshot)
-					caches.allSnapshots.by(userContext.region).put(snapshotId, snapshot)
 					return snapshot
 				}
 			} catch (Exception ase) {
@@ -977,7 +974,6 @@ class Ec2Service implements CacheInitializer, InitializingBean {
 		taskService.runTask(userContext, msg, { task ->
 			snapshot = ec2Client.getElasticBlockStoreServices().createSnapshotInRegion(userContext.region.code,volumeId, withDescription(description))
 			task.log("Snapshot ${snapshot.id} created")
-			caches.allSnapshots.by(userContext.region).put(snapshot.id, snapshot)
 		}, Link.to(EntityType.volume, volumeId))
 		snapshot
 	}
@@ -996,7 +992,6 @@ class Ec2Service implements CacheInitializer, InitializingBean {
 					{ Exception e -> e instanceof AmazonServiceException && e.errorCode == 'InvalidSnapshot.InUse' },
 					250
 					)
-			caches.allSnapshots.by(userContext.region).remove(snapshotId)
 		}
 		taskService.runTask(userContext, msg, work, Link.to(EntityType.snapshot, snapshotId), existingTask)
 	}
