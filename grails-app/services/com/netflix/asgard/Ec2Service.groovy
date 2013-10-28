@@ -151,7 +151,7 @@ class Ec2Service implements CacheInitializer, InitializingBean {
 	}
 
 	Collection<AvailabilityZoneInfo> getAvailabilityZones(UserContext userContext) {
-		caches.allAvailabilityZones.by(userContext.region).list()//.sort { it.id }
+		retrieveAvailabilityZones(userContext.region)
 	}
 
 	Collection<AvailabilityZoneInfo> getRecommendedAvailabilityZones(UserContext userContext) {
@@ -177,42 +177,12 @@ class Ec2Service implements CacheInitializer, InitializingBean {
 	}
 
 	Collection<Image> getAccountImages(UserContext userContext) {
-		caches.allImages.by(userContext.region).list()
+		retrieveImages(userContext.region)
 	}
 
-	private Collection<Subnet> retrieveSubnets(Region region) {
-		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(region).getContext());
-		log.info 'subetApi Present '+ ec2Client.subnetApi.present
-		//((SubnetApi)ec2Client.subnetApi.get()).filter(new SubnetFilterBuilder().availabilityZone(regionCode).build()).toList();
-		return null
-	}
 
-	/**
-	 * Gets information about all subnets in a region.
-	 *
-	 * @param userContext who, where, why
-	 * @return a wrapper for querying subnets
-	 */
-	Subnets getSubnets(UserContext userContext) {
-		Subnets.from(caches.allSubnets.by(userContext.region).list())
-	}
 
-	private Collection<Vpc> retrieveVpcs(Region region) {
-		String regionCode = configService.getCloudProvider() == Provider.AWS ? region.code : "nova"
-		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(region).getContext());
-		//computeServiceClientByRegion.by(region).describeVpcs().vpcs
-		return null
-	}
 
-	/**
-	 * Gets information about all VPCs in a region.
-	 *
-	 * @param userContext who, where, why
-	 * @return a list of VPCs
-	 */
-	Collection<Vpc> getVpcs(UserContext userContext) {
-		caches.allVpcs.by(userContext.region).list()
-	}
 
 	/**
 	 * Based on a list of users and image ids, gives back a list of image objects for those ids that would be executable
@@ -255,7 +225,6 @@ class Ec2Service implements CacheInitializer, InitializingBean {
 			catch (AmazonServiceException ignored) {
 				// If Amazon doesn't know this image id then return null and put null in the allImages CachedMap
 			}
-			caches.allImages.by(userContext.region).put(imageId, image)
 		}
 		image
 	}
@@ -371,7 +340,7 @@ class Ec2Service implements CacheInitializer, InitializingBean {
 
 	Collection<SecurityGroup> getSecurityGroups(UserContext userContext) {
 		log.info 'list ' + caches.allSecurityGroups.by(userContext.region).list()
-		caches.allSecurityGroups.by(userContext.region).list()
+		retrieveSecurityGroups(userContext.region).list()
 	}
 
 	/**
