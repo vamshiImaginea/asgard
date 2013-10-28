@@ -40,7 +40,7 @@
               <td class="name">
                 <label for="appName">Application:</label>
               </td>
-              <td>
+              <td><%--
                 <g:if test="${name}">
                   ${name}
                   <input type="hidden" name="appName" value="${name}"/>
@@ -50,6 +50,8 @@
                             noSelection="['':'']" value="${params.appName}" from="${applications}"
                             optionKey="name" optionValue="name" data-placeholder="-Choose application-"/>
                 </g:else>
+              --%>
+              <input class="required" type="text" id="appName" name="appName" value="${params.appName}"/>
               </td>
             </tr>
             <tr class="prop">

@@ -214,9 +214,6 @@ class SecurityCreateCommand {
             if (Relationships.usesReservedFormat(value)) {
                 return 'name.usesReservedFormat'
             }
-            if (!command.applicationService.getRegisteredApplication(userContext, value)) {
-                return 'application.name.nonexistent'
-            }
             if ("${value}-${command.detail}".length() > Relationships.GROUP_NAME_MAX_LENGTH) {
                 return "The complete name cannot exceed ${Relationships.GROUP_NAME_MAX_LENGTH} characters"
             }

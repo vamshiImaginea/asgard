@@ -451,7 +451,6 @@ class Ec2Service implements CacheInitializer, InitializingBean {
 		taskService.runTask(userContext, "Remove Security Group ${name}", { task ->
 			ec2Client.securityGroupServices.deleteSecurityGroupInRegion(regionCode, name)
 		}, Link.to(EntityType.security, name))
-		caches.allSecurityGroups.by(userContext.region).remove(name)
 	}
 
 	/** High-level permission update for a group pair: given the desired state, make it so. */
