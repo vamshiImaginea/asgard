@@ -63,11 +63,6 @@ class InitController {
 				if(config.openstack.tenantId){
 					cmd.openstackTenantId = config.openstack.tenantId
 				}
-				if(config.openstack.mdbCredentials && config.openstack.mdbCredentials.size() > 0){
-					cmd.mdbUrl = config.openstack.mdbCredentials.get('url')
-					cmd.mdbUserName = config.openstack.mdbCredentials.get('username')
-					cmd.mdbPassword = config.openstack.mdbCredentials.get('password')
-				}
 			}
 
 			render(view: 'index', model: [params: cmd])
@@ -107,9 +102,6 @@ class InitializeCommand {
 	String openStackPassword
 	String cloudService
 	String openstackTenantId
-	String mdbUrl
-	String mdbUserName
-	String mdbPassword
 	boolean showPublicAmazonImages
 	static constraints = {
 
@@ -152,9 +144,6 @@ class InitializeCommand {
 			secretConfig['username'] = openStackUsername.trim()
 			secretConfig['endpoint'] = openStackUrl.trim()
 			secretConfig['teneatId'] = openstackTenantId.trim()
-			if(mdbUrl && mdbUserName && mdbPassword){
-				secretConfig['mdbCredentials'] = ['url':mdbUrl,'username':mdbUserName,'password':mdbPassword]
-			}
 			grailsConfig['currentActiveService'] = cloudService
 			ConfigObject cloudConfig = new ConfigObject()
 			rootConfig['cloud'] = cloudConfig
