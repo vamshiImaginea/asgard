@@ -17,8 +17,10 @@ package com.netflix.asgard
 
 import org.jclouds.cloudstack.features.SecurityGroupClient;
 import org.jclouds.compute.ComputeService;
+import org.jclouds.compute.domain.ComputeType;
 import org.jclouds.compute.domain.NodeMetadata
 import org.jclouds.compute.domain.NodeMetadata.Status;
+import org.jclouds.compute.domain.internal.ComputeMetadataImpl
 import org.jclouds.compute.domain.internal.NodeMetadataImpl
 import org.jclouds.ec2.EC2Client;
 import org.jclouds.ec2.domain.IpPermission
@@ -26,6 +28,7 @@ import org.jclouds.ec2.domain.IpProtocol;
 import org.jclouds.ec2.domain.SecurityGroup
 import org.jclouds.ec2.domain.UserIdGroupPair
 import org.jclouds.openstack.nova.ec2.NovaEC2Client;
+
 import com.google.common.collect.ArrayListMultimap
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.Multimap;
@@ -71,11 +74,14 @@ class Ec2ServiceUnitSpec extends Specification {
 
 
     def 'active instances should only include pending and running states'() {
-        mockInstanceCache.list() >> [
-               new NodeMetadataImpl('i-deadbeef', 'i-deadbeef', 'i-deadbeef', null, null, [:], new HashSet<String>(), null, null, 'i-deadbeef', null, Status.RUNNING, null, 80, [],[], null, ''),
-			   new NodeMetadataImpl('i-1231', 'i-1231', 'i-1231', null, null, [:], new HashSet<String>(), null, null, 'i-1231', null, Status.RUNNING, null, 80, [],[], null, '')
-			   ]
-
+		def nodelist = [new ComputeMetadataImpl(ComputeType.IMAGE,'i-deadbeef' ,'i-deadbeef', 'i-deadbeef', null, null,
+			[:], [] as Set),
+			new ComputeMetadataImpl(ComputeType.IMAGE,'i-1231' ,'i-1231', 'i-1231', null, null,
+			[:], [] as Set)
+		] as Set
+		computeService.listNodes() >> nodelist
+		computeService.getNodeMetadata('i-deadbeef') >>  new NodeMetadataImpl('i-deadbeef', 'i-deadbeef', 'i-deadbeef', null, null, [:], new HashSet<String>(), null, null, 'i-deadbeef', null, Status.RUNNING, null, 80, [],[], null, '')
+		computeService.getNodeMetadata('i-1231') >>  new NodeMetadataImpl('i-1231', 'i-1231', 'i-1231', null, null, [:], new HashSet<String>(), null, null, 'i-deadbeef', null, Status.RUNNING, null, 80, [],[], null, '')
         when:
         Collection<NodeMetadata> instances = ec2Service.getActiveInstances(userContext)
 

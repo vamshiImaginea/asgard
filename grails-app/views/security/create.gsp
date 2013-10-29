@@ -69,7 +69,7 @@
               <td>
                 <input class="required" type="text" id="description" name="description" value="${description}"/>
               </td>
-            </tr>
+            </tr><%--
             <tr class="prop">
               <td class="name">
                 <label for="vpcId">VPC:</label>
@@ -79,7 +79,7 @@
                 <g:select name="vpcId" from="${vpcIds}" value="${selectedVpcIds}" disabled="true" />
               </td>
             </tr>
-          </tbody>
+          --%></tbody>
         </table>
       </div>
       <div class="buttons">

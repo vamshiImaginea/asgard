@@ -67,6 +67,5 @@ class InitServiceSpec extends Specification {
         config.appConfigured == true
         config.test == 'testVal'
         1 * cacheInitializer.initializeCaches()
-        1 * backgroundProcessInitializer.initializeBackgroundProcess()
     }
 }
