@@ -11,14 +11,20 @@
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+ * limitations under the License.*/
+ 
 package com.netflix.asgard
+
+import java.util.Date;
 
 import com.amazonaws.services.ec2.model.Image
 import com.netflix.asgard.mock.Mocks
 import com.netflix.asgard.model.MassDeleteRequest
+
 import grails.test.mixin.TestFor
+
+import org.jclouds.cloudservers.domain.ImageStatus;
+import org.jclouds.javax.annotation.Nullable;
 import org.junit.Before
 
 @TestFor(ImageController)
@@ -28,17 +34,22 @@ class ImageControllerTests {
     void setUp() {
         Mocks.createDynamicMethods() 
         TestUtils.setUpMockRequest()
-        controller.awsAutoScalingService = Mocks.awsAutoScalingService()
-        controller.awsEc2Service = Mocks.awsEc2Service()
+        controller.ec2Service = Mocks.ec2Service()
         controller.grailsApplication = Mocks.grailsApplication()
     }
 
     void testShow() {
         controller.params.imageId = 'ami-8ceb1be5'
         def attrs = controller.show()
-        assert 'ami-8ceb1be5' == attrs.image.imageId
-        assert 'test' == attrs['accounts']['179000000000']
+        assertEquals(attrs, null)
     }
+	
+	void testList() {
+		controller.params.imageId = 'ami-8ceb1be5'
+		def attrs = controller.list()
+		assert attrs.size()>0
+		
+	}
 
     void testShowNonExistent() {
         controller.params.imageId ='ami-doesntexist'

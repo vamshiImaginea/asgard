@@ -42,7 +42,7 @@ import org.joda.time.Duration
 class RollingPushOperation extends AbstractPushOperation {
     private static final log = LogFactory.getLog(this)
 
-    def awsEc2Service
+    def ec2Service
     def configService
     def discoveryService
     def launchTemplateService
@@ -71,7 +71,7 @@ class RollingPushOperation extends AbstractPushOperation {
 
         def thisPushOperation = this
         AutoScalingGroup group = awsAutoScalingService.getAutoScalingGroup(options.userContext, options.groupName)
-        Image image = awsEc2Service.getImage(options.userContext, options.imageId)
+        Image image = ec2Service.getImage(options.userContext, options.imageId)
         String appversion = image.getAppVersion()
         task = taskService.startTask(options.userContext, "Pushing $options.imageId " +
                 (appversion ? "with package $appversion " : '') +
@@ -91,7 +91,7 @@ class RollingPushOperation extends AbstractPushOperation {
         Closure sortAlgorithm = options.newestFirst ? { a,b -> b.launchTime <=> a.launchTime } : { it.launchTime }
         UserContext userContext = options.common.userContext
         List<com.amazonaws.services.ec2.model.Instance> ec2Instances =
-                asgInstances.collect { awsEc2Service.getInstance(userContext, it.instanceId) }
+                asgInstances.collect { ec2Service.getInstance(userContext, it.instanceId) }
                         .findAll{ it != null }
                         .sort(sortAlgorithm)
         task.log("Sorted ${options.common.appName} instances in ${options.common.groupName} by launch time with " +
@@ -117,7 +117,7 @@ class RollingPushOperation extends AbstractPushOperation {
                 ebsOptimized: oldLaunch.ebsOptimized
         )
         UserContext userContext = options.common.userContext
-        Subnets subnets = awsEc2Service.getSubnets(userContext)
+        Subnets subnets = ec2Service.getSubnets(userContext)
         AutoScalingGroupBeanOptions groupForUserData = AutoScalingGroupBeanOptions.from(group, subnets)
         groupForUserData.launchConfigurationName = newLaunchName
         launchConfig.userData = launchTemplateService.buildUserData(options.common.userContext, groupForUserData,
@@ -184,7 +184,7 @@ class RollingPushOperation extends AbstractPushOperation {
                 // Shut down abruptly or wait for clients of the instance to adjust to the change.
                 if (options.rudeShutdown || timeSinceChange.isLongerThan(afterDiscovery)) {
                     task.log("Terminating instance ${instanceInfo.id}")
-                    if (awsEc2Service.terminateInstances(userContext, [instanceInfo.id], task) == null) {
+                    if (ec2Service.terminateInstances(userContext, [instanceInfo.id], task) == null) {
                         fail("${reportSummary()} Instance ${instanceInfo.id} failed to terminate. Aborting push.")
                     }
                     instanceInfo.state = InstanceState.terminated
@@ -207,7 +207,7 @@ class RollingPushOperation extends AbstractPushOperation {
                 }
                 if (newInst) {
                     // Get the EC2 Instance object based on the ASG Instance object
-                    com.amazonaws.services.ec2.model.Instance instance = awsEc2Service.getInstance(userContext, newInst.instanceId)
+                    com.amazonaws.services.ec2.model.Instance instance = ec2Service.getInstance(userContext, newInst.instanceId)
                     if (instance) {
                         task.log("It took ${Time.format(instanceInfo.timeSinceChange)} for instance ${instanceInfo.id} to terminate and be replaced by ${instance.instanceId}")
                         slot.fresh.instance = instance

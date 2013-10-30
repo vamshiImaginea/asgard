@@ -24,13 +24,13 @@ import grails.converters.XML
  */
 class KeyPairController {
 
-    def awsEc2Service
+    def ec2Service
 
     /**
      * Display all the key pairs registered in the current account-region via REST calls.
      */
     def list = {
-        Collection<KeyPairInfo> keys = awsEc2Service.getKeys(UserContext.of(request))
+        Collection<KeyPairInfo> keys = ec2Service.getKeys(UserContext.of(request))
         withFormat {
             xml { new XML(keys).render(response) }
             json { new JSON(keys).render(response) }

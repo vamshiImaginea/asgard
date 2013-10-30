@@ -48,7 +48,7 @@ class GroupResizeOperation extends AbstractPushOperation {
 
     static final Integer MINUTES_BETWEEN_BATCHES = 5
 
-    def awsEc2Service
+    def ec2Service
     def discoveryService
     def flagService
     def restClientService
@@ -253,7 +253,7 @@ class GroupResizeOperation extends AbstractPushOperation {
         task.log("Finishing resize of '${autoScalingGroupName}'")
         // Update the caches for instances
         group?.instances?.collect { it.instanceId }?.each { String id ->
-            awsEc2Service.getInstance(userContext, id)
+            ec2Service.getInstance(userContext, id)
             discoveryService.getAppInstance(userContext, id)
             Time.sleepCancellably(discoveryService.MILLIS_DELAY_BETWEEN_DISCOVERY_CALLS)
         }

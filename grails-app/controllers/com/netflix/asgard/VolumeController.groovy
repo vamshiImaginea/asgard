@@ -26,12 +26,12 @@ class VolumeController {
 
     def index = { redirect(action: 'list', params:params) }
 
-    def awsEc2Service
+    def ec2Service
 
     def list = {
         UserContext userContext = UserContext.of(request)
-        def volumes = (awsEc2Service.getVolumes(userContext) as List).sort { it.id.toLowerCase() }
-        def details = ['volumes': volumes, 'zoneList': awsEc2Service.getAvailabilityZones(userContext)]
+        def volumes = (ec2Service.getVolumes(userContext) as List).sort { it.id.toLowerCase() }
+        def details = ['volumes': volumes, 'zoneList': ec2Service.getAvailabilityZones(userContext)]
         withFormat {
             html { details }
             xml { new XML(details).render(response) }
@@ -42,7 +42,7 @@ class VolumeController {
     def save = {
         UserContext userContext = UserContext.of(request)
         try {
-            Volume volume = awsEc2Service.createVolume(userContext, params.volumeSize as Integer,
+            Volume volume = ec2Service.createVolume(userContext, params.volumeSize as Integer,
                     params.availabilityZone)
             flash.message = "EBS Volume '${volume.id}' has been created."
             redirect(action: 'show', params:[id:volume.id])
@@ -64,7 +64,7 @@ class VolumeController {
         try {
             def deletedCount = 0
             volumeIds.each {
-                awsEc2Service.deleteVolume(userContext, it)
+                ec2Service.deleteVolume(userContext, it)
                 message += (deletedCount > 0) ? ", $it" : "Volume(s) deleted: $it"
                 deletedCount++
             }
@@ -78,7 +78,7 @@ class VolumeController {
     def show = {
         UserContext userContext = UserContext.of(request)
         String volumeId = EntityType.volume.ensurePrefix(params.volumeId ?: params.id)
-        Volume volume = awsEc2Service.getVolume(userContext, volumeId)
+        Volume volume = ec2Service.getVolume(userContext, volumeId)
     /*    volume?.tags?.sort { it.key }*/
         if (!volume) {
             Requests.renderNotFound('EBS Volume', volumeId, this)
@@ -95,7 +95,7 @@ class VolumeController {
         String volumeId = EntityType.volume.ensurePrefix(params.volumeId ?: params.id)
         UserContext userContext = UserContext.of(request)
         try {
-            awsEc2Service.detachVolume(userContext, volumeId, params.instanceId, params.device)
+            ec2Service.detachVolume(userContext, volumeId, params.instanceId, params.device)
             flash.message = "EBS Volume '${volumeId}' has been detached from ${params.instanceId}."
         } catch (Exception e) {
             flash.message = "Could not detach EBS Volume ${volumeId}: ${e}"

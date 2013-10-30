@@ -15,13 +15,13 @@
  */
 package com.netflix.asgard.deployment
 
+import org.codehaus.groovy.grails.web.mapping.LinkGenerator
+
 import com.amazonaws.services.autoscaling.model.AutoScalingGroup
 import com.amazonaws.services.autoscaling.model.ScheduledUpdateGroupAction
 import com.amazonaws.services.simpleworkflow.flow.annotations.ManualActivityCompletion
 import com.amazonaws.services.simpleworkflow.model.WorkflowExecution
-import com.netflix.asgard.AwsAutoScalingService
-import com.netflix.asgard.AwsEc2Service
-import com.netflix.asgard.AwsLoadBalancerService
+import com.netflix.asgard.Ec2Service
 import com.netflix.asgard.Caches
 import com.netflix.asgard.CloudReadyService
 import com.netflix.asgard.ConfigService
@@ -41,15 +41,12 @@ import com.netflix.asgard.model.LaunchConfigurationBeanOptions
 import com.netflix.asgard.model.ScalingPolicyData
 import com.netflix.asgard.push.AsgDeletionMode
 import com.netflix.asgard.push.PushException
-import org.codehaus.groovy.grails.web.mapping.LinkGenerator
 
 class DeploymentActivitiesImpl implements DeploymentActivities {
 
     @Delegate Activity activity = new SwfActivity()
 
-    AwsAutoScalingService awsAutoScalingService
-    AwsEc2Service awsEc2Service
-    AwsLoadBalancerService awsLoadBalancerService
+    Ec2Service ec2Service
     Caches caches
     CloudReadyService cloudReadyService
     ConfigService configService

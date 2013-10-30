@@ -42,9 +42,7 @@ class InstanceController {
 
     def index = { redirect(action: 'list', params:params) }
 
-    def awsAutoScalingService
-    def awsEc2Service
-    def awsLoadBalancerService
+    def ec2Service
     def configService
     def discoveryService
     def mergedInstanceGroupingService
@@ -85,7 +83,7 @@ class InstanceController {
 
     def appversions = {
         UserContext userContext = UserContext.of(request)
-        Set<Multiset.Entry<AppVersion>> avs = awsEc2Service.getCountedAppVersions(userContext).entrySet()
+        Set<Multiset.Entry<AppVersion>> avs = ec2Service.getCountedAppVersions(userContext).entrySet()
         withFormat {
             xml {
                 render() {
@@ -162,7 +160,7 @@ class InstanceController {
             appInst = discoveryService.getAppInstance(userContext, instanceId)
             appName = appInst?.appName
         }
-        NodeMetadata instance = awsEc2Service.getInstance(userContext, instanceId);
+        NodeMetadata instance = ec2Service.getInstance(userContext, instanceId);
         /*if (!appInst && !instance) {
             String identifier = instanceId ?: "${params.appName}/${params.hostName}"
             Requests.renderNotFound('Instance', identifier, this)
@@ -210,26 +208,7 @@ class InstanceController {
     def terminate = {
         UserContext userContext = UserContext.of(request)
         List<String> instanceIds = Requests.ensureList(params.selectedInstances ?: params.instanceId)
-
-        // All this deregister-before-terminate logic is complicated because it needs to be done in large batches to
-        // reduce Amazon errors. When Amazon fixes their ELB bugs a lot of this code should be removed for simplicity.
-        Map<String, Collection<String>> asgNamesToInstanceIdSets = new HashMap<String, Collection<String>>()
-        for (String instanceId in instanceIds) {
-            String asg = awsAutoScalingService.getAutoScalingGroupFor(userContext, instanceId)?.autoScalingGroupName
-            if (asg) {
-                if (!asgNamesToInstanceIdSets.containsKey(asg)) {
-                    asgNamesToInstanceIdSets.put(asg, new HashSet<String>())
-                }
-                asgNamesToInstanceIdSets[asg].add(instanceId)
-            }
-        }
-        for (String asg in asgNamesToInstanceIdSets.keySet()) {
-            Collection<String> instanceIdsForAsg = asgNamesToInstanceIdSets[asg]
-            awsAutoScalingService.deregisterInstancesInAutoScalingGroupFromLoadBalancers(userContext, asg,
-                    instanceIdsForAsg)
-        }
-
-        awsEc2Service.terminateInstances(userContext, instanceIds)
+        ec2Service.terminateInstances(userContext, instanceIds)
         flash.message = "Terminated ${instanceIds.size()} instance${instanceIds.size() == 1 ? '' : 's'}: ${instanceIds}"
         chooseRedirect(params.autoScalingGroupName, instanceIds, params.appNames)
     }
@@ -257,7 +236,7 @@ class InstanceController {
     def reboot = {
         String instanceId = params.instanceId
         UserContext userContext = UserContext.of(request)
-        awsEc2Service.rebootInstance(userContext, instanceId)
+        ec2Service.rebootInstance(userContext, instanceId)
 
         flash.message = "Rebooting instance '${instanceId}'."
         redirect(action: 'show', params:[instanceId:instanceId.encodeAsURL()])
@@ -267,7 +246,7 @@ class InstanceController {
         UserContext userContext = UserContext.of(request)
         String instanceId = params.instanceId ?: params.id
         try {
-            String consoleOutput = awsEc2Service.getConsoleOutput(userContext, instanceId)
+            String consoleOutput = ec2Service.getConsoleOutput(userContext, instanceId)
             return [ 'instanceId': instanceId.encodeAsURL(), 'consoleOutput' : consoleOutput, 'now': new Date() ]
         } catch (AmazonServiceException ase) {
             Requests.renderNotFound('Instance', instanceId, this, ase.toString())
@@ -339,13 +318,13 @@ class InstanceController {
 
     def associate = {
         UserContext userContext = UserContext.of(request)
-        NodeMetadata instance = awsEc2Service.getInstance(userContext, params.instanceId)
+        NodeMetadata instance = ec2Service.getInstance(userContext, params.instanceId)
         if (!instance) {
             flash.message = "EC2 Instance ${params.instanceId} not found."
             redirect(action: 'list')
             return
         } else {
-            Map<String, String> publicIps = awsEc2Service.describeAddresses(userContext)
+            Map<String, String> publicIps = ec2Service.describeAddresses(userContext)
             log.debug "describeAddresses: ${publicIps}"
             return [
                     instance: instance,
@@ -360,7 +339,7 @@ class InstanceController {
         String instanceId = params.instanceId
         UserContext userContext = UserContext.of(request)
         try {
-            awsEc2Service.associateAddress(userContext, publicIp, instanceId)
+            ec2Service.associateAddress(userContext, publicIp, instanceId)
             flash.message = "Elastic IP '${publicIp}' has been associated with '${instanceId}'."
         } catch (Exception e) {
             flash.message = "Could not associate Elastic IP '${publicIp}' with '${instanceId}': ${e}"
@@ -389,31 +368,31 @@ class InstanceController {
     def addTag = {
         String instanceId = EntityType.instance.ensurePrefix(params.instanceId)
         UserContext userContext = UserContext.of(request)
-        awsEc2Service.createInstanceTag(userContext, [instanceId], params.name, params.value)
+        ec2Service.createInstanceTag(userContext, [instanceId], params.name, params.value)
         redirect(action: 'show', params:[instanceId:instanceId])
     }
 
     def removeTag = {
         String instanceId = EntityType.instance.ensurePrefix(params.instanceId)
         UserContext userContext = UserContext.of(request)
-        awsEc2Service.deleteInstanceTag(userContext, instanceId, params.name)
+        ec2Service.deleteInstanceTag(userContext, instanceId, params.name)
         redirect(action: 'show', params:[instanceId:instanceId])
     }
 
     def userData = {
         UserContext userContext = UserContext.of(request)
         String instanceId = params.id ?: params.instanceId
-        render awsEc2Service.getUserDataForInstance(userContext, instanceId)
+        render ec2Service.getUserDataForInstance(userContext, instanceId)
     }
 
     def userDataHtml = {
         UserContext userContext = UserContext.of(request)
         String instanceId = params.id ?: params.instanceId
 		instanceId=URLDecoder.decode(instanceId,'UTF-8');
-		render "<pre>${awsEc2Service.getUserDataForInstance(userContext, instanceId)}</pre>"
+		render "<pre>${ec2Service.getUserDataForInstance(userContext, instanceId)}</pre>"
     }
 
     private String runHealthCheck(ApplicationInstance appInst) {
-        appInst?.healthCheckUrl ? (awsEc2Service.checkHostHealth(appInst?.healthCheckUrl) ? 'pass' : 'fail') : 'NA'
+        appInst?.healthCheckUrl ? (ec2Service.checkHostHealth(appInst?.healthCheckUrl) ? 'pass' : 'fail') : 'NA'
     }
 }

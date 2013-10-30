@@ -15,12 +15,20 @@
  */
 package com.netflix.asgard
 
+import org.jclouds.compute.domain.Image
+import org.jclouds.compute.domain.NodeMetadata
+import org.jclouds.ec2.domain.AvailabilityZoneInfo
+import org.jclouds.ec2.domain.SecurityGroup
+import org.jclouds.ec2.domain.Snapshot
+import org.jclouds.ec2.domain.Subnet
+import org.jclouds.ec2.domain.Volume
+
 import com.amazonaws.services.autoscaling.model.AutoScalingGroup
 import com.amazonaws.services.autoscaling.model.LaunchConfiguration
 import com.amazonaws.services.autoscaling.model.ScalingPolicy
 import com.amazonaws.services.autoscaling.model.ScheduledUpdateGroupAction
 import com.amazonaws.services.cloudwatch.model.MetricAlarm
-import com.amazonaws.services.ec2.model.KeyPair;
+import com.amazonaws.services.ec2.model.KeyPair
 import com.amazonaws.services.ec2.model.ReservedInstances
 import com.amazonaws.services.ec2.model.SpotInstanceRequest
 import com.amazonaws.services.ec2.model.Vpc
@@ -43,15 +51,6 @@ import com.netflix.asgard.model.SimpleQueue
 import com.netflix.asgard.model.TopicData
 import com.netflix.asgard.push.Cluster
 
-import org.jclouds.compute.domain.Image
-import org.jclouds.compute.domain.NodeMetadata;
-import org.jclouds.domain.Location
-import org.jclouds.ec2.domain.AvailabilityZoneInfo
-import org.jclouds.ec2.domain.SecurityGroup
-import org.jclouds.ec2.domain.Snapshot
-import org.jclouds.ec2.domain.Subnet
-import org.jclouds.ec2.domain.Volume
-
 /**
  * By creating all these object upfront and letting other services initialize them only if needed, we remove the problem
  * of repeatedly needing to recreate and reload the caches during development of service classes.
@@ -61,7 +60,6 @@ class Caches {
      CachedMap<ActivityTypeInfo> allActivityTypes
      CachedMap<WorkflowExecutionInfo> allClosedWorkflowExecutions
      CachedMap<WorkflowExecutionInfo> allOpenWorkflowExecutions
-     CachedMap<AppRegistration> allApplications
      CachedMap<MetricId> allCustomMetrics
      CachedMap<HardwareProfile> allHardwareProfiles
      CachedMap<String> allTerminationPolicyTypes
@@ -78,7 +76,6 @@ class Caches {
      MultiRegionCachedMap<DBSnapshot> allDBSnapshots
      MultiRegionCachedMap<String> allDomains
      MultiRegionCachedMap<String> allEurekaAddresses
-     MultiRegionCachedMap<FastProperty> allFastProperties
      MultiRegionCachedMap<Image> allImages
      MultiRegionCachedMap<NodeMetadata> allInstances
      MultiRegionCachedMap<InstanceHealth> allSignificantStackInstanceHealthChecks
@@ -134,8 +131,6 @@ class Caches {
 		allDBInstances = cachedMapBuilder.of(EntityType.rdsInstance, 120).buildMultiRegionCachedMap()
 		allDBSecurityGroups = cachedMapBuilder.of(EntityType.dbSecurity, 120).buildMultiRegionCachedMap()
 		allDBSnapshots = cachedMapBuilder.of(EntityType.dbSnapshot, 120).buildMultiRegionCachedMap()
-		allFastProperties = cachedMapBuilder.of(EntityType.fastProperty, 180).buildMultiRegionCachedMap(configService?.
-				platformServiceRegions)
 		allScalingPolicies = cachedMapBuilder.of(EntityType.scalingPolicy, 120).buildMultiRegionCachedMap()
 		allScheduledActions = cachedMapBuilder.of(EntityType.scheduledAction, 120).buildMultiRegionCachedMap()
 		allSignificantStackInstanceHealthChecks = cachedMapBuilder.of(EntityType.instanceHealth, 300).
@@ -143,7 +138,6 @@ class Caches {
 		allActivityTypes = cachedMapBuilder.of(EntityType.activityType, 120).buildCachedMap()
 		allOpenWorkflowExecutions = cachedMapBuilder.of(EntityType.workflowExecution, 30).buildCachedMap()
 		allClosedWorkflowExecutions = cachedMapBuilder.of(EntityType.workflowExecution, 30).buildCachedMap()
-		allApplications = cachedMapBuilder.of(EntityType.application, 120).buildCachedMap()
 		allCustomMetrics = cachedMapBuilder.of(EntityType.metric, 120).buildCachedMap()
 		allWorkflowTypes = cachedMapBuilder.of(EntityType.workflowType, 120).buildCachedMap()
 		allWorkflowDomains = cachedMapBuilder.of(EntityType.workflowDomain, 3600).buildCachedMap()

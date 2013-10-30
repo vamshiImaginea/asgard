@@ -77,14 +77,13 @@ class InitService implements ApplicationContextAware {
 	 */
 	void initializeApplication() {
 
-
 		removeCaches()
 		log.info 'Starting caches'
 		Collection<CacheInitializer> cacheInitializers = applicationContext.getBeansOfType(CacheInitializer).values()
 		for (CacheInitializer cacheInitializer in cacheInitializers) {
 			cacheInitializer.initializeCaches()
 		}
-		log.info 'Starting background threads'
+		/*log.info 'Starting background threads'
 		Collection<BackgroundProcessInitializer> backgroundProcessInitializers =
 				applicationContext.getBeansOfType(BackgroundProcessInitializer).values()
 		for (BackgroundProcessInitializer backgroundProcessInitializer in backgroundProcessInitializers) {
@@ -99,7 +98,7 @@ class InitService implements ApplicationContextAware {
 
 			}
 			backgroundProcessInitializer.initializeBackgroundProcess()
-		}
+		}*/
 	}
 
 	/**
@@ -117,14 +116,6 @@ class InitService implements ApplicationContextAware {
 		regionService.reloadRegions = true
 		cachedMapBuilder.regions = regionService.values()
 		caches.rebuild(cachedMapBuilder,configService)
-	/*	cachedMapBuilder.regions = regionService.values()
-		println regionService.values()*/
-		/*Collection<Fillable> fillableCaches = caches.properties*.value.findAll { it instanceof Fillable }
-		for(Iterator<Fillable> i = fillableCaches.iterator(); i.hasNext();){
-			Fillable item = i.next();
-			item.removeCachedEntries();
-		}
-*/
 
 	}
 }

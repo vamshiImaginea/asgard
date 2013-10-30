@@ -35,15 +35,14 @@ import org.jclouds.compute.domain.NodeMetadata;
 @ContextParam('region')
 class ImageController {
 
-    def awsEc2Service
-    def awsAutoScalingService
+    def ec2Service
     def imageService
     def instanceTypeService
-    def launchTemplateService
     def mergedInstanceGroupingService
     def taskService
     def grailsApplication
 	def configService
+	def launchTemplateService
 
     def static allowedMethods = [update: 'POST', delete: ['POST', 'DELETE'], launch: 'POST', addTag: 'POST',
             addTags: 'POST', removeTag: ['POST', 'DELETE'], removeTags: ['POST', 'DELETE'], removeAllTags: 'DELETE',
@@ -58,9 +57,9 @@ class ImageController {
         Collection<Image> images = []
         Set<String> packageNames = Requests.ensureList(params.id).collect { it.split(',') }.flatten() as Set<String>
         if (packageNames) {
-            images = packageNames.collect { awsEc2Service.getImagesForPackage(userContext, it) }.flatten()
+            images = packageNames.collect { ec2Service.getImagesForPackage(userContext, it) }.flatten()
         } else {
-            images = awsEc2Service.getImagesForPackage(userContext, '')
+            images = ec2Service.getImagesForPackage(userContext, '')
         }
         images = images.sort { it.description.toLowerCase() }
         Map<String, String> accounts = grailsApplication.config.grails.awsAccountNames
@@ -76,13 +75,13 @@ class ImageController {
         String imageId = EntityType.image.ensurePrefix(params.imageId ?: params.id)
 		imageId=URLDecoder.decode(imageId,'UTF-8');
 		log.info 'show details for '+ imageId 
-        Image image = imageId ? awsEc2Service.getImage(userContext, imageId) : null
+        Image image = imageId ? ec2Service.getImage(userContext, imageId) : null
         image?.tags?.sort { it.key }
         if (!image) {
             Requests.renderNotFound('Image', imageId, this)
         } else {
             List<String> launchUsers = []
-            try { launchUsers = awsEc2Service.getImageLaunchers(userContext, image.id) }
+            try { launchUsers = ec2Service.getImageLaunchers(userContext, image.id) }
             catch (AmazonServiceException ignored) { /* We may not own the image, so ignore failures here */ }
             /*String snapshotId = image.blockDeviceMappings.findResult { it.ebs?.snapshotId }*/
             String ownerId = image.userMetadata.get("owner")
@@ -109,13 +108,13 @@ class ImageController {
 		imageId=URLDecoder.decode(imageId,'UTF-8');
 		log.info 'changing image attributes for ' +imageId
         try {
-            launchUsers = awsEc2Service.getImageLaunchers(userContext, imageId)
+            launchUsers = ec2Service.getImageLaunchers(userContext, imageId)
         }
         catch (Exception e) {
             flash.message = "Unable to modify ${imageId} on this account because ${e}"
             redirect(action: 'show', params: params)
         }
-        ['image' : awsEc2Service.getImage(userContext, imageId),
+        ['image' : ec2Service.getImage(userContext, imageId),
          'launchPermissions' : launchUsers,
          'accounts' : grailsApplication.config.grails.awsAccountNames]
     }
@@ -126,7 +125,7 @@ class ImageController {
 		imageId=URLDecoder.decode(imageId,'UTF-8');
         List<String> launchPermissions = (params.launchPermissions instanceof String) ? [ params.launchPermissions ] : params.launchPermissions?: []
         try {
-            awsEc2Service.setImageLaunchers(userContext, imageId, launchPermissions)
+            ec2Service.setImageLaunchers(userContext, imageId, launchPermissions)
             flash.message = "Image '${imageId}' has been updated."
         } catch (Exception e) {
             flash.message = "Could not update Image: ${e}"
@@ -142,7 +141,7 @@ class ImageController {
             String imageId = params.id
 			imageId=URLDecoder.decode(imageId,'UTF-8');
             try {
-                Image image = awsEc2Service.getImage(userContext, imageId, From.CACHE)
+                Image image = ec2Service.getImage(userContext, imageId, From.CACHE)
                 String packageName = image.getType()
 	            imageService.deleteImage(userContext, imageId)
                 flash.message = "Image '${imageId}' has been deleted."
@@ -163,9 +162,9 @@ class ImageController {
                  'imageId' : imageId,
                  'instanceType' : '',
                  'instanceTypes' : instanceTypes,
-                 'securityGroups' : awsEc2Service.getEffectiveSecurityGroups(userContext),
+                 'securityGroups' : ec2Service.getEffectiveSecurityGroups(userContext),
                  'zone' : 'any',
-                 'zoneList' : awsEc2Service.getRecommendedAvailabilityZones(userContext)
+                 'zoneList' : ec2Service.getRecommendedAvailabilityZones(userContext)
         ]
     }
 
@@ -229,7 +228,7 @@ class ImageController {
     def references = {
         UserContext userContext = UserContext.of(request)
         String imageId = EntityType.image.ensurePrefix(params.imageId ?: params.id)
-        Collection<Instance> instances = awsEc2Service.getInstancesUsingImageId(userContext, imageId)
+        Collection<Instance> instances = ec2Service.getInstancesUsingImageId(userContext, imageId)
         Collection<LaunchConfiguration> launchConfigurations =
                 awsAutoScalingService.getLaunchConfigurationsUsingImageId(userContext, imageId)
         Map result = [:]
@@ -278,7 +277,7 @@ class ImageController {
         Check.notEmpty(imageIds, 'imageIds')
         Collection<String> prefixedImageIds = imageIds.collect { EntityType.image.ensurePrefix(it) }
         UserContext userContext = UserContext.of(request)
-        awsEc2Service.createImageTags(userContext, prefixedImageIds, name, value)
+        ec2Service.createImageTags(userContext, prefixedImageIds, name, value)
         render "Tag ${name}=${value} added to image${imageIds.size() > 1 ? 's' : ''} ${prefixedImageIds.join(', ')}"
     }
 
@@ -308,7 +307,7 @@ class ImageController {
         Check.notEmpty(imageIds, 'imageIds')
         Collection<String> prefixedImageIds = imageIds.collect { EntityType.image.ensurePrefix(it) }
         UserContext userContext = UserContext.of(request)
-        awsEc2Service.deleteImageTags(userContext, prefixedImageIds, name)
+        ec2Service.deleteImageTags(userContext, prefixedImageIds, name)
         render "Tag ${name} removed from image${imageIds.size() > 1 ? 's' : ''} ${imageIds.join(', ')}"
     }
 
@@ -333,7 +332,7 @@ class ImageController {
 
     def analyze = {
         UserContext userContext = UserContext.of(request)
-        Collection<Image> allImages = awsEc2Service.getAccountImages(userContext)
+        Collection<Image> allImages = ec2Service.getAccountImages(userContext)
         List<Image> dateless = []
         List<Image> baseless = []
         List<Image> baselessInUse = []
@@ -424,8 +423,7 @@ class ImageController {
 
 class ImageDeleteCommand {
     String id
-    AwsAutoScalingService awsAutoScalingService
-    AwsEc2Service awsEc2Service
+    Ec2Service ec2Service
     RestClientService restClientService
     def grailsApplication
 	def configService
@@ -439,12 +437,11 @@ class ImageDeleteCommand {
             String env = command.grailsApplication.config.cloud.accountName
 
             // If AMI is in use by a launch config or instance in the current region-env then report those references.
-            Collection<String> instances = command.awsEc2Service.
+            Collection<String> instances = command.ec2Service.
                     getInstancesUsingImageId(userContext, value).collect { it.id }
-            Collection<String> launchConfigurations = command.awsAutoScalingService.
-                    getLaunchConfigurationsUsingImageId(userContext, value).collect { it.launchConfigurationName }
-            if (instances || launchConfigurations) {
-                String reason = constructReason(instances, launchConfigurations)
+            
+            if (instances) {
+                String reason = constructReason(instances)
                 return ['image.imageId.used', value, env, reason]
             } else if (promotionTargetServer) {
                 // If the AMI is not in use on master server, check promoted data.
@@ -466,8 +463,7 @@ class ImageDeleteCommand {
         
     }
 
-    static constructReason(Collection<String> instanceIds, Collection<String> launchConfigurationNames) {
-        instanceIds ? "instance${instanceIds.size() == 1 ? '' : 's'} $instanceIds" :
-            "launch configuration${launchConfigurationNames.size() == 1 ? '' : 's'} $launchConfigurationNames"
+    static constructReason(Collection<String> instanceIds ) {
+        instanceIds ? "instance${instanceIds.size() == 1 ? '' : 's'} $instanceIds" :""
     }
 }

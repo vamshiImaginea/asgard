@@ -71,7 +71,6 @@ import com.netflix.asgard.push.Cluster
     static final EntityType<ActivityTypeInfo> activityType = create('Activity Type',
             { "${it.activityType.name}-${it.activityType.version}" as String })
     static final EntityType<MetricAlarm> alarm = create('Metric Alarm', { it.alarmName })
-    static final EntityType<AppRegistration> application = create('Application', { it.name })
     static final EntityType<ApplicationInstance> applicationInstance = create('App Instance', { it.hostName })
     static final EntityType<MetricId> metric = create('Metric', { it.displayText })
     static final EntityType<AutoScalingGroup> autoScaling = create('Auto Scaling Group',
@@ -86,8 +85,6 @@ import com.netflix.asgard.push.Cluster
     static final EntityType<String> domain = create('SimpleDB Domain', { it }, '',
             'Show metadata about this SimpleDB domain')
     static final EntityType<String> eurekaAddress = create('Eureka Address', { it })
-    static final EntityType<FastProperty> fastProperty = create('Fast Property', { it.id }, '', '',
-            { Map attrs, String objectId -> attrs.params = [name: objectId] })
     static final EntityType<HardwareProfile> hardwareProfile = create('Hardware Profile',
             { it.instanceType.toString() })
     static final EntityType<Image> image = create('Image', { it.id })

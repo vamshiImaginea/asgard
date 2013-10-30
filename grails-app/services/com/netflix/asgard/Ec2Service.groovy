@@ -37,6 +37,7 @@ import org.jclouds.compute.ComputeService
 import org.jclouds.compute.domain.ComputeMetadata
 import org.jclouds.compute.domain.Image
 import org.jclouds.compute.domain.NodeMetadata
+import org.jclouds.compute.domain.NodeMetadata.Status;
 import org.jclouds.domain.Location
 import org.jclouds.ec2.EC2Client
 import org.jclouds.ec2.domain.Attachment
@@ -86,11 +87,12 @@ import com.google.common.collect.TreeMultiset
 import com.netflix.asgard.cache.CacheInitializer
 import com.netflix.asgard.model.AutoScalingGroupData
 import com.netflix.asgard.model.SecurityGroupOption
+import com.netflix.asgard.model.StackAsg;
 import com.netflix.asgard.model.Subnets
 import com.netflix.asgard.model.ZoneAvailability
 import com.netflix.frigga.ami.AppVersion
 
-class AwsEc2Service implements CacheInitializer, InitializingBean {
+class Ec2Service implements CacheInitializer, InitializingBean {
 
 	static transactional = false
 
@@ -98,7 +100,6 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 
 	MultiRegionAwsClient<ComputeService> computeServiceClientByRegion
 	def jcloudsComputeService
-	def awsClientService
 	Caches caches
 	def configService
 	def restClientService
@@ -107,7 +108,7 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 	def regionService
 	List<String> accounts = [] // main account is accounts[0]
 	/** The state names for instances that count against reservation usage. */
-	private static final List<String> ACTIVE_INSTANCE_STATES = ['pending', 'running'].asImmutable()
+	private static final List<Status> ACTIVE_INSTANCE_STATES = [Status.PENDING,Status.RUNNING]
 
 	/** Maximum number of image ids to send in a single create tags request. See ASGARD-895. */
 	private static final int TAG_IMAGE_CHUNK_SIZE = 250
@@ -129,19 +130,16 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 
 	void initializeCaches() {
 		initialiseComputeServiceClients()
+		//initializeCachesForEachREgion()
+
+	}
+	void initializeCachesForEachREgion(){
 		caches.allKeyPairs.ensureSetUp({ Region region -> retrieveKeys(region) })
 		caches.allAvailabilityZones.ensureSetUp({ Region region -> retrieveAvailabilityZones(region) },{ Region region -> caches.allKeyPairs.by(region).fill() })
 		caches.allImages.ensureSetUp({ Region region -> retrieveImages(region) })
 		caches.allInstances.ensureSetUp({ Region region -> retrieveInstances(region) })
 		caches.allSecurityGroups.ensureSetUp({ Region region -> retrieveSecurityGroups(region) })
 		caches.allSnapshots.ensureSetUp({ Region region -> retrieveSnapshots(region) })
-		caches.allVolumes.ensureSetUp({ Region region -> retrieveVolumes(region) })
-
-		/// not supported in jclouds
-		//caches.allSubnets.ensureSetUp({ Region region -> retrieveSubnets(region) })			
-		/*caches.allVpcs.ensureSetUp({ Region region -> retrieveVpcs(region) })
-		 caches.allReservedInstancesGroups.ensureSetUp({ Region region -> retrieveReservations(region) })
-		 caches.allSubnets.ensureSetUp({ Region region -> retrieveSubnets(region) })*/
 	}
 
 	// Availability Zones
@@ -153,7 +151,7 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 	}
 
 	Collection<AvailabilityZoneInfo> getAvailabilityZones(UserContext userContext) {
-		caches.allAvailabilityZones.by(userContext.region).list().sort { it.id }
+		retrieveAvailabilityZones(userContext.region)
 	}
 
 	Collection<AvailabilityZoneInfo> getRecommendedAvailabilityZones(UserContext userContext) {
@@ -179,42 +177,12 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 	}
 
 	Collection<Image> getAccountImages(UserContext userContext) {
-		caches.allImages.by(userContext.region).list()
+		retrieveImages(userContext.region)
 	}
 
-	private Collection<Subnet> retrieveSubnets(Region region) {
-		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(region).getContext());
-		log.info 'subetApi Present '+ ec2Client.subnetApi.present
-		//((SubnetApi)ec2Client.subnetApi.get()).filter(new SubnetFilterBuilder().availabilityZone(regionCode).build()).toList();
-		return null
-	}
 
-	/**
-	 * Gets information about all subnets in a region.
-	 *
-	 * @param userContext who, where, why
-	 * @return a wrapper for querying subnets
-	 */
-	Subnets getSubnets(UserContext userContext) {
-		Subnets.from(caches.allSubnets.by(userContext.region).list())
-	}
 
-	private Collection<Vpc> retrieveVpcs(Region region) {
-		String regionCode = configService.getCloudProvider() == Provider.AWS ? region.code : "nova"
-		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(region).getContext());
-		//computeServiceClientByRegion.by(region).describeVpcs().vpcs
-		return null
-	}
 
-	/**
-	 * Gets information about all VPCs in a region.
-	 *
-	 * @param userContext who, where, why
-	 * @return a list of VPCs
-	 */
-	Collection<Vpc> getVpcs(UserContext userContext) {
-		caches.allVpcs.by(userContext.region).list()
-	}
 
 	/**
 	 * Based on a list of users and image ids, gives back a list of image objects for those ids that would be executable
@@ -257,7 +225,6 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 			catch (AmazonServiceException ignored) {
 				// If Amazon doesn't know this image id then return null and put null in the allImages CachedMap
 			}
-			caches.allImages.by(userContext.region).put(imageId, image)
 		}
 		image
 	}
@@ -289,7 +256,6 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 			if (image) {
 				ec2Client.getAMIServices().deregisterImageInRegion(userContext.region.code,  image.providerId)
 			}
-			caches.allImages.by(userContext.region).remove(imageId)
 		}
 		taskService.runTask(userContext, msg, work, Link.to(EntityType.image, imageId), existingTask)
 	}
@@ -372,8 +338,8 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 	}
 
 	Collection<SecurityGroup> getSecurityGroups(UserContext userContext) {
-		log.info 'list ' + caches.allSecurityGroups.by(userContext.region).list()
-		caches.allSecurityGroups.by(userContext.region).list()
+		log.info 'Retriving Security Groups for ' + userContext.region
+		retrieveSecurityGroups(userContext.region)
 	}
 
 	/**
@@ -408,16 +374,6 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 		Check.notNull(name, SecurityGroup, "name")
 		String groupName = name
 		String groupId = ''
-		/*if (name ==~ SECURITY_GROUP_ID_PATTERN) {
-			groupId = name
-			SecurityGroup cachedSecurityGroup = caches.allSecurityGroups.by(region).list().find { it.name == name }
-			groupName = cachedSecurityGroup?.name
-		} else {
-			groupName = name
-		}*/
-		/*if (from == From.CACHE) {
-			return caches.allSecurityGroups.by(region).get(name)
-		}*/
 		Set<SecurityGroup> groups = null
 		EC2Client ec2Client=null
 		String regionCode = region.code
@@ -426,21 +382,9 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 			groups= ec2Client.securityGroupServices.describeSecurityGroupsInRegion(regionCode, groupName);
 			return Check.lone(groups, SecurityGroup)
 			//groupName = groups?.name
-		} catch (IllegalStateException e) {/*
-			log.error 'security group not found ' + e.printStackTrace()
-			 if (e.getCause() == 'InvalidParameterValue' && !groupId) {
-				// It's likely a VPC security group which we can't reference by name. Maybe it has an ID in the cache.
-				SecurityGroup cachedGroup = caches.allSecurityGroups.by(region).get(groupName)
-				if (cachedGroup) {
-					List<String> grooupIds= cachedGroup.id;
-					groups  = ec2Client.securityGroupServices.describeSecurityGroupsInRegion(regionCode,cachedGroup.id)
-					if(!groups.empty && groups.size()==1){
-						groups = Check.lone(groups, SecurityGroup)
-					}
-					
-				}
-			}
-		*/}
+		} catch (IllegalStateException e) {
+		log.error 'security group not found ' + e.printStackTrace()
+		}
 		
 	}
 
@@ -507,7 +451,6 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 		taskService.runTask(userContext, "Remove Security Group ${name}", { task ->
 			ec2Client.securityGroupServices.deleteSecurityGroupInRegion(regionCode, name)
 		}, Link.to(EntityType.security, name))
-		caches.allSecurityGroups.by(userContext.region).remove(name)
 	}
 
 	/** High-level permission update for a group pair: given the desired state, make it so. */
@@ -662,29 +605,17 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 	private Set<NodeMetadata> retrieveInstances(Region region) {
 		Set<ComputeMetadata> listNodes = computeServiceClientByRegion.by(region).listNodes()
 		Set<NodeMetadata> nodes= new HashSet<NodeMetadata>(listNodes.size())
-
-		/*def result = computeServiceClientByRegion.by(region).describeInstances(new DescribeInstancesRequest())
-		 def reservations = result.getReservations()
-		 for (res in reservations) {
-		 for (ri in res.getInstances()) {
-		 instances.add(ri)
-		 }
-		 }*/
 		log.info 'retrieveInstances in region '+ region
-
 		for(ComputeMetadata computeMetadata : listNodes){
 			NodeMetadata nodeMetadata=	computeServiceClientByRegion.by(region).getNodeMetadata(computeMetadata.getId());
 			nodes.add(nodeMetadata)
-
 		}
 		log.info 'retrieveInstances in region '+ nodes
 		nodes
-
-
 	}
 
 	Set<NodeMetadata> getInstances(UserContext userContext) {
-		caches.allInstances.by(userContext.region)?.list() ?: []
+		retrieveInstances(userContext.region) ?: []
 	}
 
 	/**
@@ -694,7 +625,7 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 	 * @return Collection < Instance > active instances
 	 */
 	Set<NodeMetadata> getActiveInstances(UserContext userContext) {
-		getInstances(userContext).findAll { it.getStatus().name in ACTIVE_INSTANCE_STATES }
+		getInstances(userContext).findAll { it.getStatus() in ACTIVE_INSTANCE_STATES }
 	}
 
 	Set<NodeMetadata> getInstancesByIds(UserContext userContext, List<String> instanceIds, From from = From.CACHE) {
@@ -926,7 +857,7 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 	//Volumes
 
 	Collection<Volume> getVolumes(UserContext userContext) {
-		caches.allVolumes.by(userContext.region).list()
+		retrieveVolumes(userContext.region)
 	}
 
 	private Set<Volume> retrieveVolumes(Region region) {
@@ -950,7 +881,6 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 				def volumes = ec2Client.elasticBlockStoreServices.describeVolumesInRegion(regionCode,volumeId )
 				if (volumes.size() > 0) {
 					def volume = Check.lone(volumes, Volume)
-					caches.allVolumes.by(userContext.region).put(volumeId, volume)
 					return volume
 				}
 			} catch (AmazonServiceException ase) {
@@ -984,7 +914,6 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 	Volume createVolume(UserContext userContext, Integer size, String zone) {
 		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
 		def volume=	ec2Client.elasticBlockStoreServices.createVolumeInAvailabilityZone(zone, size)
-		caches.allVolumes.by(userContext.region).put(volume.id, volume)
 		return volume
 	}
 
@@ -995,14 +924,13 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 	Volume createVolume(UserContext userContext, Integer size, String zone, String snapshotId) {
 		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
 		def volume=	ec2Client.elasticBlockStoreServices.createVolumeFromSnapshotInAvailabilityZone(zone, size, snapshotId);
-		caches.allVolumes.by(userContext.region).put(volume.id, volume)
 		return volume
 	}
 
 	// Snapshots
 
 	Collection<Snapshot> getSnapshots(UserContext userContext) {
-		caches.allSnapshots.by(userContext.region).list()
+		retrieveSnapshots(userContext.region) as List
 	}
 
 	private Set<Snapshot> retrieveSnapshots(Region region) {
@@ -1026,7 +954,6 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 				Set<Snapshot> snapshots =ec2Client.getElasticBlockStoreServices().describeSnapshotsInRegion(regionCode,snapshotIds(snapshotId))
 				if (snapshots.size() > 0) {
 					Snapshot snapshot = Check.lone(snapshots, Snapshot)
-					caches.allSnapshots.by(userContext.region).put(snapshotId, snapshot)
 					return snapshot
 				}
 			} catch (Exception ase) {
@@ -1045,7 +972,6 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 		taskService.runTask(userContext, msg, { task ->
 			snapshot = ec2Client.getElasticBlockStoreServices().createSnapshotInRegion(userContext.region.code,volumeId, withDescription(description))
 			task.log("Snapshot ${snapshot.id} created")
-			caches.allSnapshots.by(userContext.region).put(snapshot.id, snapshot)
 		}, Link.to(EntityType.volume, volumeId))
 		snapshot
 	}
@@ -1064,7 +990,6 @@ class AwsEc2Service implements CacheInitializer, InitializingBean {
 					{ Exception e -> e instanceof AmazonServiceException && e.errorCode == 'InvalidSnapshot.InUse' },
 					250
 					)
-			caches.allSnapshots.by(userContext.region).remove(snapshotId)
 		}
 		taskService.runTask(userContext, msg, work, Link.to(EntityType.snapshot, snapshotId), existingTask)
 	}

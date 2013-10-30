@@ -49,15 +49,6 @@
           <g:link class="cli" action="raw" params="[instanceId: java.net.URLEncoder.encode(instance.id,'UTF-8')]" title="Display the operating system console output log.">Console Output (Raw)</g:link>
           <g:link class="userData" action="userDataHtml" params="[instanceId: java.net.URLEncoder.encode(instance.id,'UTF-8') ]" title="Display the user data executed by the instance on startup.">User Data</g:link>
         </div>
-        <div class="buttons">
-          <h3>Load Balancing:</h3>
-          <g:buttonSubmit class="requireLogin removeBalance"
-                  action="deregister" value="Deregister Instance from LB" title="Remove this instance from the auto scaling group's load balancers." />
-          <g:buttonSubmit class="requireLogin instanceBalance"
-                  action="register" value="Register Instance with ASG's LB" title="Add this instance to the auto scaling group's load balancers." />
-          <g:link class="attachElastic" action="associate" params="[instanceId:java.net.URLEncoder.encode(instance.id,'UTF-8') ]"
-                    title="Choose an elastic IP address to use for this instance.">Associate Elastic IP with Instance</g:link>
-        </div>
         <g:if test="${appName}">
           <input type="hidden" name="appName" value="${appName}"/>
           <div class="buttons">
@@ -73,15 +64,7 @@
     <div class="dialog">
       <table>
         <tbody>
-        <tr class="prop" title="Application name from Cloud Application Registry">
-          <td class="name">Application:</td>
-          <td class="value">
-            <g:if test="${appName}">
-              <g:linkObject type="application" name="${appName}"/>
-            </g:if>
-          </td>
-        </tr>
-        <tr class="prop" title="Effective public hostname from Eureka or EC2">
+            <tr class="prop" title="Effective public hostname from Eureka or EC2">
           <td class="name">DNS Name:</td>
           <td class="value">${baseServer}</td>
         </tr>
@@ -149,14 +132,14 @@
           <tr class="prop">
             <td class="name">Instance ID:</td>
             <td class="value">${instance.id}</td>
-          </tr>
+          </tr><%--
           <g:if test="${instance.id}">
             <tr class="prop">
               <td class="name">Spot Instance Request:</td>
               <td class="value"><g:linkObject type="spotInstanceRequest" name="${java.net.URLEncoder.encode(instance.id,'UTF-8')}" >${instance.id}</g:linkObject></td>
             </tr>
           </g:if>
-          <tr class="prop">
+          --%><tr class="prop">
             <td class="name">Public DNS/IP:</td>
             <td class="value">${instance.publicAddresses}</td>
           </tr>
@@ -181,119 +164,9 @@
           <tr class="prop">
             <td class="name">State (Transition Reason):</td>
             <td class="value">${instance.status}</td>
-          </tr><%--
-          <tr class="prop">
-            <td class="name">Launch Time:</td>
-            <td class="value"><g:formatDate date="${instance.launchTime}"/></td>
-          </tr>
-          <tr class="prop">
-            <td class="name">Key Name:</td>
-            <td class="value">${instance.keyName}</td>
-          </tr>
-          <tr class="prop">
-            <td class="name">Ami Launch Index:</td>
-            <td class="value">${instance.amiLaunchIndex}</td>
-          </tr>
-          <tr class="prop">
-            <td class="name">KernelId:</td>
-            <td class="value">${instance.kernelId}</td>
-          </tr>
-          <tr class="prop">
-            <td class="name">RamdiskId:</td>
-            <td class="value">${instance.ramdiskId}</td>
-          </tr>
-          <tr class="prop">
-            <td class="name">Platform:</td>
-            <td class="value">${instance.platform}</td>
-          </tr>
-          <tr class="prop">
-            <td class="name">Monitoring:</td>
-            <td class="value">${instance.monitoring.state}</td>
-          </tr>
-          <tr class="prop">
-            <td class="name">Subnet ID:</td>
-            <td class="value">${instance.subnetId}</td>
-          </tr>
-          <tr class="prop">
-            <td class="name">VPC ID:</td>
-            <td class="value">${instance.vpcId}</td>
-          </tr>
-          <tr class="prop">
-            <td class="name">Root Device Type:</td>
-            <td class="value">${instance.rootDeviceType}</td>
-          </tr>
-          <tr class="prop">
-            <td class="name">Root Device Name:</td>
-            <td class="value">${instance.rootDeviceName}</td>
-          </tr>
-          <tr class="prop">
-            <td class="name">Block Device Mappings:</td>
-            <td class="name">
-              <table>
-                <g:each var="mapping" in="${instance.blockDeviceMappings}">
-                  <tr class="prop"><td class="value">${mapping.deviceName} : ${mapping.ebs.volumeId}</td></tr>
-                </g:each>
-              </table>
-            </td>
-          </tr>
-          <tr class="prop">
-            <td class="name">Product Code:</td>
-            <td class="name">
-              <table>
-                <g:each var="data" in="${instance.productCodes}">
-                  <tr class="prop"><td class="value">${data}</td></tr>
-                </g:each>
-              </table>
-            </td>
-          </tr>
-          <tr class="prop">
-            <td class="name">Security Groups:</td>
-            <td class="value">
-              <table>
-                <g:each var="g" in="${securityGroups}">
-                  <tr class="prop">
-                    <td class="value"><g:linkObject type="security" name="${g.groupId}">${g.groupName}</g:linkObject></td>
-                  </tr>
-                </g:each>
-              </table>
-            </td>
-          </tr>
-          --%><g:render template="/common/showTags" model="[entity: instance]"/>
-        </g:if>
-
-        <tr class="prop">
-          <td><h2 title="Information cross-referenced from other objects">Referenced From</h2></td>
-        </tr>
-        <tr class="prop">
-          <td class="name">Cluster:</td>
-          <td class="value">
-            <g:if test="${cluster}">
-              <g:linkObject type="cluster" name="${cluster}"/>
-            </g:if>
-          </td>
-        </tr>
-        <tr class="prop">
-          <td class="name">AutoScaling Group:</td>
-          <td class="value">
-            <g:if test="${group}">
-              <g:linkObject type="autoScaling" name="${group?.autoScalingGroupName}"/>
-            </g:if>
-          </td>
-        </tr>
-        <tr class="prop">
-          <td class="name">Load Balancers:</td>
-          <td class="value">
-            <table>
-              <g:each var="loadBalancer" in ="${loadBalancers}">
-                <tr class="prop">
-                  <td class="value"><g:linkObject type="loadBalancer" name="${loadBalancer.loadBalancerName}"/></td>
-                </tr>
-              </g:each>
-            </table>
-          </td>
-        </tr>
+          </tr></g:if></table>
+      
         </tbody>
-      </table>
     </div>
   </div>
 </body>

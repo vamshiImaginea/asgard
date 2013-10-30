@@ -37,7 +37,7 @@ class InitControllerSpec extends Specification {
 
     def 'should create config file'() {
         InitializeCommand command = new InitializeCommand(accessId: SAMPLE_ACCESS_ID, secretKey: SAMPLE_SECRET_KEY,
-            accountNumber: '1111-2222-3333')
+            accountNumber: '1111-2222-3333', cloudService:'aws')
         configService.getAsgardHome() >> 'asgardHomeDir'
 
         when:
@@ -50,48 +50,57 @@ class InitControllerSpec extends Specification {
     }
 
     def 'should redirct with flash message for IOException'() {
-        InitializeCommand command = new InitializeCommand(accessId: SAMPLE_ACCESS_ID, secretKey: SAMPLE_SECRET_KEY,
-            accountNumber: '1111-2222-3333')
-        initService.writeConfig(_) >> { throw new IOException('This error') }
+        InitializeCommand command = new InitializeCommand(accessId: SAMPLE_ACCESS_ID, secretKey: SAMPLE_SECRET_KEY, cloudService:'aws')
 
         when:
         controller.save(command)
 
         then:
-        'This error' == controller.flash.message
+        'AWS Amazon Credentials are not provided' == controller.flash.message
         '/init/index' == response.redirectUrl
     }
 
-    def 'should return error for invalid request'() {
-        InitializeCommand command = new InitializeCommand()
-        command.validate()
+  
 
+    @Unroll("save should throw exception for AWS when accessId is #accessId #secretKey #accountNumber")
+    def 'aws credentials contraints'() {
         when:
+        InitializeCommand command = new InitializeCommand(accessId: accessId, secretKey: secretKey,
+            accountNumber: accountNumber, cloudService:'aws')
         controller.save(command)
 
         then:
-        command.hasErrors()
-        '/init/index' == view
-    }
-
-    @Unroll("hasErrors should return #valid when accessId is #accessId")
-    def 'accessId contraints'() {
-        when:
-        InitializeCommand command = new InitializeCommand(accessId: accessId, secretKey: SAMPLE_SECRET_KEY,
-            accountNumber: '111122223333')
-        command.validate()
-
-        then:
-        command.hasErrors() != valid
+        'AWS Amazon Credentials are not provided' == controller.flash.message
 
         where:
 
-        accessId         | valid
-        'accessId'       | false
-        ''               | false
-        null             | false
-        SAMPLE_ACCESS_ID | true
+        accessId         | secretKey | accountNumber
+        null             | null      | null   
+		'access'         | 'secret'  | null
+		''               | ''        | null
+		'access'         | null      | 'account'
+		'access'         | null      | null
+		
     }
+	
+	@Unroll("hasErrors should return #valid when accessId is #accessId")
+	def 'aws contraints'() {
+		when:
+		InitializeCommand command = new InitializeCommand(accessId: accessId, secretKey: SAMPLE_SECRET_KEY,
+			accountNumber: '111122223333', cloudService:'aws')
+		command.validate()
+
+		then:
+		command.hasErrors() != valid
+
+		where:
+
+		accessId         | valid
+		'accessId'       | false
+		''               | true
+		SAMPLE_ACCESS_ID | true
+	}
+
 
     @Unroll("hasErrors should return #valid when secrectKey is #secretKey")
     def 'secretKey contraints'() {
@@ -107,8 +116,7 @@ class InitControllerSpec extends Specification {
 
         secretKey         | valid
         'secretKeyId'     | false
-        ''                | false
-        null              | false
+        ''                | true
         SAMPLE_SECRET_KEY | true
     }
 
@@ -116,7 +124,7 @@ class InitControllerSpec extends Specification {
     def 'accountNumber constraints'() {
         when:
         InitializeCommand command = new InitializeCommand(accessId: SAMPLE_ACCESS_ID, secretKey: SAMPLE_SECRET_KEY,
-            accountNumber: accountNumber)
+            accountNumber: accountNumber,cloudService:'aws')
         command.validate()
 
         then:
@@ -127,8 +135,7 @@ class InitControllerSpec extends Specification {
         accountNumber    | valid
         '1111-2222-3333' | true
         '111122223333'   | true
-        ''               | false
-        null             | false
+        ''               | true
         'aaaa'           | false
         '1111222233334'  | false
     }

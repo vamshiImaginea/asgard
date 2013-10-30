@@ -68,7 +68,7 @@ class CachedMapSpec extends Specification {
             permitAcquisitionAttemptCount++
         }
 
-        cachedMap = new MultithreadedTestingCachedMap(Region.EU_WEST_1, EntityType.domain,
+        cachedMap = new MultithreadedTestingCachedMap(Region.US_EAST_1, EntityType.domain,
                 null, null, waitForProperTestingState)
         cachedMap.ensureSetUp(retriever)
 
@@ -96,7 +96,7 @@ class CachedMapSpec extends Specification {
             retrievalCallCount++
             return stooges
         }
-        cachedMap = new CachedMap(Region.EU_WEST_1, EntityType.domain, null, null)
+        cachedMap = new CachedMap(Region.US_EAST_1, EntityType.domain, null, null)
         cachedMap.ensureSetUp(retriever)
 
         when:

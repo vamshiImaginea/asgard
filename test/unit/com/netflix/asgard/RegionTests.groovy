@@ -18,29 +18,10 @@ package com.netflix.asgard
 class RegionTests extends GroovyTestCase {
 
     void testWithCode() {
-        assert Region.US_EAST_1 == Region.withCode('us-east-1')
-        assert Region.US_WEST_1 == Region.withCode('us-west-1')
-        assert 'us-west-1' == Region.withCode('us-west-1').code
-        assert 'eu-west-1' == Region.withCode('eu-west-1').code
-        assertNull Region.withCode('us-east')
-        assertNull Region.withCode('blah')
-        assertNull Region.withCode('')
-        assertNull Region.withCode(null)
-        assertNull Region.withCode('  us-east-1  ')
+        assert Region.US_EAST_1 == Region.defaultRegion()
+        assertTrue(new Region(code:'us-west-1').equals(new Region(code:'us-west-1')))
+		assertFalse(new Region(code:'us-west-1').equals(new Region(code:'us-west-2')))
     }
 
-    void testWithPricingJsonCode() {
-        assert Region.US_EAST_1 == Region.withPricingJsonCode('us-east')
-        assert Region.US_WEST_1 == Region.withPricingJsonCode('us-west')
-        assert Region.EU_WEST_1 == Region.withPricingJsonCode('eu-ireland')
-        assert Region.AP_NORTHEAST_1 == Region.withPricingJsonCode('apac-tokyo')
-        assert Region.AP_SOUTHEAST_1 == Region.withPricingJsonCode('apac-sin')
-        assert 'us-west-1' == Region.withPricingJsonCode('us-west').code
-        assert 'eu-west-1' == Region.withPricingJsonCode('eu-ireland').code
-        assertNull Region.withPricingJsonCode('us-east-1')
-        assertNull Region.withPricingJsonCode('blah')
-        assertNull Region.withPricingJsonCode('')
-        assertNull Region.withPricingJsonCode(null)
-        assertNull Region.withPricingJsonCode('  us-east  ')
-    }
+  
 }

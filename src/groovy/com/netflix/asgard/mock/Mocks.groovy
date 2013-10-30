@@ -15,23 +15,30 @@
  */
 package com.netflix.asgard.mock
 
+import grails.converters.JSON
+import grails.converters.XML
+import grails.test.MockUtils
+import groovy.util.slurpersupport.GPathResult
+import org.jclouds.ContextBuilder;
+import javax.servlet.http.HttpServletRequest
+import org.codehaus.groovy.grails.web.json.JSONArray
+import org.jclouds.compute.ComputeService
+import org.jclouds.compute.ComputeServiceContext
+import org.jclouds.logging.slf4j.config.SLF4JLoggingModule;
+import org.joda.time.format.ISODateTimeFormat
+import org.springframework.mock.web.MockHttpServletRequest
+
+import spock.lang.Specification;
+
 import com.amazonaws.AmazonServiceException
 import com.amazonaws.services.ec2.AmazonEC2
 import com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancing
 import com.amazonaws.services.simpledb.model.Attribute
 import com.amazonaws.services.simpledb.model.Item
 import com.amazonaws.services.sns.AmazonSNS
-import com.netflix.asgard.AppRegistration
-import com.netflix.asgard.ApplicationService
-import com.netflix.asgard.AwsAutoScalingService
-import com.netflix.asgard.AwsClientService
-import com.netflix.asgard.AwsCloudWatchService
-import com.netflix.asgard.AwsEc2Service
-import com.netflix.asgard.AwsLoadBalancerService
-import com.netflix.asgard.AwsRdsService
-import com.netflix.asgard.AwsSimpleDbService
-import com.netflix.asgard.AwsSnsService
-import com.netflix.asgard.AwsSqsService
+import com.google.common.collect.ImmutableSet;
+import com.google.inject.Module;
+import com.netflix.asgard.Ec2Service
 import com.netflix.asgard.CachedMapBuilder
 import com.netflix.asgard.Caches
 import com.netflix.asgard.ConfigService
@@ -39,9 +46,6 @@ import com.netflix.asgard.DefaultUserDataProvider
 import com.netflix.asgard.DiscoveryService
 import com.netflix.asgard.DnsService
 import com.netflix.asgard.EmailerService
-import com.netflix.asgard.EurekaAddressCollectorService
-import com.netflix.asgard.FastPropertyService
-import com.netflix.asgard.FlagService
 import com.netflix.asgard.InstanceTypeService
 import com.netflix.asgard.LaunchTemplateService
 import com.netflix.asgard.Link
@@ -49,13 +53,9 @@ import com.netflix.asgard.MergedInstanceGroupingService
 import com.netflix.asgard.MergedInstanceService
 import com.netflix.asgard.MonkeyPatcherService
 import com.netflix.asgard.MultiRegionAwsClient
-import com.netflix.asgard.PushService
 import com.netflix.asgard.Region
 import com.netflix.asgard.RestClientService
 import com.netflix.asgard.SecretService
-import com.netflix.asgard.ServerService
-import com.netflix.asgard.SimpleDbDomainService
-import com.netflix.asgard.StackService
 import com.netflix.asgard.Task
 import com.netflix.asgard.TaskService
 import com.netflix.asgard.ThreadScheduler
@@ -64,16 +64,8 @@ import com.netflix.asgard.cache.Fillable
 import com.netflix.asgard.model.HardwareProfile
 import com.netflix.asgard.model.InstanceTypeData
 import com.netflix.asgard.plugin.UserDataProvider
-import grails.converters.JSON
-import grails.converters.XML
-import grails.test.MockUtils
-import groovy.util.slurpersupport.GPathResult
-import javax.servlet.http.HttpServletRequest
-import org.codehaus.groovy.grails.web.json.JSONArray
-import org.joda.time.format.ISODateTimeFormat
-import org.springframework.mock.web.MockHttpServletRequest
 
-class Mocks {
+class Mocks extends Specification{
 
     static final String TEST_AWS_ACCOUNT_ID = '179000000000'
     static final String PROD_AWS_ACCOUNT_ID = '149000000000'
@@ -166,38 +158,6 @@ class Mocks {
         monkeyPatcherService
     }
 
-    private static ApplicationService applicationService
-    static ApplicationService applicationService() {
-        if (applicationService == null) {
-            MockUtils.mockLogging(ApplicationService, false)
-            applicationService = new ApplicationService()
-            applicationService.caches = caches()
-            applicationService.grailsApplication = grailsApplication()
-            applicationService.configService = configService()
-            applicationService.awsClientService = awsClientService()
-            applicationService.simpleDbClient = applicationService.awsClientService.createImpl(MockAmazonSimpleDBClient)
-
-            List<String> names =
-                    ['abcache', 'api', 'aws_stats', 'cryptex', 'helloworld', 'ntsuiboot', 'videometadata'].asImmutable()
-            List<AppRegistration> apps = names.collect({ AppRegistration.from(item(it.toUpperCase())) }).asImmutable()
-
-            // Populate map of names to apps
-            Map<String, AppRegistration> namesToApps = [:]
-            apps.eachWithIndex { app, index -> namesToApps[names[index]] = app }
-            namesToApps = namesToApps.asImmutable()
-
-            applicationService.metaClass.getRegisteredApplications = { UserContext userContext -> apps }
-            applicationService.metaClass.getRegisteredApplication = { UserContext userContext, String name -> namesToApps[name] }
-
-            applicationService.afterPropertiesSet()
-            applicationService.initializeCaches()
-
-            // Sanity check that we can get a registered application by name with test code.
-            assert "cryptex" == applicationService.getRegisteredApplication(Mocks.userContext(), "cryptex").name
-        }
-        applicationService
-    }
-
     private static def item(String name) {
         new Item().withName(name).withAttributes(
                 [new Attribute('createTs', '1279755598817'), new Attribute('updateTs', '1279755598817')])
@@ -206,6 +166,7 @@ class Mocks {
     static UserContext userContext() {
         HttpServletRequest request = new MockHttpServletRequest()
         request.setAttribute('region', Region.US_EAST_1)
+		request.setAttribute('cloudProvider', 'aws')
         UserContext.of(request)
     }
 
@@ -214,7 +175,7 @@ class Mocks {
         if (mergedInstanceService == null) {
             MockUtils.mockLogging(MergedInstanceService, false)
             mergedInstanceService = new MergedInstanceService()
-            mergedInstanceService.awsEc2Service = awsEc2Service()
+            mergedInstanceService.ec2Service = awsEc2Service()
             mergedInstanceService.discoveryService = discoveryService()
             mergedInstanceService
         }
@@ -227,7 +188,7 @@ class Mocks {
             MockUtils.mockLogging(MergedInstanceGroupingService, false)
             mergedInstanceGroupingService = new MergedInstanceGroupingService()
             mergedInstanceGroupingService.awsAutoScalingService = awsAutoScalingService()
-            mergedInstanceGroupingService.awsEc2Service = awsEc2Service()
+            mergedInstanceGroupingService.ec2Service = awsEc2Service()
             mergedInstanceGroupingService.discoveryService = discoveryService()
             mergedInstanceGroupingService.metaClass.getMergedInstances = { UserContext userContext -> [] }
         }
@@ -245,19 +206,6 @@ class Mocks {
         dnsService
     }
 
-    private static EurekaAddressCollectorService eurekaAddressCollectorService
-    static EurekaAddressCollectorService eurekaAddressCollectorService() {
-        if (eurekaAddressCollectorService == null) {
-            MockUtils.mockLogging(EurekaAddressCollectorService, false)
-            eurekaAddressCollectorService = new EurekaAddressCollectorService()
-            eurekaAddressCollectorService.caches = caches()
-            eurekaAddressCollectorService.configService = configService()
-            eurekaAddressCollectorService.restClientService = restClientService()
-            eurekaAddressCollectorService.dnsService = dnsService()
-            eurekaAddressCollectorService.initializeCaches()
-        }
-        eurekaAddressCollectorService
-    }
 
     private static DiscoveryService discoveryService
     static DiscoveryService discoveryService() {
@@ -281,7 +229,7 @@ class Mocks {
             MockUtils.mockLogging(InstanceTypeService, false)
             instanceTypeService = new InstanceTypeService()
             instanceTypeService.grailsApplication = grailsApplication()
-            instanceTypeService.awsEc2Service = awsEc2Service()
+            instanceTypeService.ec2Service = ec2Service()
             instanceTypeService.configService = configService()
             instanceTypeService.emailerService = emailerService()
             instanceTypeService.caches = caches()
@@ -291,60 +239,7 @@ class Mocks {
         instanceTypeService
     }
 
-    private static AwsLoadBalancerService awsLoadBalancerService
-    static AwsLoadBalancerService awsLoadBalancerService() {
-        if (awsLoadBalancerService == null) {
-            awsLoadBalancerService = newAwsLoadBalancerService()
-        }
-        awsLoadBalancerService
-    }
-
-    static AwsLoadBalancerService newAwsLoadBalancerService(AmazonElasticLoadBalancing mockElb = null) {
-        MockUtils.mockLogging(AwsLoadBalancerService, false)
-        AwsLoadBalancerService newAwsLoadBalancerService = new AwsLoadBalancerService()
-        newAwsLoadBalancerService.with {
-            grailsApplication = grailsApplication()
-            awsClientService = awsClientService()
-            caches = caches()
-            awsEc2Service = awsEc2Service()
-            taskService = taskService()
-        }
-        if (mockElb) {
-            newAwsLoadBalancerService.awsClient = new MultiRegionAwsClient({ mockElb })
-        }
-        newAwsLoadBalancerService.afterPropertiesSet()
-        newAwsLoadBalancerService.initializeCaches()
-        newAwsLoadBalancerService
-    }
-
-    private static AwsClientService awsClientService
-    static AwsClientService awsClientService() {
-        if (awsClientService == null) {
-            MockUtils.mockLogging(AwsClientService, false)
-            awsClientService = new AwsClientService()
-            awsClientService.grailsApplication = grailsApplication()
-            awsClientService.secretService = new SecretService()
-            awsClientService.configService = configService()
-            awsClientService.serverService = serverService()
-            awsClientService.afterPropertiesSet()
-        }
-        awsClientService
-    }
-
-    private static PushService pushService
-    static PushService pushService() {
-        if (pushService == null) {
-            MockUtils.mockLogging(PushService, false)
-            pushService = new PushService()
-            pushService.grailsApplication = grailsApplication()
-            pushService.configService = configService()
-            pushService.awsAutoScalingService = awsAutoScalingService()
-            pushService.awsEc2Service = awsEc2Service()
-            pushService.instanceTypeService = instanceTypeService()
-            pushService.restClientService = restClientService()
-        }
-        pushService
-    }
+    
 
     private static TaskService taskService
     static TaskService taskService() {
@@ -359,7 +254,6 @@ class Mocks {
             }
             taskService.grailsApplication = grailsApplication()
             taskService.emailerService = emailerService()
-            taskService.awsSimpleDbService = awsSimpleDbService()
         }
         taskService
     }
@@ -375,45 +269,6 @@ class Mocks {
         emailerService
     }
 
-    private static FlagService flagService
-    static FlagService flagService() {
-        if (flagService == null) {
-            MockUtils.mockLogging(FlagService, false)
-            flagService = new FlagService()
-        }
-        flagService
-    }
-
-    private static FastPropertyService fastPropertyService
-    static FastPropertyService fastPropertyService() {
-        if (fastPropertyService == null) {
-            MockUtils.mockLogging(FastPropertyService, false)
-            fastPropertyService = new FastPropertyService()
-            fastPropertyService.metaClass.platformServiceHostAndPort = { UserContext userContext -> 'nowhere:80' }
-            fastPropertyService.grailsApplication = grailsApplication()
-            fastPropertyService.applicationService = applicationService()
-            fastPropertyService.caches = caches()
-            fastPropertyService.discoveryService = discoveryService()
-            fastPropertyService.mergedInstanceGroupingService = mergedInstanceGroupingService()
-
-            GPathResult listXml = XML.parse(MockFastProperties.DATA) as GPathResult
-            fastPropertyService.restClientService = [
-                    getAsXml: { String uri ->
-                        if (uri.endsWith('allprops')) {
-                            return listXml
-                        }
-                        String id = uri.substring(uri.lastIndexOf('/') + 1)
-                        return listXml.properties.property.find { GPathResult fastPropertyData ->
-                            fastPropertyData.propertyId.toString() == id
-                        }
-                    }
-            ]
-            fastPropertyService.taskService = taskService()
-            fastPropertyService.initializeCaches()
-            waitForFill(caches.allFastProperties)
-        }
-        fastPropertyService
-    }
 
     private static RestClientService restClientService
     static RestClientService restClientService() {
@@ -429,15 +284,7 @@ class Mocks {
         newRestClientService
     }
 
-    private static StackService stackService
-    static StackService stackService() {
-        if (stackService == null) {
-            MockUtils.mockLogging(StackService, false)
-            stackService = new StackService()
-            stackService.awsAutoScalingService = awsAutoScalingService()
-        }
-        stackService
-    }
+    
 
     private static LaunchTemplateService launchTemplateService
     static LaunchTemplateService launchTemplateService() {
@@ -445,7 +292,6 @@ class Mocks {
             MockUtils.mockLogging(LaunchTemplateService, false)
             launchTemplateService = new LaunchTemplateService()
             launchTemplateService.grailsApplication = grailsApplication()
-            launchTemplateService.applicationService = applicationService()
             launchTemplateService.configService = configService()
             launchTemplateService.pluginService = [ userDataProvider: userDataProvider() ]
         }
@@ -456,119 +302,52 @@ class Mocks {
     static UserDataProvider userDataProvider() {
         if (userDataProvider == null) {
             userDataProvider = new DefaultUserDataProvider()
-            userDataProvider.applicationService = applicationService()
             userDataProvider.configService = configService()
         }
         userDataProvider
     }
 
-    private static AwsAutoScalingService awsAutoScalingService
-    static AwsAutoScalingService awsAutoScalingService() {
-        if (awsAutoScalingService == null ) {
-            awsAutoScalingService = newAwsAutoScalingService()
-        }
-        awsAutoScalingService
-    }
 
-    static AwsAutoScalingService newAwsAutoScalingService() {
-        MockUtils.mockLogging(AwsAutoScalingService, false)
-        final newAwsAutoScalingService = new AwsAutoScalingService()
-        newAwsAutoScalingService.with {
-            grailsApplication = grailsApplication()
-            awsClientService = awsClientService()
-            caches = caches()
-            applicationService = applicationService()
-            awsEc2Service = awsEc2Service()
-            awsLoadBalancerService = awsLoadBalancerService()
+    private static Ec2Service ec2Service
+    static Ec2Service ec2Service() {
+        if (ec2Service == null) {
+            ec2Service = newAwsEc2Service()
+        }
+        ec2Service
+    }
+	private static ComputeService computeService
+	static ComputeService computeService() {
+		if (computeService == null) {
+			computeService = newcomputeService()
+		}
+		computeService
+	}
+
+    static Ec2Service newAwsEc2Service() {
+        MockUtils.mockLogging(Ec2Service, false)
+        Ec2Service ec2Service = new Ec2Service()
+		
+        ec2Service.with() {
             configService = configService()
-            discoveryService = discoveryService()
-            mergedInstanceService = mergedInstanceService()
-            taskService = taskService()
-            launchTemplateService = launchTemplateService()
-            pushService = pushService()
-            awsCloudWatchService = awsCloudWatchService()
-            emailerService = emailerService()
-            awsSimpleDbService = awsSimpleDbService()
-            afterPropertiesSet()
-            initializeCaches()
-            waitForFill(caches.allAutoScalingGroups)
-            waitForFill(caches.allClusters)
-        }
-        newAwsAutoScalingService
-    }
-
-    private static AwsEc2Service awsEc2Service
-    static AwsEc2Service awsEc2Service() {
-        if (awsEc2Service == null) {
-            awsEc2Service = newAwsEc2Service()
-        }
-        awsEc2Service
-    }
-
-    static AwsEc2Service newAwsEc2Service(AmazonEC2 amazonEC2 = null) {
-        MockUtils.mockLogging(AwsEc2Service, false)
-        AwsEc2Service awsEc2Service = new AwsEc2Service()
-        awsEc2Service.with() {
-            configService = configService()
-            awsClientService = awsClientService()
             caches = caches()
             taskService = taskService()
-            if (amazonEC2) {
-                awsClient = new MultiRegionAwsClient({ amazonEC2 })
-            }
-            afterPropertiesSet()
-            initializeCaches()
+			computeServiceClientByRegion = new MultiRegionAwsClient<ComputeService>({
+				computeService()
+			})
+			initializeCachesForEachREgion()
         }
-        awsEc2Service
+        ec2Service
     }
-
-    private static AwsCloudWatchService awsCloudWatchService
-    static AwsCloudWatchService awsCloudWatchService() {
-        if (awsCloudWatchService == null) {
-            awsCloudWatchService = newAwsCloudWatchService()
-        }
-        awsCloudWatchService
-    }
-
-    static AwsCloudWatchService newAwsCloudWatchService() {
-        MockUtils.mockLogging(AwsCloudWatchService, false)
-        AwsCloudWatchService newAwsCloudWatchService = new AwsCloudWatchService()
-        newAwsCloudWatchService.with {
-            awsClientService = awsClientService()
-            caches = caches()
-            configService = configService()
-            taskService = taskService()
-            afterPropertiesSet()
-            initializeCaches()
-        }
-        newAwsCloudWatchService
-    }
-
-    private static AwsSnsService awsSnsService
-    static AwsSnsService awsSnsService() {
-        if (awsSnsService == null) {
-            awsSnsService = newAwsSnsService()
-        }
-        awsSnsService
-    }
-
-    static AwsSnsService newAwsSnsService(AmazonSNS mockAmazonSNS = null) {
-        MockUtils.mockLogging(AwsSnsService, false)
-        AwsSnsService newAwsSnsService = new AwsSnsService()
-        newAwsSnsService.with {
-            grailsApplication = grailsApplication()
-            awsClientService = awsClientService()
-            caches = caches()
-            configService = configService()
-            taskService = taskService()
-        }
-        if (mockAmazonSNS) {
-            newAwsSnsService.awsClient = new MultiRegionAwsClient({ mockAmazonSNS })
-        }
-        newAwsSnsService.afterPropertiesSet()
-        newAwsSnsService.initializeCaches()
-        newAwsSnsService
-    }
+	static ComputeService newcomputeService() {
+		Iterable<Module> modules = ImmutableSet.<Module> of(new SLF4JLoggingModule());
+		ComputeServiceContext context = ContextBuilder.newBuilder("stub")
+				.endpoint("http://172.16.16.254:8773/services/Cloud")
+				.credentials("50c4857939ff4d83b27564cb8a286762", "860c0051e7b1428592a12cfda47829ba")
+				.modules(modules)
+				.buildView(ComputeServiceContext.class)
+				computeService = context.getComputeService()
+				computeService
+	}
 
     private static ConfigService configService
     static ConfigService configService() {
@@ -579,68 +358,7 @@ class Mocks {
         configService
     }
 
-    private static ServerService serverService
-    static ServerService serverService() {
-        if (serverService == null) {
-            serverService = new ServerService()
-            serverService.grailsApplication = grailsApplication()
-        }
-        serverService
-    }
-
-    private static AwsSqsService awsSqsService
-    static AwsSqsService awsSqsService() {
-        if (awsSqsService == null) {
-            MockUtils.mockLogging(AwsSqsService, false)
-            awsSqsService = new AwsSqsService()
-            awsSqsService.grailsApplication = grailsApplication()
-            awsSqsService.awsClientService = awsClientService()
-            awsSqsService.caches = caches()
-            awsSqsService.taskService = taskService()
-            awsSqsService.afterPropertiesSet()
-            awsSqsService.initializeCaches()
-        }
-        awsSqsService
-    }
-
-    private static SimpleDbDomainService simpleDbDomainService
-    static SimpleDbDomainService simpleDbDomainService() {
-        if (simpleDbDomainService == null) {
-            MockUtils.mockLogging(SimpleDbDomainService, false)
-            simpleDbDomainService = new SimpleDbDomainService()
-            simpleDbDomainService.caches = caches()
-            simpleDbDomainService.awsSimpleDbService = awsSimpleDbService()
-            simpleDbDomainService.initializeCaches()
-        }
-        simpleDbDomainService
-    }
-
-    private static AwsSimpleDbService awsSimpleDbService
-    static AwsSimpleDbService awsSimpleDbService() {
-        if (awsSimpleDbService == null) {
-            MockUtils.mockLogging(AwsSimpleDbService, false)
-            awsSimpleDbService = new AwsSimpleDbService()
-            awsSimpleDbService.awsClientService = awsClientService()
-            awsSimpleDbService.afterPropertiesSet()
-        }
-        awsSimpleDbService
-    }
-
-    private static AwsRdsService awsRdsService
-    static AwsRdsService awsRdsService() {
-        if (awsRdsService == null) {
-            MockUtils.mockLogging(AwsRdsService, false)
-            awsRdsService = new AwsRdsService()
-            awsRdsService.configService = configService()
-            awsRdsService.taskService = taskService()
-            awsRdsService.awsClientService = awsClientService()
-            awsRdsService.caches = caches()
-            awsRdsService.afterPropertiesSet()
-            awsRdsService.initializeCaches()
-        }
-        awsRdsService
-    }
-
+    
     static AmazonServiceException makeAmazonServiceException(String message, int statusCode, String errorCode,
                                                              String requestId) {
         AmazonServiceException e = new AmazonServiceException(message)

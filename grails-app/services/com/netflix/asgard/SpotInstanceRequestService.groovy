@@ -34,7 +34,7 @@ import com.netflix.asgard.model.InstanceTypeData
 
 class SpotInstanceRequestService implements CacheInitializer {
 
-    def awsEc2Service
+    def ec2Service
     Caches caches
     def instanceTypeService
     def awsLoadBalancerService
@@ -47,7 +47,7 @@ class SpotInstanceRequestService implements CacheInitializer {
     }
 
     private List<SpotInstanceRequest> retrieveSpotInstanceRequests(Region region) {
-        awsEc2Service.retrieveSpotInstanceRequests(region)
+        ec2Service.retrieveSpotInstanceRequests(region)
     }
 
     List<SpotInstanceRequest> createSpotInstanceRequests(UserContext userContext,
@@ -71,7 +71,7 @@ class SpotInstanceRequestService implements CacheInitializer {
                     ignoreProperties(['launchSpecification'])
             RequestSpotInstancesRequest request = templateSirBeanState.injectState(new RequestSpotInstancesRequest())
             request.withInstanceCount(instanceCount).withLaunchSpecification(targetLaunchSpec)
-            RequestSpotInstancesResult result = awsEc2Service.requestSpotInstances(userContext, request)
+            RequestSpotInstancesResult result = ec2Service.requestSpotInstances(userContext, request)
             List<SpotInstanceRequest> createdSpotInstanceRequests = result.spotInstanceRequests
             createSpotInstanceRequestTags(userContext, createdSpotInstanceRequests*.spotInstanceRequestId, tags, task)
             createdSpotInstanceRequests
@@ -86,7 +86,7 @@ class SpotInstanceRequestService implements CacheInitializer {
         String msg = "Create tags ${tagMessage} on ${count} spot instance request${count == 1 ? '' : 's'}"
         Closure work = { Task task ->
             CreateTagsRequest request = new CreateTagsRequest().withResources(spotInstanceRequestIds).withTags(tags)
-            awsEc2Service.createTags(userContext, request)
+            ec2Service.createTags(userContext, request)
         }
         Link link = count == 1 ? Link.to(EntityType.spotInstanceRequest, spotInstanceRequestIds[0]) : null
         taskService.runTask(userContext, msg, work, link, existingTask)
@@ -103,11 +103,11 @@ class SpotInstanceRequestService implements CacheInitializer {
             List<String> instanceIds = sirs*.instanceId.findAll { it }
             CancelSpotInstanceRequestsRequest request = new CancelSpotInstanceRequestsRequest().
                     withSpotInstanceRequestIds(spotInstanceRequestIds)
-            CancelSpotInstanceRequestsResult result = awsEc2Service.cancelSpotInstanceRequests(userContext, request)
+            CancelSpotInstanceRequestsResult result = ec2Service.cancelSpotInstanceRequests(userContext, request)
 
             task.log("Terminating ${instanceIds.size()} instance${instanceIds.size() == 1 ? '' : 's'}")
             if (instanceIds) {
-                awsEc2Service.terminateInstances(userContext, instanceIds, task)
+                ec2Service.terminateInstances(userContext, instanceIds, task)
             }
             // TODO update ec2Instance cache
 
@@ -120,7 +120,7 @@ class SpotInstanceRequestService implements CacheInitializer {
     List<SpotInstanceRequest> getSpotInstanceRequestsByIds(UserContext userContext, List<String> sirIds) {
         DescribeSpotInstanceRequestsRequest request = new DescribeSpotInstanceRequestsRequest().
                 withSpotInstanceRequestIds(sirIds)
-        DescribeSpotInstanceRequestsResult result = awsEc2Service.describeSpotInstanceRequests(userContext, request)
+        DescribeSpotInstanceRequestsResult result = ec2Service.describeSpotInstanceRequests(userContext, request)
         List<SpotInstanceRequest> spotInstanceRequests = result.spotInstanceRequests
         Map<String, SpotInstanceRequest> sirIdsToSirs = mapIdsToSpotInstanceRequests(spotInstanceRequests)
         caches.allSpotInstanceRequests.by(userContext.region).putAll(sirIdsToSirs)

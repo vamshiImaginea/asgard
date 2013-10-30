@@ -19,7 +19,6 @@ import com.netflix.asgard.Caches
 import com.netflix.asgard.DefaultUserDataProvider
 import com.netflix.asgard.Region
 import com.netflix.asgard.ServiceInitLoggingBeanPostProcessor
-import com.netflix.asgard.SnsTaskFinishedListener
 import com.netflix.asgard.ThreadScheduler
 import com.netflix.asgard.auth.OneLoginAuthenticationProvider
 import com.netflix.asgard.auth.RestrictEditAuthorizationProvider
@@ -39,9 +38,6 @@ beans = {
         bean.lazyInit = true
     }
 
-    snsTaskFinishedListener(SnsTaskFinishedListener) { bean ->
-        bean.lazyInit = true
-    }
 
     if (application.config.plugin?.authenticationProvider == 'oneLoginAuthenticationProvider') {
         oneLoginAuthenticationProvider(OneLoginAuthenticationProvider) { bean ->

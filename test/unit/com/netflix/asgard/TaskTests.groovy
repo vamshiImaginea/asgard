@@ -45,13 +45,13 @@ class TaskTests extends GroovyTestCase {
 
     void testGetSummary() {
         assert new Task(name: 'Create ASG helloworld-v001', env: 'prod',
-                status: 'completed', userContext: new UserContext(region: Region.US_WEST_2, username: 'hsimpson',
+                status: 'completed', userContext: new UserContext(region: Region.US_EAST_1, username: 'hsimpson',
                 clientHostName: 'laptop-hsimpson')).summary ==
-                'Asgard task completed in prod us-west-2 by hsimpson: Create ASG helloworld-v001'
+                'Asgard task completed in prod us-east-1 by hsimpson: Create ASG helloworld-v001'
 
         assert new Task(name: 'Create ASG helloworld-v001', env: 'prod',
-                status: 'completed', userContext: new UserContext(region: Region.US_WEST_2, username: null,
+                status: 'completed', userContext: new UserContext(region: Region.US_EAST_1, username: null,
                 clientHostName: 'laptop-hsimpson')).summary ==
-                'Asgard task completed in prod us-west-2 by laptop-hsimpson: Create ASG helloworld-v001'
+                'Asgard task completed in prod us-east-1 by laptop-hsimpson: Create ASG helloworld-v001'
     }
 }

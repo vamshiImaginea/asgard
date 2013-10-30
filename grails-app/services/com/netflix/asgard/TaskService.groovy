@@ -34,7 +34,6 @@ class TaskService {
             'DuplicateLoadBalancerName', 'InvalidDBInstanceState', 'InvalidDBSnapshotState', 'InvalidGroup.Duplicate',
             'InvalidGroup.InUse', 'InvalidParameterValue', 'ValidationError']
 
-    def awsSimpleDbService
     def emailerService
     def grailsApplication
     def pluginService
@@ -95,12 +94,9 @@ class TaskService {
     }
 
     private String nextTaskId(UserContext userContext) {
-        try {
-            return awsSimpleDbService.incrementAndGetSequenceNumber(userContext, sequenceLocator)
-        } catch (Exception e) {
-            emailerService.sendExceptionEmail(e.toString(), e)
+        
             return UUID.randomUUID().toString()
-        }
+     
     }
 
     private Task newTask(UserContext userContext, String name, Link link) {
@@ -174,13 +170,13 @@ class TaskService {
         if (task.email) {
             emailerService.sendUserEmail(task.email, task.summary, task.logAsString)
         }
-        for(TaskFinishedListener taskFinishedListener in pluginService?.taskFinishedListeners) {
+      /*  for(TaskFinishedListener taskFinishedListener in pluginService?.taskFinishedListeners) {
             try {
                 taskFinishedListener.taskFinished(task)
             } catch (Exception e) {
                 emailerService.sendExceptionEmail("Task finished plugin error: $e", e)
             }
-        }
+        }*/
     }
 
     def getRunning = { Lists.newArrayList(running) }
