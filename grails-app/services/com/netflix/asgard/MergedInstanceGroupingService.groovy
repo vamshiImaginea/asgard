@@ -32,6 +32,8 @@ class MergedInstanceGroupingService {
     static transactional = false
 
     def ec2Service
+	def discoveryService
+	
 
     /**
      * Returns the merged instances for a given application. appName may be null for all.
@@ -44,11 +46,25 @@ class MergedInstanceGroupingService {
      * Returns the merged instances for all instances.
      */
     List<MergedInstance> getMergedInstances(UserContext userContext) {
-        Collection<NodeMetadata> ec2List = ec2Service.getInstances(userContext)
-        List<MergedInstance> instances = ec2List.collect { NodeMetadata ec2Inst ->
-            new MergedInstance(ec2Inst, null)
-        }
-      instances
+	  
+	  Collection<NodeMetadata> ec2List = ec2Service.getInstances(userContext)
+	  Collection<ApplicationInstance> discList = discoveryService.getAppInstances(userContext)
+	  Map<String, ApplicationInstance> idsToDiscInstances = discList.inject([:]) { map, discoveryInstance ->
+		  map << [(discoveryInstance.instanceId): discoveryInstance]
+	  } as Map<String, ApplicationInstance>
+
+	  // All the ec2 instances, with Discovery pair when available.
+	  List<MergedInstance> instances = ec2List.collect { NodeMetadata ec2Inst ->
+		  new MergedInstance(ec2Inst, discList.findAll{discoveryInstance -> ec2Inst.providerId == discoveryInstance.instanceId})
+	  }
+	  // All the remaining Discovery-only instances.
+	  for (ApplicationInstance appInst : discList) {
+		  if (!appInst.instanceId) {
+			  instances += new MergedInstance(null, [appInst])
+		  }
+	  }
+	 instances
+  
     }
 
     /**
@@ -60,11 +76,11 @@ class MergedInstanceGroupingService {
         List<MergedInstance> instances = discList.collect { appInst ->
             NodeMetadata ec2Inst = null
             if (appInst.instanceId) {
-                ec2Inst = ec2Service.getInstance(userContext, appInst.instanceId, From.CACHE)
+                ec2Inst = ec2Service.getInstance(userContext, appInst.instanceId)
             }
-            new MergedInstance(ec2Inst, appInst)
+            new MergedInstance(ec2Inst,[appInst])
         }
-        injectGroupNames(userContext, instances, appName)
+      instances
     }
 
     List<MergedInstance> findByFieldValue(UserContext userContext, String fieldName, List<String> fieldValues) {
@@ -81,23 +97,5 @@ class MergedInstanceGroupingService {
         }
     }
 
-    private List<MergedInstance> injectGroupNames(UserContext userContext, List<MergedInstance> instances, String appName) {
-
-        // TODO: This is a good spot to look up all the apps and mark which instances have valid app names. Rename this method.
-        Map<String, AutoScalingGroup> instanceIdsToGroups = [:]
-        Collection<AutoScalingGroup> groups = appName ?
-            awsAutoScalingService.getAutoScalingGroupsForApp(userContext, appName) :
-            awsAutoScalingService.getAutoScalingGroups(userContext)
-        groups.each { group ->
-            group.instances.each { inst ->
-                instanceIdsToGroups[inst.instanceId] = group
-            }
-        }
-        instances.each { instance ->
-            AutoScalingGroup group = instanceIdsToGroups[instance.instanceId]
-            instance.autoScalingGroupName = group?.autoScalingGroupName
-            instance.launchConfigurationName = group?.launchConfigurationName
-        }
-        instances
-    }
+   
 }

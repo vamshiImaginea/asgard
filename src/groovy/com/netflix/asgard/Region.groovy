@@ -20,6 +20,7 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.Map.Entry;
 
+import groovy.transform.EqualsAndHashCode;
 import groovy.transform.Immutable;
 
 import org.jclouds.compute.ComputeService
@@ -31,6 +32,7 @@ import com.google.common.cache.LocalCache.Values;
  * A way to indicate a choice of region within the Amazon Web Services global service offering.
  */
 @Immutable
+@EqualsAndHashCode
 class Region {
 
 	static final Region US_EAST_1 = new Region(code:'us-east-1')
@@ -41,17 +43,7 @@ class Region {
 	static List<Region> values(){
 		[new Region(code:'us-east-1',endpoint:'')]
 	}
-	@Override
-	boolean equals( param0) {
-
-		return ((Region)param0).code.equalsIgnoreCase(this.code)
-	};
-
-	@Override
-	int hashCode() {
-		return code.hash
-
-	};
+	
 	/**
 	 * Takes a canonical identifier for an AWS region and returns the matching Region object. If no match exists, this
 	 * method returns null.

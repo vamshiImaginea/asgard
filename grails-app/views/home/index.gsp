@@ -36,9 +36,13 @@
         </thead>
         <tbody>
         <tr>
-          <td>
-          
-                   </td>
+         <td>
+            Manage <g:link controller="application" action="list"
+                      title="An Application is an interrelated set of ${provider} components identified by standard naming patterns.">Applications</g:link>
+            <ul>
+              <li>Configure outbound security access for Applications</li>
+            </ul>
+          </td>
           <td>
             <ul>
               <li>Manage <g:link controller="image" action="list"
@@ -125,6 +129,10 @@
 					${provider} Accounts:
 					${grailsApplication.config.secret.accountNumber}
 				</p>
+			
+		
+			</g:else>
+			
 				<g:if test="${discoveryUrl}">
 					<p>
 						Eureka UI: <a href="${discoveryUrl}">
@@ -144,8 +152,6 @@
 						${region}
 					</strong>
 				</g:else>
-		
-			</g:else>
 		<p>
 					Hostname:
 					${InetAddress.localHost.hostName}, IP:

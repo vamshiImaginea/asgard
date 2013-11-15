@@ -49,33 +49,17 @@ class MergedInstance {
     String version
     String port
 
-    String autoScalingGroupName
     String launchConfigurationName
 
     NodeMetadata ec2Instance
-    ApplicationInstance appInstance
+    Collection<ApplicationInstance> appInstances
 
     MergedInstance() {
     }
 
-    MergedInstance(NodeMetadata ec2Instance, ApplicationInstance appInstance) {
+    MergedInstance(NodeMetadata ec2Instance, Collection<ApplicationInstance> appInstances) {
         this.ec2Instance = ec2Instance
-        this.appInstance = appInstance
-
-        // Discovery app instance fields
-        if (appInstance) {
-            appName = appInstance.appName
-            hostName = appInstance.hostName
-            status = appInstance.status
-            version = appInstance.version
-            port = appInstance.port
-            if (appInstance.dataCenterInfo) {
-                instanceType = appInstance.dataCenterInfo['instance-type']
-                instanceId = appInstance.dataCenterInfo['instance-id']
-                amiId = appInstance.dataCenterInfo['ami-id']
-                zone = appInstance.dataCenterInfo['availability-zone']
-            }
-        }
+        this.appInstances = appInstances       
 
         // EC2 Instance fields
         if (ec2Instance) {
@@ -90,7 +74,7 @@ class MergedInstance {
     }
 
     String getVipAddress() {
-        appInstance?.vipAddress
+        appInstances?.vipAddress
     }
 
     List<Tag> listTags() {
@@ -100,9 +84,9 @@ class MergedInstance {
     List listFieldContainers() {
         [
                 this,
-                appInstance,
-                appInstance?.dataCenterInfo,
-                appInstance?.leaseInfo,
+                appInstances,
+                appInstances?.dataCenterInfo,
+                appInstances?.leaseInfo,
                 ec2Instance,
                 ec2Instance?.placement,
                 ec2Instance?.state,

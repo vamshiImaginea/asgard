@@ -181,9 +181,6 @@ class Ec2Service implements CacheInitializer, InitializingBean {
 	}
 
 
-
-
-
 	/**
 	 * Based on a list of users and image ids, gives back a list of image objects for those ids that would be executable
 	 * by any of those users.
@@ -667,7 +664,7 @@ class Ec2Service implements CacheInitializer, InitializingBean {
 
 	NodeMetadata getInstance(UserContext userContext, String instanceId, From from = From.AWS) {
 		if (from == From.CACHE) {
-			return caches.allInstances.by(userContext.region).get(instanceId)
+			return caches.allInstances.by(userContext.region).find{NodeMetadata node -> node.hostname ==instanceId }
 		}
 		computeServiceClientByRegion.by(userContext.region).getNodeMetadata(instanceId)
 	}

@@ -15,10 +15,14 @@
  */
 package com.netflix.asgard
 
+import java.util.List;
+
 import com.google.common.collect.Lists
 import com.netflix.asgard.cache.CacheInitializer
 import com.netflix.asgard.model.ApplicationInstance
+
 import groovy.util.slurpersupport.GPathResult
+
 import org.joda.time.Duration
 
 class DiscoveryService implements CacheInitializer {
@@ -77,7 +81,7 @@ class DiscoveryService implements CacheInitializer {
      * @return the Eureka base URL with the region's Eureka CName, or null if none is configured
      */
     String findCanonicalBaseUrl(Region region) {
-        String cname = configService.getRegionalDiscoveryServer(region)
+		String cname = configService.getRegionalDiscoveryServer(region)
         cname ? constructBaseUrl(cname) : null
     }
 
@@ -129,7 +133,7 @@ class DiscoveryService implements CacheInitializer {
 
     // Discovery methods
 
-    private List<ApplicationInstance> retrieveInstances(Region region) {
+   private List<ApplicationInstance> retrieveInstances(Region region) {
         new Retriable<List<ApplicationInstance>>(
                 work: {
                     List instances = []
@@ -152,7 +156,7 @@ class DiscoveryService implements CacheInitializer {
     }
 
     Collection<ApplicationInstance> getAppInstances(UserContext userContext) {
-        caches.allApplicationInstances.by(userContext.region)?.list() ?: []
+      retrieveInstances(userContext.region)
     }
 
     /** Retrieves a list of 0 or more application instance objects that optionally match an app name. */

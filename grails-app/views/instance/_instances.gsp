@@ -21,19 +21,19 @@
     <thead>
     <tr>
       <th>&thinsp;x</th>
+      <th>Instance ID</th>
+      <th>Image ID</th>
+      <th>Inst Type</th>
+      <th>Zone</th>
       <g:if test="${discoveryExists}">
         <th>Application</th>
       </g:if>
-      <th>Auto Scaling Group</th>
       <th><g:if test="${discoveryExists}">VIP & </g:if>Hostname</th>
       <g:if test="${discoveryExists}">
         <th>Port</th>
       </g:if>
       <th>Status</th>
-      <th>Instance ID</th>
-      <th>Image ID</th>
-      <th>Inst Type</th>
-      <th>Zone</th>
+      
       <th>Tags</th>
       <th>Launch Time</th>
     </tr>
@@ -42,12 +42,21 @@
     <g:each var="mi" in="${instanceList}" status="i">
       <tr class="${(i % 2) == 0 ? 'odd' : 'even'}">
         <td><g:if test="${mi.instanceId}"><g:checkBox name="selectedInstances" value="${mi.instanceId}" checked="0" class="requireLogin"/></g:if></td>
+        
+         <td><g:linkObject type="instance" name="${mi.instanceId.encodeAsURL()}">${mi.instanceId}</g:linkObject></td>
+        <td><g:linkObject type="image" name="${mi.amiId.encodeAsURL()}">${mi.amiId}</g:linkObject></td>
+       <td>${mi.instanceType}</td>
+        <td><g:availabilityZone value="${mi.zone}"/></td>
         <g:if test="${discoveryExists}">
-          <td class="app"><g:linkObject type="application" name="${mi.appName}"/></td>
+         <td>
+         <g:each var="appi" in="${mi.appInstances}" >
+           <g:link class="application" controller="application" action="show" id="${appi.appName}">${appi.appName}</g:link>
+          </g:each>
+          </td>  
         </g:if>
-        <td class="autoScaling"><g:linkObject type="autoScaling" name="${mi.autoScalingGroupName}"/></td>
+        
         <td>
-          <g:set var="vipHost"><g:if test="${discoveryExists}">${mi.vipAddress} <br/> </g:if>${mi.hostName}</g:set>
+          <g:set var="vipHost"><g:if test="${discoveryExists}">${mi.appInstances*.vipAddress} <br/> </g:if>${mi.hostName}</g:set>
           <g:if test="${!mi.instanceId}">
             <g:link class="instance" action="show" params="[appName:mi.appName,instanceId:mi.instanceId,hostName:mi.hostName]"
                                 title="Show details of this instance">${vipHost}</g:link>
@@ -57,13 +66,16 @@
           </g:else>
         </td>
         <g:if test="${discoveryExists}">
-          <td>${mi.port}</td>
-        </g:if>
+        
+          <td>
+          <g:each var="appi" in="${mi.appInstances}" > 
+          ${appi.appName} - ${appi.port}
+          </g:each>
+          </td>
+          
+         </g:if>
         <td>${mi.status}</td>
-        <td><g:linkObject type="instance" name="${mi.instanceId.encodeAsURL()}">${mi.instanceId}</g:linkObject></td>
-        <td><g:linkObject type="image" name="${mi.amiId.encodeAsURL()}">${mi.amiId}</g:linkObject></td>
-        <td>${mi.instanceType}</td>
-        <td><g:availabilityZone value="${mi.zone}"/></td>
+       
         <td class="variables">
           <g:if test="${mi.listTags()}">
             <g:each var="tag" in="${mi.listTags()}">

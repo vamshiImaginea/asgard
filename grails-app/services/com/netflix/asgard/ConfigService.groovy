@@ -143,7 +143,7 @@ class ConfigService {
     String getRegionalDiscoveryServer(Region region) {
         if (isOnline()) {
             Map<Region, String> regionsToDiscoveryServers = grailsApplication.config.eureka?.regionsToServers
-            return regionsToDiscoveryServers ? regionsToDiscoveryServers[region] : null
+            return regionsToDiscoveryServers[region] ?: regionsToDiscoveryServers[Region.US_EAST_1]
         }
         null
     }

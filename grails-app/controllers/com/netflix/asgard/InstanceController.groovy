@@ -150,52 +150,41 @@ class InstanceController {
         String instanceId = params.id?:params.instanceId
 		instanceId=URLDecoder.decode(instanceId,'UTF-8');
 		
-        String appName
+        String appName,baseServer,healthCheck
+		Image image
+		
         ApplicationInstance appInst
         if (params.appName) {
             appName = params.appName
             String instName = instanceId ?: params.hostName
             appInst = discoveryService.getAppInstance(userContext, appName, instName)
         } else {
-            appInst = discoveryService.getAppInstance(userContext, instanceId)
+		    String providerId = instanceId.substring(instanceId.indexOf('/')+1)
+            appInst = discoveryService.getAppInstance(userContext,providerId )
             appName = appInst?.appName
         }
         NodeMetadata instance = ec2Service.getInstance(userContext, instanceId);
-        /*if (!appInst && !instance) {
+        if (!appInst && !instance) {
             String identifier = instanceId ?: "${params.appName}/${params.hostName}"
             Requests.renderNotFound('Instance', identifier, this)
-        } else {*/
-        /*    String healthCheck = runHealthCheck(appInst)
+        } else {
+            healthCheck = runHealthCheck(appInst)
             instance?.tags?.sort { it.key }
-            Image image = instance ? awsEc2Service.getImage(userContext, instance.imageId) : null
-            AutoScalingGroup group = awsAutoScalingService.getAutoScalingGroupFor(userContext, instance?.id)
-            String clusterName = Relationships.clusterFromGroupName(group?.autoScalingGroupName)
-            List<LoadBalancerDescription> loadBalancers = awsLoadBalancerService.getLoadBalancersFor(userContext,
-                    instance?.id)*/
+            image = instance ? ec2Service.getImage(userContext, instance.imageId) : null
 
             Map<String, List<TextLink>> linkGroupingsToListsOfTextLinks = [:]
-            String baseServer = instance?.hostname
-            if (baseServer) {
-                Map<String, List<TextLinkTemplate>> groupingsToLinkTemplateLists =
-                        configService.instanceLinkGroupingsToLinkTemplateLists
-                groupingsToLinkTemplateLists.each { String grouping, List<TextLinkTemplate> linkTemplates ->
-                    List<TextLink> textLinks = linkTemplates.collect { it.makeLinkForServer(baseServer) }
-                    linkGroupingsToListsOfTextLinks[grouping] = textLinks
-                }
-            }
+            baseServer = instance?.hostname
+            
+        }
 
             Map details = [
                     appName: appName,
                     discInstance: appInst,
-                   // healthCheck: healthCheck,  // TODO: do this in JavaScript on the page?
+                    healthCheck: healthCheck, 
                     baseServer: baseServer,
                     instance: instance,
-                    linkGroupingsToListsOfTextLinks: linkGroupingsToListsOfTextLinks,
                     //securityGroups: instance?.securityGroups?.sort(),
-                   // image: image,
-                    //cluster: clusterName,
-                   // group: group,
-                    //loadBalancers: loadBalancers
+                     image: image,
             ]
             withFormat {
                 html { return details }
@@ -210,7 +199,7 @@ class InstanceController {
         List<String> instanceIds = Requests.ensureList(params.selectedInstances ?: params.instanceId)
         ec2Service.terminateInstances(userContext, instanceIds)
         flash.message = "Terminated ${instanceIds.size()} instance${instanceIds.size() == 1 ? '' : 's'}: ${instanceIds}"
-        chooseRedirect(params.autoScalingGroupName, instanceIds, params.appNames)
+        redirect (action: 'list')
     }
 
     def terminateAndShrinkGroup = {
@@ -350,7 +339,7 @@ class InstanceController {
     def takeOutOfService = {
         UserContext userContext = UserContext.of(request)
         String autoScalingGroupName = params.autoScalingGroupName
-        List<String> instanceIds = Requests.ensureList(params.instanceId)
+        List<String> instanceIds = Requests.ensureList(params.providerId)
         discoveryService.disableAppInstances(userContext, params.appName, instanceIds)
         flash.message = "Instances of app '${params.appName}' taken out of service in discovery: '${instanceIds}'"
         chooseRedirect(autoScalingGroupName, instanceIds)
@@ -359,7 +348,7 @@ class InstanceController {
     def putInService = {
         UserContext userContext = UserContext.of(request)
         String autoScalingGroupName = params.autoScalingGroupName
-        List<String> instanceIds = Requests.ensureList(params.instanceId)
+        List<String> instanceIds = Requests.ensureList(params.providerId)
         discoveryService.enableAppInstances(userContext, params.appName, instanceIds)
         flash.message = "Instances of app '${params.appName}' put in service in discovery: '${instanceIds}'"
         chooseRedirect(autoScalingGroupName, instanceIds)

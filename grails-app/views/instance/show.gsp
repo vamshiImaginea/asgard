@@ -30,6 +30,7 @@
     <g:if test="${instance}">
       <g:form class="validate">
         <input type="hidden" name="instanceId" value="${instance.id}"/>
+        <input type="hidden" name="providerId" value="${instance.providerId}"/>
         <g:if test="${group?.desiredCapacity}">
           <div class="buttons">
             <h3>ASG Decrement:</h3>
@@ -145,12 +146,12 @@
           </tr>
           <tr class="prop">
             <td class="name">Private DNS/IP:</td>
-            <td class="value">${instance.privateAddresses}</td>
+             <td class="value">${instance.privateAddresses}</td>
           </tr>
           <tr class="prop">
             <td class="name">Image:</td>
             <td class="value">
-              <g:linkObject type="image" name="${java.net.URLEncoder.encode(instance.imageId,'UTF-8')}">${instance.imageId}</g:linkObject>${image ? ' | ' + image.architecture + ' | ' + image.imageLocation : ''}
+              <g:linkObject type="image" name="${java.net.URLEncoder.encode(instance.imageId,'UTF-8')}">${instance.imageId}</g:linkObject>${image ? ' | ' + image.operatingSystem + ' | ' + image.location : ''}
             </td>
           </tr>
           <tr class="prop">

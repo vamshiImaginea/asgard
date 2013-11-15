@@ -91,10 +91,10 @@
   </div>
   <g:if test="${!pageProperty(name: 'meta.hideNav')}">
    <ul class="nav">
-     <li class="menuButton"><a class="home" href="${resource(dir: '/')}">Home</a></li><%--
+     <li class="menuButton"><a class="home" href="${resource(dir: '/')}">Home</a></li>
      <li class="menuButton">
-       <g:link class="applications" controller="application" action="list">App</g:link>
-       <ul>
+       <g:link class="applications" controller="application" action="list">Applications</g:link>
+     <%--  <ul>
          --%><%--<li class="menuButton"><g:link class="applications" controller="application" action="list">Applications</g:link></li>
          <li class="menuButton"><g:link class="stacks" controller="stack" action="list">Stacks</g:link></li>
          <li class="menuButton"><g:link class="users" controller="application" action="owner">Owners</g:link></li>

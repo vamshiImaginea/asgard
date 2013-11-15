@@ -15,26 +15,19 @@
  */
 package com.netflix.asgard
 
-import com.sun.org.apache.xpath.internal.operations.String;
-
 class HomeController {
 
-	// Warm caches in service classes when home page is invoked.
-	def configService
-	def discoveryService
-	static allowedMethods = [selectService: 'GET']
-	def index = {
-		Region region = request.region
-		String discoveryBaseApiUrl = discoveryService.findCanonicalBaseApiUrl(region)
-		[
-			'externalLinks' : configService.getExternalLinks(),
-			'discoveryUrl': discoveryService.findCanonicalBaseUrl(region),
-			'discoveryApiUrl': discoveryBaseApiUrl ? "${discoveryBaseApiUrl}/apps" : null
-		]
-		if(params.get('cloudService')!=null)
-			render(view: 'index', model: [params: cmd])    }
+    // Warm caches in service classes when home page is invoked.
+    def configService
+    def discoveryService
 
-	def selectService = {
-		redirect(controller: 'init',params:[cloudService:params.get('cloudService')])
-	}
+    def index = {
+        Region region = request.region
+        String discoveryBaseApiUrl = discoveryService.findCanonicalBaseApiUrl(region)
+        [
+                externalLinks: configService.getExternalLinks(),
+                discoveryUrl: discoveryService.findCanonicalBaseUrl(region),
+                discoveryApiUrl: discoveryBaseApiUrl ? "${discoveryBaseApiUrl}/apps" : null,
+        ]
+    }
 }

@@ -17,7 +17,6 @@ package com.netflix.asgard
 
 import java.util.Iterator;
 
-import com.amazonaws.services.ec2.model.InstanceType
 import com.google.common.collect.ArrayTable
 import com.google.common.collect.Table
 import com.netflix.asgard.cache.CacheInitializer
@@ -33,6 +32,7 @@ import org.codehaus.groovy.grails.web.json.JSONArray
 import org.codehaus.groovy.grails.web.json.JSONElement
 import org.jclouds.compute.domain.Hardware
 import org.jclouds.compute.domain.internal.HardwareImpl;
+import org.jclouds.ec2.domain.InstanceType
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.Node
@@ -241,10 +241,10 @@ class InstanceTypeService implements CacheInitializer {
         Map<JsonTypeSizeCombo, InstanceType> typeSizeCodesToInstanceTypes = [:]
 
         // Reservation json compound code names
-        typeSizeCodesToInstanceTypes.put(new JsonTypeSizeCombo('stdResI', 'sm'), InstanceType.M1Small)
-        typeSizeCodesToInstanceTypes.put(new JsonTypeSizeCombo('stdResI', 'lg'), InstanceType.M1Large)
-        typeSizeCodesToInstanceTypes.put(new JsonTypeSizeCombo('stdResI', 'xl'), InstanceType.M1Xlarge)
-        // Double-check and uncomment second generation M3 instance types when InstanceType enum is ready for them
+        typeSizeCodesToInstanceTypes.put(new JsonTypeSizeCombo('stdResI', 'sm'), InstanceType.M1_SMALL)
+        typeSizeCodesToInstanceTypes.put(new JsonTypeSizeCombo('stdResI', 'lg'), InstanceType.M1_XLARGE)
+        typeSizeCodesToInstanceTypes.put(new JsonTypeSizeCombo('stdResI', 'xl'), InstanceType.M1_LARGE)
+      /*  // Double-check and uncomment second generation M3 instance types when InstanceType enum is ready for them
         // typeSizeCodesToInstanceTypes.put(new JsonTypeSizeCombo('secgenstdResI', 'xl'), InstanceType.M3Xlarge)
         // typeSizeCodesToInstanceTypes.put(new JsonTypeSizeCombo('secgenstdResI', 'xxl'), InstanceType.M32xlarge)
         typeSizeCodesToInstanceTypes.put(new JsonTypeSizeCombo('uResI', 'u'), InstanceType.T1Micro)
@@ -286,12 +286,8 @@ class InstanceTypeService implements CacheInitializer {
         typeSizeCodesToInstanceTypes.put(new JsonTypeSizeCombo('hiMemSpot', 'xxl'), InstanceType.M22xlarge)
         typeSizeCodesToInstanceTypes.put(new JsonTypeSizeCombo('hiMemSpot', 'xxxxl'), InstanceType.M24xlarge)
         typeSizeCodesToInstanceTypes.put(new JsonTypeSizeCombo('hiCPUSpot', 'med'), InstanceType.C1Medium)
-        typeSizeCodesToInstanceTypes.put(new JsonTypeSizeCombo('hiCPUSpot', 'xl'), InstanceType.C1Xlarge)
+        typeSizeCodesToInstanceTypes.put(new JsonTypeSizeCombo('hiCPUSpot', 'xl'), InstanceType.C1Xlarge)*/
 
-        // On demand and spot share these identifiers
-        typeSizeCodesToInstanceTypes.put(new JsonTypeSizeCombo('clusterComputeI', 'xxxxl'), InstanceType.Cc14xlarge)
-        typeSizeCodesToInstanceTypes.put(new JsonTypeSizeCombo('clusterComputeI', 'xxxxxxxxl'), InstanceType.Cc28xlarge)
-        typeSizeCodesToInstanceTypes.put(new JsonTypeSizeCombo('clusterGPUI', 'xxxxl'), InstanceType.Cg14xlarge)
 
         return typeSizeCodesToInstanceTypes.asImmutable()
     }
