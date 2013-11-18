@@ -257,13 +257,13 @@ class ApplicationController {
 		String name = params.name
 		String securityGroupId = params.securityGroupId
 		UserContext userContext = UserContext.of(request)
-		AppRegistration app = applicationService.getRegisteredApplication(userContext, name)
+		Application app = applicationService.getRegisteredApplication(userContext, name)
 		if (!app) {
 			flash.message = "Application '${name}' not found."
 			redirect(action: 'list')
 			return
 		}
-		SecurityGroup group = ec2Service.getSecurityGroup(userContext, securityGroupId)
+		SecurityGroup group = ec2Service.getSecurityGroup(userContext, name)
 		if (!group) {
 			flash.message = "Could not retrieve or create Security Group '${name}'"
 			redirect(action: 'list')
@@ -290,10 +290,10 @@ class ApplicationController {
 
 	private void updateSecurityEgress(UserContext userContext, SecurityGroup srcGroup, List<String> selectedGroups,
 			Map portMap) {
-		awsEc2Service.getSecurityGroups(userContext).each { SecurityGroup targetGroup ->
-			boolean wantAccess = selectedGroups.any { it == targetGroup.groupName } &&
-			portMap[targetGroup.groupName] != ''
-			String wantPorts = wantAccess ? portMap[targetGroup.groupName] : null
+		  ec2Service.getSecurityGroups(userContext).each { SecurityGroup targetGroup ->
+			boolean wantAccess = selectedGroups.any { it == targetGroup.name } &&
+			portMap[targetGroup.name] != ''
+			String wantPorts = wantAccess ? portMap[targetGroup.name] : null
 			List<IpPermission> wantPerms = ec2Service.permissionsFromString(wantPorts)
 			ec2Service.updateSecurityGroupPermissions(userContext, targetGroup, srcGroup, wantPerms)
 		}

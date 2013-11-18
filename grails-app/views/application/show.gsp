@@ -33,7 +33,7 @@
         <input type="hidden" name="name" value="${name}"/>
         <g:buttonSubmit class="delete" data-warning="Really delete application '${name}'?" action="delete" value="Delete Application"/>
         <g:if test="${appSecurityGroup}">
-          <input type="hidden" name="securityGroupId" value="${appSecurityGroup.groupId}"/>
+          <input type="hidden" name="securityGroupId" value="${appSecurityGroup.id}"/>
           <g:buttonSubmit class="securityEdit" action="security">Edit Application Security Access</g:buttonSubmit>
         </g:if>
         <g:else>
@@ -109,7 +109,7 @@
             <table>
               <g:each var="s" in="${securities}">
                 <tr>
-                  <td><g:linkObject type="security" name="${s.groupId}">${s.groupName}</g:linkObject></td>
+                  <td><g:linkObject type="security" name="${s.id}">${s.groupName}</g:linkObject></td>
                 </tr>
               </g:each>
             </table>

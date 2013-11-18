@@ -24,14 +24,15 @@ class HomeController {
 
     def index = {
         Region region = request.region
+		if(params.get('cloudService')!=null)
+		render(view: 'index', model: [params: cmd])
         String discoveryBaseApiUrl = discoveryService.findCanonicalBaseApiUrl(region)
         [
                 externalLinks: configService.getExternalLinks(),
                 discoveryUrl: discoveryService.findCanonicalBaseUrl(region),
                 discoveryApiUrl: discoveryBaseApiUrl ? "${discoveryBaseApiUrl}/apps" : null,
         ]
-        if(params.get('cloudService')!=null)
-        render(view: 'index', model: [params: cmd])    
+      
     }
     
 	def selectService = {
