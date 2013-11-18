@@ -48,13 +48,13 @@
         <g:each var="app" in="${applications}" status="i">
           <tr class="${(i % 2) == 0 ? 'odd' : 'even'}">
             <td class="app"><g:link class="application" controller="application" action="show" id="${app.key}"/>${app.key}</td>
-            <td><g:link class="instance" controller="instance" action="list" id="${app.key}">${instanceCountsPerAppName.getCount(app.key)}</g:link></td><%--
-            <td class="description">${app.description}</td>
-            <td class="email">${app.email}</td>
-            <td class="owner">${app.owner}</td>
-            <td><g:formatDate date="${app.createTime}"/></td>
-            <td><g:formatDate date="${app.updateTime}"/></td>
-          --%></tr>
+            <td><g:link class="instance" controller="instance" action="list" id="${app.key}">${instanceCountsPerAppName.getCount(app.key)}</g:link></td>
+            <td class="description">${app.value.description}</td>
+            <td class="email">${app.value.email}</td>
+            <td class="owner">${app.value.owner}</td>
+            <td><g:formatDate date="${app.value.createTime}"/></td>
+            <td><g:formatDate date="${app.value.updateTime}"/></td>
+          </tr>
         </g:each>
         </tbody>
       </table>

@@ -39,7 +39,6 @@ class AppRegistration {
     Date createTime
     Date updateTime
     Map<String, String> additionalAttributes
-    Collection<NodeMetadata> instances
 	
 
     static AppRegistration from(Item item) {

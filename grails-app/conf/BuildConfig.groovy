@@ -145,7 +145,8 @@ grails.project.dependency.resolution = {
                 //Jclouds dependencies
 		'org.jclouds:jclouds-all:1.6.0',
 		'org.jclouds.driver:jclouds-log4j:1.5.4',
-                'org.jclouds.driver:jclouds-jsch:1.5.4'
+                'org.jclouds.driver:jclouds-jsch:1.5.4',
+				 'org.xerial:sqlite-jdbc:3.6.17'
 	        		
 
         ) { // Exclude superfluous and dangerous transitive dependencies

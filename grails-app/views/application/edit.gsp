@@ -34,20 +34,20 @@
       </div>
     </g:hasErrors>
     <g:form method="post">
-      <input type="hidden" id="name" name="name" value="${app.name}"/>
+      <input type="hidden" id="name" name="name" value="${app.applicationName}"/>
       <div class="dialog">
         <table>
           <tbody>
           <tr class="prop">
             <td class="name">Name:</td>
-            <td class="value">${app.name}</td>
+            <td class="value">${app.applicationName}</td>
           </tr>
           <tr class="prop">
             <td class="name">
               <label for="group">App Group:</label>
             </td>
             <td class="value">
-              <input type="text" id="group" name="group" value="${app.group}"/>
+              <input type="text" id="group" name="group" value="${app.groupName}"/>
             </td>
           </tr>
           <tr class="prop">
@@ -86,7 +86,7 @@
               <label for="email">Email:</label>
             </td>
             <td class="value">
-              <input type="email" id="email" name="email" value="${app.email}"/>
+              <input type="email" id="email" name="email" value="${app.ownerEmail}"/>
             </td>
           </tr>
           <tr class="prop">
@@ -96,7 +96,7 @@
             <td class="value">
               <select id="monitorBucketType" name="monitorBucketType">
                 <g:each var="bucketType" in="${MonitorBucketType.values()}">
-                  <option ${app.monitorBucketType?.name() == bucketType.name() ? 'selected' : ''} value="${bucketType.name()}">${bucketType.description}</option>
+                  <option ${app.monitorBucketType == bucketType.name() ? 'selected' : ''} value="${bucketType.name()}">${bucketType.description}</option>
                 </g:each>
               </select>
             </td>

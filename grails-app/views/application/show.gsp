@@ -29,7 +29,7 @@
     </g:if>
     <div class="buttons">
       <g:form>
-        <g:link class="edit" action="edit" params="[id:app.name]">Edit Application</g:link>
+        <g:link class="edit" action="edit" params="[id:name]">Edit Application</g:link>
         <input type="hidden" name="name" value="${name}"/>
         <g:buttonSubmit class="delete" data-warning="Really delete application '${name}'?" action="delete" value="Delete Application"/>
         <g:if test="${appSecurityGroup}">
@@ -55,26 +55,26 @@
         <tr class="prop">
           <td class="name">App Group:</td>
           <td class="value">${name}</td>
-        </tr><%--
+        </tr>
         <tr class="prop">
           <td class="name">Type:</td>
-          <td class="value">${app.type}</td>
+          <td class="value">${application.type}</td>
         </tr>
         <tr class="prop">
           <td class="name">Description:</td>
-          <td class="value">${app.description}</td>
+          <td class="value">${application.description}</td>
         </tr>
         <tr class="prop">
           <td class="name">Owner:</td>
-          <td class="value">${app.owner}</td>
+          <td class="value">${application.owner}</td>
         </tr>
         <tr class="prop">
           <td class="name">Email:</td>
-          <td class="value">${app.email}</td>
+          <td class="value">${application.ownerEmail}</td>
         </tr>
         <tr class="prop">
           <td class="name">Monitor Bucket Type:</td>
-          <td class="value">${app.monitorBucketType.description}</td>
+          <td class="value">${application.monitorBucketType}</td>
         </tr>
         <g:if test="${isChaosMonkeyActive}">
           <tr class="prop">
@@ -82,15 +82,15 @@
             <td class="value"><a class="cloudready" href="${chaosMonkeyEditLink}">Edit in Cloudready</a></td>
           </tr>
         </g:if>
-        --%><%--<tr class="prop">
+       <tr class="prop">
           <td class="name">Create Time:</td>
-          <td class="value"><g:formatDate date="${app.createTime}"/></td>
+          <td class="value"><g:formatDate date="${ new Date(Long.parseLong(application.createdTime))}"/></td>
         </tr>
         <tr class="prop">
           <td class="name">Update Time:</td>
-          <td class="value"><g:formatDate date="${app.updateTime}"/></td>
+          <td class="value"><g:formatDate date="${ new Date(Long.parseLong(application.updatedTime))}"/></td>
         </tr>
-        --%><g:if test="${alertingServiceConfigUrl}">
+        <g:if test="${alertingServiceConfigUrl}">
           <tr class="prop">
             <td class="name">
               <a target="_blank" href="${alertingServiceConfigUrl}">Click here to configure alerts</a>

@@ -30,6 +30,7 @@ class SecurityController {
 
     def ec2Service
     def configService
+	def applicationService
 
     def static allowedMethods = [save: 'POST', update: 'POST', delete: 'POST']
 
@@ -89,7 +90,13 @@ class SecurityController {
         UserContext userContext = UserContext.of(request)
         String name = params.id ?: params.name
         String description = ''
-        List<String> applications = []
+       List<AppRegistration> applications = []
+        if (name) {
+            AppRegistration app = applicationService.getRegisteredApplication(userContext, name)
+            description = app?.description
+        } else {
+            applications = applicationService.getRegisteredApplications(userContext)
+        }
         [
             applications: applications,
             //vpcIds: awsEc2Service.getVpcs(userContext)*.vpcId,

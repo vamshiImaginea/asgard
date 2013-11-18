@@ -17,6 +17,7 @@ package com.netflix.asgard
 
 import java.util.Iterator;
 
+import com.amazonaws.services.ec2.model.InstanceType
 import com.google.common.collect.ArrayTable
 import com.google.common.collect.Table
 import com.netflix.asgard.cache.CacheInitializer
@@ -32,7 +33,6 @@ import org.codehaus.groovy.grails.web.json.JSONArray
 import org.codehaus.groovy.grails.web.json.JSONElement
 import org.jclouds.compute.domain.Hardware
 import org.jclouds.compute.domain.internal.HardwareImpl;
-import org.jclouds.ec2.domain.InstanceType
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.Node
@@ -59,17 +59,10 @@ class InstanceTypeService implements CacheInitializer {
 
     void initializeCaches() {
         // Use one thread for all these data sources. None of these need updating more than once an hour.
-		caches.allOnDemandPrices.ensureSetUp({ retrieveInstanceTypeOnDemandPricing() })
-		caches.allReservedPrices.ensureSetUp({ retrieveInstanceTypeReservedPricing() })
-		caches.allSpotPrices.ensureSetUp({ retrieveInstanceTypeSpotPricing() })
+		
 		caches.allInstanceTypes.ensureSetUp({ Region region -> 	
 			buildInstanceTypes(region) })
-		caches.allHardwareProfiles.ensureSetUp({ retrieveHardwareProfiles() }, {
-			caches.allOnDemandPrices.fill()
-			caches.allReservedPrices.fill()
-			caches.allSpotPrices.fill()
-			caches.allInstanceTypes.fill()
-        })
+	
     }
 
     /** Costs less, can take longer to start, can terminate sooner */
@@ -240,10 +233,10 @@ class InstanceTypeService implements CacheInitializer {
 
         Map<JsonTypeSizeCombo, InstanceType> typeSizeCodesToInstanceTypes = [:]
 
-        // Reservation json compound code names
+       /* // Reservation json compound code names
         typeSizeCodesToInstanceTypes.put(new JsonTypeSizeCombo('stdResI', 'sm'), InstanceType.M1_SMALL)
         typeSizeCodesToInstanceTypes.put(new JsonTypeSizeCombo('stdResI', 'lg'), InstanceType.M1_XLARGE)
-        typeSizeCodesToInstanceTypes.put(new JsonTypeSizeCombo('stdResI', 'xl'), InstanceType.M1_LARGE)
+        typeSizeCodesToInstanceTypes.put(new JsonTypeSizeCombo('stdResI', 'xl'), InstanceType.M1_LARGE)*/
       /*  // Double-check and uncomment second generation M3 instance types when InstanceType enum is ready for them
         // typeSizeCodesToInstanceTypes.put(new JsonTypeSizeCombo('secgenstdResI', 'xl'), InstanceType.M3Xlarge)
         // typeSizeCodesToInstanceTypes.put(new JsonTypeSizeCombo('secgenstdResI', 'xxl'), InstanceType.M32xlarge)

@@ -334,7 +334,7 @@ class Ec2Service implements CacheInitializer, InitializingBean {
 		configService.getCloudProvider() ==Provider.AWS ? configService.defaultKeyName : configService.defaultKeyName
 	}
 
-	Collection<SecurityGroup> getSecurityGroups(UserContext userContext) {
+	Set<SecurityGroup> getSecurityGroups(UserContext userContext) {
 		log.info 'Retriving Security Groups for ' + userContext.region
 		retrieveSecurityGroups(userContext.region)
 	}
@@ -361,8 +361,8 @@ class Ec2Service implements CacheInitializer, InitializingBean {
 		securityGroups
 	}
 
-	List<SecurityGroup> getSecurityGroupsForApp(UserContext userContext, String appName) {
-		def pat = ~"^${appName.toLowerCase()}(-frontend)?\$"
+	Set<SecurityGroup> getSecurityGroupsForApp(UserContext userContext, String appName) {
+		String pat = ~"^${appName.toLowerCase()}(-frontend)?\$"
 		getSecurityGroups(userContext).findAll { it.name ==~ pat }
 	}
 

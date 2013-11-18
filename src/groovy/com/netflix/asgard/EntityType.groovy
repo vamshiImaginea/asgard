@@ -71,6 +71,7 @@ import com.netflix.asgard.push.Cluster
     static final EntityType<ActivityTypeInfo> activityType = create('Activity Type',
             { "${it.activityType.name}-${it.activityType.version}" as String })
     static final EntityType<MetricAlarm> alarm = create('Metric Alarm', { it.alarmName })
+	static final EntityType<Application> application = create('Application', { it.applicationName })	
     static final EntityType<ApplicationInstance> applicationInstance = create('App Instance', { it.hostName })
     static final EntityType<MetricId> metric = create('Metric', { it.displayText })
     static final EntityType<AutoScalingGroup> autoScaling = create('Auto Scaling Group',
