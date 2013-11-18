@@ -20,6 +20,7 @@ class HomeController {
     // Warm caches in service classes when home page is invoked.
     def configService
     def discoveryService
+	static allowedMethods = [selectService: 'GET']
 
     def index = {
         Region region = request.region
@@ -29,5 +30,11 @@ class HomeController {
                 discoveryUrl: discoveryService.findCanonicalBaseUrl(region),
                 discoveryApiUrl: discoveryBaseApiUrl ? "${discoveryBaseApiUrl}/apps" : null,
         ]
+        if(params.get('cloudService')!=null)
+        render(view: 'index', model: [params: cmd])    
     }
+    
+	def selectService = {
+    		redirect(controller: 'init',params:[cloudService:params.get('cloudService')])
+    	}
 }
