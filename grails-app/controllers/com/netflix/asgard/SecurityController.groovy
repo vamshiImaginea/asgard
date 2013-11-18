@@ -90,9 +90,9 @@ class SecurityController {
         UserContext userContext = UserContext.of(request)
         String name = params.id ?: params.name
         String description = ''
-       List<AppRegistration> applications = []
+       List<Application> applications = []
         if (name) {
-            AppRegistration app = applicationService.getRegisteredApplication(userContext, name)
+            Application app = applicationService.getRegisteredApplication(userContext, name)
             description = app?.description
         } else {
             applications = applicationService.getRegisteredApplications(userContext)

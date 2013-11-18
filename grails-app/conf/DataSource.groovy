@@ -53,7 +53,7 @@ environments {
 			dbCreate="update"
 			url="jdbc:sqlite:/${System.getProperty('user.home')}/dev.sqlite3"
 			logSql="true"
-			dialect="dialect.SQLiteDialect"
+			dialect="org.hibernate.dialect.SQLiteDialect"
 			driverClassName="org.sqlite.JDBC"
 		}
 	}
