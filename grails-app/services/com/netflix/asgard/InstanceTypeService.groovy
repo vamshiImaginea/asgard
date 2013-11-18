@@ -59,8 +59,7 @@ class InstanceTypeService implements CacheInitializer {
 
     void initializeCaches() {
         // Use one thread for all these data sources. None of these need updating more than once an hour.
-		
-		caches.allInstanceTypes.ensureSetUp({ Region region -> 	
+			caches.allInstanceTypes.ensureSetUp({ Region region -> 	
 			buildInstanceTypes(region) })
 	
     }
@@ -82,7 +81,12 @@ class InstanceTypeService implements CacheInitializer {
     }
 
     Collection<InstanceTypeData> getInstanceTypes(UserContext userContext) {
-		   caches.allInstanceTypes.by(userContext.region).list();
+		Collection<InstanceTypeData> instanceTypes = new ArrayList<InstanceTypeData>()
+		Collection<Hardware> hardwareProfiles = ec2Service.computeServiceClientByRegion.by(userContext.region).listHardwareProfiles() 
+		hardwareProfiles.each {
+			it -> instanceTypes.add(new InstanceTypeData(hardware:it))
+		}
+		instanceTypes
     }
 
     private JSONElement fetchPricingJsonData(InstancePriceType instancePriceType) {

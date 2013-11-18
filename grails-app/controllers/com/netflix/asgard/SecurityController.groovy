@@ -66,18 +66,15 @@ class SecurityController {
        /* group.ipPermissions.sort { it.userIdGroupPairs ? it.userIdGroupPairs[0].groupName : String.valueOf(it.fromPort) }
         group.ipPermissions.each { it.userIdGroupPairs.sort { it.groupName } }*/
 
-      /*  List<LaunchConfiguration> launchConfigs = awsAutoScalingService.getLaunchConfigurationsForSecurityGroup(
-                userContext, group)
-        Collection<Instance> instances = awsEc2Service.getInstancesWithSecurityGroup(userContext, group)
-        List<LoadBalancerDescription> lbs = awsLoadBalancerService.getLoadBalancersWithSecurityGroup(userContext, group)*/
-
+     
+/*        Collection<Instance> instances = ec2Service.getInstancesWithSecurityGroup(userContext, group)
+*/
         def details = [
                 group: group,
                 accountNames: configService.awsAccountNames,
-                editable: ec2Service.isSecurityGroupEditable(group.name),
-               /* launchConfigs: launchConfigs,
-                instances: instances,
-                elbs: lbs*/
+                editable: ec2Service.isSecurityGroupEditable(group.name)          
+              /*  instances: instances,*/
+              
         ]
         withFormat {
             html { return details }
