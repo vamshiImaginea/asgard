@@ -24,7 +24,7 @@ class HomeController {
 
     def index = {
         Region region = request.region
-		if(params.get('cloudService')!=null)
+		if(params.get('cloudProvider')!=null)
 		render(view: 'index', model: [params: cmd])
         String discoveryBaseApiUrl = discoveryService.findCanonicalBaseApiUrl(region)
         [
@@ -36,6 +36,6 @@ class HomeController {
     }
     
 	def selectService = {
-    		redirect(controller: 'init',params:[cloudService:params.get('cloudService')])
+    		redirect(controller: 'init',params:[cloudProvider:params.get('cloudProvider')])
     	}
 }

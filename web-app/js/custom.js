@@ -70,22 +70,21 @@ jQuery.extend({
     }
 });
 function showCloudConfig() {
+    window.location = '/home/selectService?cloudProvider='+jQuery("#cloudProvider").val();
 	
-	if (jQuery("#cloudServiceType").val() == 'aws') {
-		document.getElementById("aws").style.display = 'block';
-		document.getElementById("openStack").style.display = 'none';
-
-	} else {
-		document.getElementById("aws").style.display = 'none';
-		document.getElementById("openStack").style.display = 'block';
-
 	}
-}
 
 jQuery(document).ready(function() {
 	
-	if(jQuery("#cloudServiceType").val()){
-	showCloudConfig()
+	if(jQuery("#cloudProvider").val()){
+		document.getElementById("openStack").style.display = 'none';
+		document.getElementById("aws").style.display = 'none';
+		if (jQuery("#cloudProvider").val() == 'openstack') {
+			document.getElementById("openStack").style.display = '';
+		
+		} else if (jQuery("#cloudProvider").val() == 'aws'){
+			document.getElementById("aws").style.display = '';
+		}
 	}
 	
     /**
@@ -649,11 +648,8 @@ ady
             window.location = url;
         });
         
-        jQuery('#cloudService').change(function() {
-           
-            var cloudService = this.value;
-            url = '/home/selectService?cloudService='+cloudService;
-            window.location = url;
+        jQuery('#cloudProviderId').change(function() {  
+            window.location = '/home/selectService?cloudProvider='+this.value;
         });
 
         jQuery('.countAndList').each(function() {

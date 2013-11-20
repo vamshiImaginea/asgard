@@ -34,8 +34,7 @@ class InitController {
 	static allowedMethods = [save: 'POST',show: 'GET']
 
 
-	def index = {
-		InitializeCommand cmd ->
+	def index = { InitializeCommand cmd ->
 		[asgardHome: configService.asgardHome]
 		File asgardHomeDir = new File(configService.asgardHome)
 		asgardHomeDir.mkdirs()
@@ -47,24 +46,14 @@ class InitController {
 		if(!configFile.exists()) {
 			return
 		}
+		String cloudProvider = params.get('cloudProvider')
 
-
-		if(params.get('cloudService')) {
-			def config = new ConfigSlurper().parse(configFile.toURL())
-			if(null != config.secret && config.secret.size() > 0){
-				cmd.accessId = config.secret.accessId
-				cmd.secretKey = config.secret.secretKey
-				cmd.accountNumber = config.secret.accountNumber
-			}
-			if(null != config.openstack && config.openstack.size() > 0){
-				cmd.openStackUrl = config.openstack.endpoint
-				cmd.openStackPassword = config.openstack.passwd
-				cmd.openStackUsername = config.openstack.username
-				if(config.openstack.tenantId){
-					cmd.openstackTenantId = config.openstack.tenantId
-				}
-			}
-
+		if(cloudProvider) {
+			cmd.userName = configService.getUserName(cloudProvider)
+			cmd.apiKey =  configService.getApiKey(cloudProvider)
+			cmd.endPoint = configService.getEndPoint(cloudProvider)
+			cmd.accountNo = configService.getAccount(cloudProvider)
+			cmd.cloudProvider = cloudProvider
 			render(view: 'index', model: [params: cmd])
 		}
 	}
@@ -94,65 +83,41 @@ class InitController {
 }
 
 class InitializeCommand {
-	String accessId
-	String secretKey
+	String userName
+	String apiKey
 	String accountNumber
-	String openStackUrl
-	String openStackUsername
-	String openStackPassword
-	String cloudService
-	String openstackTenantId
+	String endPoint
+	String cloudProvider
+	String accountNo
 	boolean showPublicAmazonImages
-	static constraints = {
-
-		 accessId(nullable: true, blank: true, matches: /[A-Z0-9]{20}/)
-		 secretKey(nullable: true, blank: true, matches: /[A-Za-z0-9\+\/]{40}/)
-		 accountNumber(nullable: true, blank: true, matches: /\d{4}-?\d{4}-?\d{4}/)
-
-	}
+	/*static constraints = {
+	 userName(nullable: false)
+	 apiKey(nullable: false)
+	 }*/
 
 	ConfigObject toConfigObject() {
 		ConfigObject rootConfig = new ConfigObject()
 		ConfigObject grailsConfig = new ConfigObject()
 		rootConfig['grails'] = grailsConfig
-		ConfigObject secretConfig = new ConfigObject()
-		if (cloudService.equals("aws")) {
-			if(!accessId || !accountNumber || !secretKey) {
-				throw new Exception("AWS Amazon Credentials are not provided")
-			}
-			String accountNumber = accountNumber.replace('-','')
-			grailsConfig['awsAccounts'] =  [accountNumber]
-			grailsConfig['awsAccountNames'] = [(accountNumber): 'prod']
-			grailsConfig['currentActiveService'] = cloudService
-
-			rootConfig['secret'] = secretConfig
-			secretConfig['accessId'] = accessId.trim()
-			secretConfig['secretKey'] = secretKey.trim()
-			secretConfig['accountNumber'] = accountNumber
-			ConfigObject cloudConfig = new ConfigObject()
-			rootConfig['cloud'] = cloudConfig
-			cloudConfig['accountName'] = 'prod'
-			cloudConfig['publicResourceAccounts'] = showPublicAmazonImages ? ['amazon'] : []
-			rootConfig
-		}else {
-			if(!openStackUrl || !openStackUsername || !openStackPassword || !openstackTenantId) {
-				throw new Exception("OpenStack Credentials are not provided")
-			}
-
-			rootConfig['openstack'] = secretConfig
-			secretConfig['passwd'] = openStackPassword.trim()
-			secretConfig['username'] = openStackUsername.trim()
-			secretConfig['endpoint'] = openStackUrl.trim()
-			secretConfig['teneatId'] = openstackTenantId.trim()
-			grailsConfig['currentActiveService'] = cloudService
-			ConfigObject cloudConfig = new ConfigObject()
-			rootConfig['cloud'] = cloudConfig
-			cloudConfig['accountName'] = 'prod'
-			rootConfig
+		if(!userName || !apiKey) {
+			throw new Exception("Cloud Credentials are not provided")
 		}
+		ConfigObject cloud = new ConfigObject()
+		String accountNumber = accountNo.replace('-','')
+		cloud['userName'] = userName.trim()
+		cloud['apiKey'] = apiKey.trim()
+		cloud['accountNumber'] = accountNumber
 
-
-
-
+		if (cloudProvider.equals("aws")) {
+			if( !accountNo ) {
+				throw new Exception("AWS Amazon Account No  not provided")
+			}
+			cloud['publicResourceAccounts'] = showPublicAmazonImages ? ['amazon']: []
+		}else if(cloudProvider.equals("openstack") ) {
+			cloud['endpoint'] = endPoint.trim()
+		}
+		rootConfig[cloudProvider] = cloud
+		grailsConfig['currentActiveService'] = cloudProvider
+		rootConfig
 	}
 }

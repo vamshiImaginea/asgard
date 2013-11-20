@@ -63,15 +63,12 @@ class SecurityController {
             Requests.renderNotFound('Security Group', name, this)
             return
         }
-       /* group.ipPermissions.sort { it.userIdGroupPairs ? it.userIdGroupPairs[0].groupName : String.valueOf(it.fromPort) }
-        group.ipPermissions.each { it.userIdGroupPairs.sort { it.groupName } }*/
-
-     
-/*        Collection<Instance> instances = ec2Service.getInstancesWithSecurityGroup(userContext, group)
-*/
+    /*        Collection<Instance> instances = ec2Service.getInstancesWithSecurityGroup(userContext, group)*/
+		
         def details = [
                 group: group,
-                accountNames: configService.awsAccountNames,
+				app: applicationService.getRegisteredApplication(userContext, group.name),
+                accountNames: configService.accountNames,
                 editable: ec2Service.isSecurityGroupEditable(group.name)          
               /*  instances: instances,*/
               

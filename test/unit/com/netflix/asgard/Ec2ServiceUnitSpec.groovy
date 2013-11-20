@@ -48,7 +48,8 @@ class Ec2ServiceUnitSpec extends Specification {
     CachedMap mockInstanceCache
     CachedMap mockReservationCache
     Ec2Service ec2Service
-	JcloudsComputeService jcloudsComputeService
+	ProviderComputeService providerComputeService
+	ProviderEc2Service providerEc2Service
 
     def setup() {
         userContext = UserContext.auto(Region.US_EAST_1)
@@ -56,7 +57,8 @@ class Ec2ServiceUnitSpec extends Specification {
         mockSecurityGroupCache = Mock(CachedMap)
         mockInstanceCache = Mock(CachedMap)
         mockReservationCache = Mock(CachedMap)
-		jcloudsComputeService = Mock(JcloudsComputeService)
+		providerComputeService = Mock(ProviderComputeService)
+		providerEc2Service = Mock(ProviderEc2Service)
         Caches caches = new Caches(new MockCachedMapBuilder([
                 (EntityType.security): mockSecurityGroupCache,
                 (EntityType.instance): mockInstanceCache,
@@ -68,7 +70,7 @@ class Ec2ServiceUnitSpec extends Specification {
             }
         }
         ec2Service = new Ec2Service(computeServiceClientByRegion: new MultiRegionAwsClient({ computeService }), caches: caches,
-                taskService: taskService, jcloudsComputeService:jcloudsComputeService)
+                taskService: taskService, ProviderComputeServiceFactory:ProviderComputeService,providerEc2Service:providerEc2Service)
     }
 
 
@@ -99,7 +101,7 @@ class Ec2ServiceUnitSpec extends Specification {
         SecurityGroup actualSecurityGroup = ec2Service.getSecurityGroup(userContext, 'super_secure')
         then:
 		actualSecurityGroup == expectedSecurityGroup
-        1 * jcloudsComputeService.getProivderClient(_) >> ec2client
+        1 * jcloudsEc2Service.getProivderClient(_) >> ec2client
 		1 * ec2client.getSecurityGroupServices() >> securityGroupClient
 		1 * securityGroupClient.describeSecurityGroupsInRegion(_,_) >> [expectedSecurityGroup]
       
@@ -126,7 +128,7 @@ ec2Service.accounts =['1']
         ])
 
         then:
-		3 * jcloudsComputeService.getProivderClient(_) >> ec2client
+		3 * jcloudsEc2Service.getProivderClient(_) >> ec2client
 		3 * ec2client.getSecurityGroupServices() >> securityGroupClient
 		1 * securityGroupClient.describeSecurityGroupsInRegion(_,_) >> [source]
 		2 * securityGroupClient.authorizeSecurityGroupIngressInRegion('us-east-1', 'group', _, 1, 1, '')

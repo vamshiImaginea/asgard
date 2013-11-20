@@ -25,8 +25,10 @@ class RegionFilters {
         all(controller: '*', action: '*') {
             before = {
                 // Choose a region based on request parameter, then cookie, then default
-                Region region = Region.withCode(params.region) ?: regionService.withCode(request.getCookie('region')) ?:
+				
+                Region region = regionService.withCode(params.region) ?: regionService.withCode(request.getCookie('region')) ?:
                        regionService.values().size()>0?regionService.values().get(0):Region.defaultRegion()
+				log.info "region : " +region
                 // Store the region in the cookie and in the request
                 response.setCookie('region', region.code, MONTH_IN_SECONDS)
                 request.region = region

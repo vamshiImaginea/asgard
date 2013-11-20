@@ -82,6 +82,7 @@ import com.amazonaws.services.ec2.model.Vpc
 import com.google.common.base.Predicates
 import com.google.common.collect.HashMultiset
 import com.google.common.collect.Lists
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Multiset
 import com.google.common.collect.TreeMultiset
 import com.netflix.asgard.cache.CacheInitializer
@@ -99,7 +100,8 @@ class Ec2Service implements CacheInitializer, InitializingBean {
 	private static Pattern SECURITY_GROUP_ID_PATTERN = ~/sg-[a-f0-9]+/
 
 	MultiRegionAwsClient<ComputeService> computeServiceClientByRegion
-	def jcloudsComputeService
+	def providerComputeService
+	def providerEc2Service
 	Caches caches
 	def configService
 	def restClientService
@@ -115,14 +117,14 @@ class Ec2Service implements CacheInitializer, InitializingBean {
 
 	void afterPropertiesSet() {
 		computeServiceClientByRegion = new MultiRegionAwsClient<ComputeService>({ Region region ->
-			jcloudsComputeService.getComputeServiceForProvider(region)
+			providerComputeService.getComputeServiceForProvider(region)
 		})
 
 		accounts = configService.getAccounts()
 	}
 	void initialiseComputeServiceClients() {
 		computeServiceClientByRegion = new MultiRegionAwsClient<ComputeService>({ Region region ->
-			jcloudsComputeService.getComputeServiceForProvider(region)
+			providerComputeService.getComputeServiceForProvider(region)
 		},regionService)
 
 		accounts = configService.getAccounts()
@@ -130,22 +132,13 @@ class Ec2Service implements CacheInitializer, InitializingBean {
 
 	void initializeCaches() {
 		initialiseComputeServiceClients()
-		//initializeCachesForEachREgion()
 
-	}
-	void initializeCachesForEachREgion(){
-		caches.allKeyPairs.ensureSetUp({ Region region -> retrieveKeys(region) })
-		caches.allAvailabilityZones.ensureSetUp({ Region region -> retrieveAvailabilityZones(region) },{ Region region -> caches.allKeyPairs.by(region).fill() })
-		caches.allImages.ensureSetUp({ Region region -> retrieveImages(region) })
-		caches.allInstances.ensureSetUp({ Region region -> retrieveInstances(region) })
-		caches.allSecurityGroups.ensureSetUp({ Region region -> retrieveSecurityGroups(region) })
-		caches.allSnapshots.ensureSetUp({ Region region -> retrieveSnapshots(region) })
 	}
 
 	// Availability Zones
 
 	private Set<AvailabilityZoneInfo> retrieveAvailabilityZones(Region region) {
-		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(region).getContext());
+		EC2Client ec2Client = providerEc2Service.getProivderClient(computeServiceClientByRegion.by(region).getContext());
 		ec2Client.availabilityZoneAndRegionServices.describeAvailabilityZonesInRegion(region.code);
 		
 	}
@@ -164,14 +157,15 @@ class Ec2Service implements CacheInitializer, InitializingBean {
 	}
 	
 	EC2Client getEC2Client(UserContext context){
-		jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(context.region).getContext());
+		providerEc2Service.getProivderClient(computeServiceClientByRegion.by(context.region).getContext());
 	}
 
 	// Images
 
 	private Set<Image> retrieveImages(Region region) {
 		log.info 'retrieveImages in region '+ region
-		Set<Image>  imagesForRegion= computeServiceClientByRegion.by(region).listImages()
+		ComputeService  computeService = computeServiceClientByRegion.by(region);
+		Set<Image>  imagesForRegion= computeService.listImages()
 		log.info 'imagesForRegion in region '+ imagesForRegion
 		imagesForRegion
 	}
@@ -193,7 +187,7 @@ class Ec2Service implements CacheInitializer, InitializingBean {
 	 */
 	Collection<Image> getImagesWithLaunchPermissions(UserContext userContext, Collection<String> executableUsers,
 			Collection<String> imageIds) {
-		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
+		EC2Client ec2Client = providerEc2Service.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
 		DescribeImagesOptions options = new DescribeImagesOptions().ownedBy(executableUsers.toArray(String[])).imageIds(imageIds);
 		ec2Client.aMIServices.describeImagesInRegion(userContext.region.code, options)
 	}
@@ -247,7 +241,7 @@ class Ec2Service implements CacheInitializer, InitializingBean {
 
 	void deregisterImage(UserContext userContext, String imageId, Task existingTask = null) {
 		String msg = "Deregister image ${imageId}"
-		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
+		EC2Client ec2Client = providerEc2Service.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
 		Closure work = { Task task ->
 			Image image = getImage(userContext, imageId)
 			if (image) {
@@ -260,7 +254,7 @@ class Ec2Service implements CacheInitializer, InitializingBean {
 	//mutators
 
 	void addImageLaunchers(UserContext userContext, String imageId, List<String> userIds, Task existingTask = null) {
-		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
+		EC2Client ec2Client = providerEc2Service.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
 		List<String> defaultUserGrp = new ArrayList<String>();
 		defaultUserGrp.add("all");
 		taskService.runTask(userContext, "Add to image ${imageId}, launchers ${userIds}", { task ->
@@ -270,7 +264,7 @@ class Ec2Service implements CacheInitializer, InitializingBean {
 	}
 
 	void setImageLaunchers(UserContext userContext, String imageId, List<String> userIds) {
-		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
+		EC2Client ec2Client = providerEc2Service.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
 
 		List<String> defaultUserGrp = new ArrayList<String>();
 		defaultUserGrp.add("all");
@@ -285,7 +279,7 @@ class Ec2Service implements CacheInitializer, InitializingBean {
 		Check.notEmpty(imageIds, "imageIds")
 		Check.notEmpty(name, "name")
 		Check.notEmpty(value, "value")
-		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
+		EC2Client ec2Client = providerEc2Service.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
 		List<List<String>> partitionedImageIds = Lists.partition(imageIds as List, TAG_IMAGE_CHUNK_SIZE)
 		for (List<String> imageIdsChunk in partitionedImageIds) {
 			CreateTagsRequest request = new CreateTagsRequest(resources: imageIdsChunk, tags: [new Tag(name, value)])
@@ -326,7 +320,7 @@ class Ec2Service implements CacheInitializer, InitializingBean {
 	}
 
 	private Set<KeyPair> retrieveKeys(Region region) {
-		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(region).getContext());
+		EC2Client ec2Client = providerEc2Service.getProivderClient(computeServiceClientByRegion.by(region).getContext());
 		ec2Client.keyPairServices.describeKeyPairsInRegion(region.code, null);
 	}
 
@@ -355,7 +349,7 @@ class Ec2Service implements CacheInitializer, InitializingBean {
 
 	private Set<SecurityGroup> retrieveSecurityGroups(Region region) {
 		log.info 'retrieveSecurityGroups in region '+ region
-		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(region).getContext());
+		EC2Client ec2Client = providerEc2Service.getProivderClient(computeServiceClientByRegion.by(region).getContext());
 		Set<SecurityGroup> securityGroups= ec2Client.securityGroupServices.describeSecurityGroupsInRegion(region.code,null)
 		log.info 'retrieveSecurityGroups in region '+ securityGroups
 		securityGroups
@@ -375,7 +369,7 @@ class Ec2Service implements CacheInitializer, InitializingBean {
 		EC2Client ec2Client=null
 		String regionCode = region.code
 		try {
-			ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(region).getContext());
+			ec2Client = providerEc2Service.getProivderClient(computeServiceClientByRegion.by(region).getContext());
 			groups= ec2Client.securityGroupServices.describeSecurityGroupsInRegion(regionCode, groupName);
 			return Check.lone(groups, SecurityGroup)
 			//groupName = groups?.name
@@ -434,7 +428,7 @@ class Ec2Service implements CacheInitializer, InitializingBean {
 		Check.notEmpty(description, 'description')
 		String groupId = null
 		String regionCode = userContext.region.code
-		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
+		EC2Client ec2Client = providerEc2Service.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
 		
 		taskService.runTask(userContext, "Create Security Group ${name}", { task ->
 		    ec2Client.securityGroupServices.createSecurityGroupInRegion(regionCode, name, description)
@@ -444,7 +438,7 @@ class Ec2Service implements CacheInitializer, InitializingBean {
 
 	void removeSecurityGroup(UserContext userContext, String name, String id) {
 		String regionCode = userContext.region.code
-		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
+		EC2Client ec2Client = providerEc2Service.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
 		taskService.runTask(userContext, "Remove Security Group ${name}", { task ->
 			ec2Client.securityGroupServices.deleteSecurityGroupInRegion(regionCode, name)
 		}, Link.to(EntityType.security, name))
@@ -515,19 +509,21 @@ class Ec2Service implements CacheInitializer, InitializingBean {
 
 	/** Returns the ingress permissions from one group to another. Assumes tcp and groups, not cidrs. */
 	static Collection<IpPermission> getIngressFrom(SecurityGroup targetGroup, SecurityGroup sourceGroup) {
-		targetGroup.ipPermissions.findAll {
-			it.userIdGroupPairs.any { it.containsKey(sourceGroup.name) }
-		}
+		targetGroup.equals(sourceGroup)?targetGroup.ipPermissions:[]
+		
 	}
 
 	private String bestIngressPortsFor(SecurityGroup targetGroup) {
 		Map guess = ['7001' : 1]
-		targetGroup.ipPermissions.each {
-			if (it.ipProtocol == 'tcp' &&  it.userIdGroupPairs.size() > 0) {
+	
+	targetGroup.ipPermissions.each() {
+			it ->
+			if (it.ipProtocol == IpProtocol.TCP) {
 				Integer count = it.userIdGroupPairs.size()
 				String portRange = portString(it.fromPort, it.toPort)
 				guess[portRange] = guess[portRange] ? guess[portRange] + count : count
 			}
+			
 		}
 		String g = guess.sort { -it.value }.collect { it.key }[0]
 		//println "guess: ${target.groupName} ${guess} => ${g}"
@@ -539,9 +535,9 @@ class Ec2Service implements CacheInitializer, InitializingBean {
 	private void authorizeSecurityGroupIngress(UserContext userContext, SecurityGroup targetgroup, SecurityGroup sourceGroup, String ipProtocol, int fromPort, int toPort) {
 		String groupName = targetgroup.name
 		String sourceGroupName = sourceGroup.name
-		UserIdGroupPair sourcePair = new UserIdGroupPair(accounts[0],sourceGroup.name)
+	//	UserIdGroupPair sourcePair = new UserIdGroupPair(accounts[0],sourceGroup.name)
 		String regionCode = userContext.region.code
-		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
+		EC2Client ec2Client = providerEc2Service.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
 		taskService.runTask(userContext, "Authorize Security Group Ingress to ${groupName} from ${sourceGroupName} on ${fromPort}-${toPort}", { task ->
 			ec2Client.securityGroupServices.authorizeSecurityGroupIngressInRegion(regionCode, targetgroup.name, IpProtocol.fromValue(ipProtocol),fromPort,toPort,"")
 		}, Link.to(EntityType.security, groupName))
@@ -551,17 +547,15 @@ class Ec2Service implements CacheInitializer, InitializingBean {
 		String groupName = targetgroup.name
 		String sourceGroupName = sourceGroup.name
 		String regionCode = userContext.region.code
-		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
+		EC2Client ec2Client = providerEc2Service.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
 
-
-		UserIdGroupPair sourcePair = new UserIdGroupPair(accounts[0],sourceGroup.id)
+        
 		List<IpPermission> perms = [
-			new IpPermission()
-			.withUserIdGroupPairs(sourcePair)
-			.withIpProtocol(ipProtocol).withFromPort(fromPort).withToPort(toPort)
+			IpPermission.builder().ipProtocol(IpProtocol.valueOf(ipProtocol.toUpperCase())).fromPort(fromPort).toPort(toPort).build()
+			
 		]
 		taskService.runTask(userContext, "Revoke Security Group Ingress to ${groupName} from ${sourceGroupName} on ${fromPort}-${toPort}", { task ->
-			ec2Client.securityGroupServices.revokeSecurityGroupIngressInRegion(regionCode, targetgroup.id, perms)
+			ec2Client.securityGroupServices.revokeSecurityGroupIngressInRegion(regionCode,sourceGroupName,IpProtocol.valueOf(ipProtocol.toUpperCase()),fromPort,toPort,"0.0.0.0/0")
 		}, Link.to(EntityType.security, groupName))
 	}
 
@@ -690,7 +684,7 @@ class Ec2Service implements CacheInitializer, InitializingBean {
 	Reservation getInstanceReservation(UserContext userContext, String instanceId) {
 		Check.notNull(instanceId, Reservation, "instanceId")
 		String regionCode = userContext.region.code
-		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
+		EC2Client ec2Client = providerEc2Service.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
 
 		Set<Reservation> reservations
 		try {
@@ -737,9 +731,8 @@ class Ec2Service implements CacheInitializer, InitializingBean {
 
 	String getUserDataForInstance(UserContext userContext, String instanceId) {
 		if (!instanceId) { return null }
-		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
+		EC2Client ec2Client = providerEc2Service.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
 		ec2Client.instanceServices.getUserDataForInstanceInRegion(userContext.region.code,instanceId)		
-		
 	}
 
 	Boolean checkHostHealth(String url) {
@@ -785,28 +778,28 @@ class Ec2Service implements CacheInitializer, InitializingBean {
 	}
 
 	String getConsoleOutput(UserContext userContext, String instanceId) {
-		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
+		EC2Client ec2Client = providerEc2Service.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
 		ec2Client.instanceServices.getConsoleOutputForInstanceInRegion(userContext.region.code, instanceId);
 		
 	}
 
 
 	Map<String, String> describeAddresses(UserContext userContext) {
-		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
+		EC2Client ec2Client = providerEc2Service.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
 		Set<PublicIpInstanceIdPair> addresses = ec2Client.getElasticIPAddressServices().describeAddressesInRegion(userContext.region.code);
 		addresses.inject([:]) { Map memo, address -> memo[address.publicIp] = address.instanceId; memo } as Map
 	}
 
 	void associateAddress(UserContext userContext, String publicIp, String instanceId) {
 		taskService.runTask(userContext, "Associate ${publicIp} with ${instanceId}", { task ->
-			EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
+			EC2Client ec2Client = providerEc2Service.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
 			Set<PublicIpInstanceIdPair> addresses = ec2Client.getElasticIPAddressServices().associateAddressInRegion(userContext.region.code,publicIp,instanceId );	
 			}, Link.to(EntityType.instance, instanceId))
 	}
 
 
 	private Set<Reservation> retrieveReservations(Region region) {
-		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(region).getContext());
+		EC2Client ec2Client = providerEc2Service.getProivderClient(computeServiceClientByRegion.by(region).getContext());
 		ec2Client.instanceServices.describeInstancesInRegion(region.code,null)
 	}
 
@@ -861,7 +854,7 @@ class Ec2Service implements CacheInitializer, InitializingBean {
 		log.info 'get volumes'
 		Set<Volume> volumes
 		String regionCode = configService.getCloudProvider() == Provider.AWS ? region.code : "nova"
-		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(region).getContext());
+		EC2Client ec2Client = providerEc2Service.getProivderClient(computeServiceClientByRegion.by(region).getContext());
 		volumes= ec2Client.elasticBlockStoreServices.describeVolumesInRegion(regionCode,null)
 		log.info 'fetched Volumes '+volumes.size()
 		volumes
@@ -869,7 +862,7 @@ class Ec2Service implements CacheInitializer, InitializingBean {
 
 	Volume getVolume(UserContext userContext, String volumeId, From from = From.AWS) {
 		String regionCode = configService.getCloudProvider() == Provider.AWS ? userContext.region.code : "nova"
-		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
+		EC2Client ec2Client = providerEc2Service.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
 		if (volumeId) {
 			if (from == From.CACHE) {
 				return caches.allVolumes.by(userContext.region).get(volumeId)
@@ -889,19 +882,19 @@ class Ec2Service implements CacheInitializer, InitializingBean {
 
 	void detachVolume(UserContext userContext, String volumeId, String instanceId, String device) {
 		String regionCode = configService.getCloudProvider() == Provider.AWS ? userContext.region.code : "nova"
-		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
+		EC2Client ec2Client = providerEc2Service.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
 		DetachVolumeOptions detachVolumeOptions = new  DetachVolumeOptions().fromDevice(device).fromInstance(instanceId)
 		ec2Client.elasticBlockStoreServices.detachVolumeInRegion(regionCode, volumeId, false,detachVolumeOptions)
 	}
 
 	Attachment attachVolume(UserContext userContext, String volumeId, String instanceId, String device) {
-		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());		DetachVolumeOptions detachVolumeOptions = new  DetachVolumeOptions().fromDevice(device).fromInstance(instanceId)
+		EC2Client ec2Client = providerEc2Service.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());		DetachVolumeOptions detachVolumeOptions = new  DetachVolumeOptions().fromDevice(device).fromInstance(instanceId)
 		ec2Client.elasticBlockStoreServices.attachVolumeInRegion(userContext.region.code, volumeId, instanceId, device)
 
 	}
 
 	void deleteVolume(UserContext userContext, String volumeId) {
-		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
+		EC2Client ec2Client = providerEc2Service.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
 		ec2Client.elasticBlockStoreServices.deleteVolumeInRegion(userContext.region.code, volumeId)
 		// Do not remove it from the allVolumes map, as this prevents
 		// the list page from showing volumes that are in state "deleting".
@@ -909,7 +902,7 @@ class Ec2Service implements CacheInitializer, InitializingBean {
 	}
 
 	Volume createVolume(UserContext userContext, Integer size, String zone) {
-		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
+		EC2Client ec2Client = providerEc2Service.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
 		def volume=	ec2Client.elasticBlockStoreServices.createVolumeInAvailabilityZone(zone, size)
 		return volume
 	}
@@ -919,7 +912,7 @@ class Ec2Service implements CacheInitializer, InitializingBean {
 	}
 
 	Volume createVolume(UserContext userContext, Integer size, String zone, String snapshotId) {
-		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
+		EC2Client ec2Client = providerEc2Service.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
 		def volume=	ec2Client.elasticBlockStoreServices.createVolumeFromSnapshotInAvailabilityZone(zone, size, snapshotId);
 		return volume
 	}
@@ -932,7 +925,7 @@ class Ec2Service implements CacheInitializer, InitializingBean {
 
 	private Set<Snapshot> retrieveSnapshots(Region region) {
 		log.info 'retrieveSnapshots in region '+ region
-		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(region).getContext());
+		EC2Client ec2Client = providerEc2Service.getProivderClient(computeServiceClientByRegion.by(region).getContext());
 		def snapshotsInRegion = ec2Client.getElasticBlockStoreServices().describeSnapshotsInRegion(region.code,null)
 		log.info 'retrieveSnapshots in region '+ snapshotsInRegion
 		snapshotsInRegion
@@ -941,7 +934,7 @@ class Ec2Service implements CacheInitializer, InitializingBean {
 
 	Snapshot getSnapshot(UserContext userContext, String snapshotId, From from = From.AWS) {
 		String regionCode = userContext.region.code;
-		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
+		EC2Client ec2Client = providerEc2Service.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
 
 		if (snapshotId) {
 			if (from == From.CACHE) {
@@ -962,7 +955,7 @@ class Ec2Service implements CacheInitializer, InitializingBean {
 
 	Snapshot createSnapshot(UserContext userContext, String volumeId, String description) {
 
-		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
+		EC2Client ec2Client = providerEc2Service.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
 
 		Snapshot snapshot = null
 		String msg = "Create snapshot for volume '${volumeId}' with description '${description}'"
@@ -976,7 +969,7 @@ class Ec2Service implements CacheInitializer, InitializingBean {
 	void deleteSnapshot(UserContext userContext, String snapshotId, Task existingTask = null) {
 		 String regionCode = userContext.region.code;
 
-		EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
+		EC2Client ec2Client = providerEc2Service.getProivderClient(computeServiceClientByRegion.by(userContext.region).getContext());
 
 		String msg = "Delete snapshot ${snapshotId}"
 		Closure work = { Task task ->

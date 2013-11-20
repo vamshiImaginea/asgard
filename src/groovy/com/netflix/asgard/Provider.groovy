@@ -12,7 +12,9 @@ enum Provider {
 
 	OPENSTACK('openstack',
 	'openstack-nova-ec2'
-	)
+	),
+
+	RACKSPACE('rackspace',null) // proiver at Region level
 
 	String providerName
 	String jcloudsProviderMapping
@@ -25,7 +27,9 @@ enum Provider {
 
 
 	static Provider withCode(String providerName) {
-		Provider.values().find { it.providerName.equalsIgnoreCase(providerName) } as Provider
+		Provider.values().find {
+			it.providerName.equalsIgnoreCase(providerName)
+		} as Provider
 	}
 
 

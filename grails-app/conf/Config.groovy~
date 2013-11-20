@@ -213,4 +213,26 @@ environments {
     }
 }
 
+grails {
+	currentActiveService='openstack'
+	accountName='prod'
+}
+openstack {
+	endPoint='http://172.16.16.254:8773/services/Cloud'
+	userName='50c4857939ff4d83b27564cb8a286762'
+	apiKey='860c0051e7b1428592a12cfda47829ba'
+	accountNumber='42a6632b6a0a4c61b2aa33d3b40d8024'
+}
+aws {
+	awsAccounts=['003736106820']
+	awsAccountNames=['003736106820':'prod']
+	userName='150c4857939ff4d83b27564cb8a286762'
+	apiKey='1860c0051e7b1428592a12cfda47829ba'
+	publicResourceAccounts=['amazon']
+	accountNumber='003736106820'
+}
 
+eureka {
+	regionsToServers=['us-east-1':'172.16.16.198']
+	port=8080
+}

@@ -68,17 +68,17 @@
               <g:each var="perm" in="${group.ipPermissions}" status="i">
                 <tr class="prop">
                   <td class="value">
-                    ${perm.ipProtocol} ${perm.fromPort}-${perm.toPort}
-                   <%-- [<g:each var="pair" in="${perm.userIdGroupPairs}" status="j">
+                    ${perm.ipProtocol} ${perm.fromPort}-${perm.toPort}<%--
+                  [<g:each var="pair" in="${perm.userIdGroupPairs}" status="j">
                       <g:if test="${j>0}">, </g:if>
                       <g:if test="${pair.containsKey(group.ownerId)}">
-                        <g:linkObject type="security" name="${pair.groupName}">${pair.groupName}</g:linkObject>
+                        <g:linkObject type="security" name="${pair.key}">${pair.key}</g:linkObject>
                       </g:if>
-                      <g:else><
+                      <g:else>
                         <div class="security">${pair.key} (${accountNames[pair.key] ?: pair.key} ${pair.key})</div>
                       </g:else>
                     </g:each>]
-                    --%>${perm.ipRanges}
+                   --%>${perm.ipRanges}
                   </td>
                 </tr>
               </g:each>
@@ -92,16 +92,9 @@
         </tr>
         <tr class="prop">
           <td class="name">Application:</td>
-          <td class="value"><g:linkObject type="application" name="${app?.name}"/></td>
+          <td class="value"><g:linkObject type="application" name="${app?.applicationName}"/></td>
         </tr>
-        <tr class="prop">
-          <td class="name">Launch Configurations:</td>
-          <%--<td class="value">
-            <g:each var="launchConfig" in="${launchConfigs}" status="i">
-              <g:linkObject type="launchConfiguration" name="${launchConfig.launchConfigurationName}"/>
-            </g:each>
-          </td>
-        --%></tr>
+        
         <tr class="prop">
           <td class="name">Instances:</td><%--
           <td class="value">
@@ -110,14 +103,7 @@
             </g:each>
           </td>
         --%></tr>
-        <tr class="prop">
-          <td class="name">Load Balancers:</td>
-          <%--<td class="value">
-            <g:each var="elb" in="${elbs}" status="i">
-              <g:linkObject type="loadBalancer" name="${elb.loadBalancerName}"/>
-            </g:each>
-          </td>
-        --%></tr>
+       
         </tbody>
       </table>
     </div>

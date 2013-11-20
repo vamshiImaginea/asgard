@@ -52,7 +52,7 @@ import com.netflix.asgard.model.MassDeleteRequest
 class ImageService implements BackgroundProcessInitializer {
 
     static transactional = false
-	def jcloudsComputeService	
+	def providerComputeService
     def ec2Service
     def awsS3Service
     def configService

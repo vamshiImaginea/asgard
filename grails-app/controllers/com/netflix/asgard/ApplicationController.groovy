@@ -81,8 +81,6 @@ class ApplicationController {
 			}
 			SecurityGroup appSecurityGroup = ec2Service.getSecurityGroup(userContext, name)
 			boolean isChaosMonkeyActive = cloudReadyService.isChaosMonkeyActive(userContext.region)
-			request.alertingServiceConfigUrl = configService.alertingServiceConfigUrl
-			securities: ec2Service.getSecurityGroupsForApp(userContext, name)
 			def details = [
 				app: appToInstances,
 				name: name,

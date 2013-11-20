@@ -85,7 +85,7 @@ class ImageController {
             catch (AmazonServiceException ignored) { /* We may not own the image, so ignore failures here */ }
             /*String snapshotId = image.blockDeviceMappings.findResult { it.ebs?.snapshotId }*/
             String ownerId = image.userMetadata.get("owner")
-            Map<String, String> accounts = configService.awsAccountNames
+            Map<String, String> accounts = configService.accountNames
             Map details = [
                     image: image,
                    /* snapshotId: snapshotId,*/

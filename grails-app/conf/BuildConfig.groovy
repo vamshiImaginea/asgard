@@ -143,7 +143,7 @@ grails.project.dependency.resolution = {
                 // Grails environments.
                 'com.googlecode.json-simple:json-simple:1.1',
                 //Jclouds dependencies
-		'org.jclouds:jclouds-all:1.6.0',
+		'org.apache.jclouds:jclouds-all:1.6.2-incubating',
 		'org.jclouds.driver:jclouds-log4j:1.5.4',
                 'org.jclouds.driver:jclouds-jsch:1.5.4',
 				 'org.xerial:sqlite-jdbc:3.6.17'

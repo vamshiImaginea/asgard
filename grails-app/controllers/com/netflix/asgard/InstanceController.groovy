@@ -29,6 +29,8 @@ import com.netflix.grails.contextParam.ContextParam
 import grails.converters.JSON
 import grails.converters.XML
 
+import java.lang.reflect.Array
+
 import org.jclouds.compute.domain.Image
 import org.jclouds.compute.domain.NodeMetadata;
 import org.jclouds.ec2.domain.Reservation
@@ -150,18 +152,22 @@ class InstanceController {
         String instanceId = params.id?:params.instanceId
 		instanceId=URLDecoder.decode(instanceId,'UTF-8');
 		
-        String appName,baseServer,healthCheck
+        String baseServer,healthCheck
+		Collection<String> applications 
 		Image image
+		Collection<ApplicationInstance> applicationInstances
 		
         ApplicationInstance appInst
+		
         if (params.appName) {
             appName = params.appName
             String instName = instanceId ?: params.hostName
             appInst = discoveryService.getAppInstance(userContext, appName, instName)
         } else {
 		    String providerId = instanceId.substring(instanceId.indexOf('/')+1)
-            appInst = discoveryService.getAppInstance(userContext,providerId )
-            appName = appInst?.appName
+            applicationInstances = discoveryService.getAppInstances(userContext)
+			applicationInstances = applicationInstances.findAll{discoveryInstance -> providerId == discoveryInstance.instanceId}
+			applications = applicationInstances.collect {app -> app.appName}
         }
         NodeMetadata instance = ec2Service.getInstance(userContext, instanceId);
         if (!appInst && !instance) {
@@ -178,7 +184,8 @@ class InstanceController {
         }
 
             Map details = [
-                    appName: appName,
+                    appNames: applications,
+					applicationInstances: applicationInstances,
                     discInstance: appInst,
                     healthCheck: healthCheck, 
                     baseServer: baseServer,
@@ -336,23 +343,39 @@ class InstanceController {
         redirect(action: 'show', params:[instanceId:instanceId.encodeAsURL()])
     }
 
-    def takeOutOfService = {
-        UserContext userContext = UserContext.of(request)
-        String autoScalingGroupName = params.autoScalingGroupName
-        List<String> instanceIds = Requests.ensureList(params.providerId)
-        discoveryService.disableAppInstances(userContext, params.appName, instanceIds)
-        flash.message = "Instances of app '${params.appName}' taken out of service in discovery: '${instanceIds}'"
-        chooseRedirect(autoScalingGroupName, instanceIds)
-    }
+	def takeOutOfService = {
+		UserContext userContext = UserContext.of(request)
+		String autoScalingGroupName = params.autoScalingGroupName
+		List<String> instanceIds = Requests.ensureList(params.providerId?:(params.selectedInstances ?: params.instanceId))
+		instanceIds = instanceIds.collect {
+			id ->	id.contains("/")?id.substring(id.indexOf("/")+1):id
+		}
+		List<String> appNames = Requests.ensureList(params.appNames)
+		for (app in appNames) {
+			discoveryService.disableAppInstances(userContext, app, instanceIds)
+		}
+		flash.message = "Instances of app '${params.appNames}' taken out of service in discovery: '${instanceIds}'"
+		chooseRedirect(autoScalingGroupName, instanceIds)
+	}
 
-    def putInService = {
-        UserContext userContext = UserContext.of(request)
-        String autoScalingGroupName = params.autoScalingGroupName
-        List<String> instanceIds = Requests.ensureList(params.providerId)
-        discoveryService.enableAppInstances(userContext, params.appName, instanceIds)
-        flash.message = "Instances of app '${params.appName}' put in service in discovery: '${instanceIds}'"
-        chooseRedirect(autoScalingGroupName, instanceIds)
-    }
+	def putInService = {
+		UserContext userContext = UserContext.of(request)
+		String autoScalingGroupName = params.autoScalingGroupName
+
+		List<String> instanceIds = Requests.ensureList(params.providerId ?:(params.selectedInstances ?: params.instanceId))
+		instanceIds = instanceIds.collect {
+			id ->	id.contains("/")?id.substring(id.indexOf("/")+1):id
+		}
+		List<String> appNames = Requests.ensureList(params.appNames)
+		for (app in appNames) {
+			discoveryService.enableAppInstances(userContext, app, instanceIds)
+		}
+
+
+
+		flash.message = "Instances of app '${params.appNames}' put in service in discovery: '${instanceIds}'"
+		chooseRedirect(autoScalingGroupName, instanceIds)
+	}
 
     def addTag = {
         String instanceId = EntityType.instance.ensurePrefix(params.instanceId)

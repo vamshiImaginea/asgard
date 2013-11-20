@@ -51,7 +51,7 @@ class InstanceTypeServiceSpec extends Specification {
     ConfigService mockConfigService
     CachedMap mockHardwareProfilesCache
 	Ec2Service ec2Service
-	JcloudsComputeService jcloudsComputeService
+	ProviderComputeService providerComputeService
 	MultiRegionAwsClient<ComputeService> client
 	ComputeService computeService
     def setup() {
@@ -59,7 +59,7 @@ class InstanceTypeServiceSpec extends Specification {
         mockConfigService = Mock(ConfigService)
         mockHardwareProfilesCache = Mock(CachedMap)
 		ec2Service = Mock(Ec2Service)
-		jcloudsComputeService = Mock(JcloudsComputeService)
+		providerComputeService = Mock(ProviderComputeService)
 		client = Mock(MultiRegionAwsClient)
 		computeService = Mock(ComputeService)
         caches = new Caches(new MockCachedMapBuilder([

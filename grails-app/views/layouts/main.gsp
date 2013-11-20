@@ -15,7 +15,7 @@
     limitations under the License.
 
 --%>
-<%@ page import="grails.converters.JSON; com.netflix.asgard.push.GroupResizeOperation" %>
+<%@ page import="grails.converters.JSON; com.netflix.asgard.push.GroupResizeOperation;com.netflix.asgard.Provider" %>
 <!DOCTYPE html>
 <html>
 <head>
@@ -51,8 +51,8 @@
       <span>${env}</span>
     </div>
       <g:if test="${!pageProperty(name: 'meta.hideNav')}">
- <div class="cloudservice">
-   <g:select title="Switch to a different Cloud Servie" id="cloudService" class="noSelect2" name="cloudService" from="${["aws","openstack"]}" value="${provider.toLowerCase()}" />
+ <div class="cloudProvider">
+   <g:select title="Switch to a different Cloud Provider" id="cloudProviderId" class="noSelect2" name="cloudProvider" from="${Provider.values()}" value="${Provider.withCode(provider)}" />
  </div>
       <div class="region">
         <form action="/" method="GET">

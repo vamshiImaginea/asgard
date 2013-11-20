@@ -36,12 +36,15 @@ import com.google.common.cache.LocalCache.Values;
 class Region {
 
 	static final Region US_EAST_1 = new Region(code:'us-east-1')
+	static final List<Region> RACKSPACE_SERVER_REGIONS  = [new Region(provider:'rackspace-cloudservers-us',code:'US'),
+		new Region(provider:'rackspace-cloudservers-uk',code:'UK')]
 
 	String code
 	String endpoint
+	String provider
 
 	static List<Region> values(){
-		[new Region(code:'us-east-1',endpoint:'')]
+		[]
 	}
 	
 	/**

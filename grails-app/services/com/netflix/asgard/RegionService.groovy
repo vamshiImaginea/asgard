@@ -11,26 +11,31 @@ import org.jclouds.ec2.EC2Client
 class RegionService {
 	static transactional = false
 	def configService
-	def jcloudsComputeService
+	def providerComputeService
+	def providerEc2Service
 	static boolean reloadRegions = true
-	 List<Region> regions = []
+	List<Region> regions = []
 	List<Region> values(){
 		if(reloadRegions){
 			regions.clear()
 			if(configService.appConfigured){
-				ComputeService computeService = jcloudsComputeService.getComputeServiceForProvider(null)
-				EC2Client ec2Client = jcloudsComputeService.getProivderClient(computeService.getContext())
-				Set<Entry<String, URI>> entry = ec2Client.getAvailabilityZoneAndRegionServices().describeRegions(null).entrySet();
-				for (Iterator iterator = entry.iterator(); iterator.hasNext();) {
-					Entry<String, URI> regionsEntrySet = (Entry<String, URI>) iterator.next();
-					regions.add(new Region(code:regionsEntrySet.getKey(),endpoint:regionsEntrySet.getValue()))
-
-
+				if( configService.getCloudProvider() != Provider.RACKSPACE ){
+					ComputeService computeService = providerComputeService.getComputeServiceForProvider(null)
+					EC2Client ec2Client = providerEc2Service.getProivderClient(computeService.getContext())
+					Set<Entry<String, URI>> entry = ec2Client.getAvailabilityZoneAndRegionServices().describeRegions(null).entrySet();
+					for (Iterator iterator = entry.iterator(); iterator.hasNext();) {
+						Entry<String, URI> regionsEntrySet = (Entry<String, URI>) iterator.next();
+						regions.add(new Region(code:regionsEntrySet.getKey(),endpoint:regionsEntrySet.getValue()))
+					}
+				}
+				else{
+					regions = Region.RACKSPACE_SERVER_REGIONS;
 				}
 			}
 			reloadRegions = false
 		}
 		regions
+
 
 	}
 	Region withCode(String code) {
@@ -39,5 +44,4 @@ class RegionService {
 		else
 			Region.US_EAST_1
 	}
-
 }

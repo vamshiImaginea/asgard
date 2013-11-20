@@ -29,16 +29,51 @@
     </g:if>
     <g:form method="post" class="validate">
       <input type="hidden" name="appNames" value="${params.id}"/>
+      
+               
+        
+  
+  
+      
+      
+      
+      
       <g:render template="instances">
+       
+       
+      
         <div class="buttons">
           <g:buttonSubmit class="stop" value="Terminate Instance(s)" action="terminate"
                           data-warning="Really terminate instance(s)?"/>
           <g:link class="clean" action="audit">Audit Ungrouped Instances</g:link>
         </div>
+           
+            <g:if test="${appNames}"><%--
+             && instanceList!=null && instanceList[0]!=null && instanceList[0]?.appInstances[0]!=null
+            <input type="hidden" name="appNames" value="${instanceList[0]?.appInstances[0]?.appName}"/>   
+                    
+          --%><div class="buttons">
+            <g:buttonSubmit class="requireLogin outOfService"
+                    action="takeOutOfService" value="Deactivate Application in Eureka" title="Prevent Eureka from listing this instance for use by other applications." />
+            <g:buttonSubmit class="requireLogin inService"
+                    action="putInService" value="Activate Application in Eureka" title="Allow Eureka to list this instance for use by other applications." />
+  
+           </div>
+            </g:if>
+      
+        
+        
       </g:render>
       <div class="paginateButtons">
       </div>
     </g:form>
   </div>
+  
+  
+  
+  
+
+  
+  
 </body>
 </html>
