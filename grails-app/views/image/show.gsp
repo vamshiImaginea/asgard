@@ -87,7 +87,7 @@
         </tr>
         <tr class="prop">
           <td class="name">Launch Permissions:</td>
-          <td class="value">[<g:each status="i" var="u" in="${launchUsers}">${i == 0 ? '' : ', '}${accounts[u]} (${u})</g:each>]</td>
+          <td class="value">[${accounts}]</td>
         </tr>
       <%--  <tr class="prop">
           <td class="name">Kernel ID:</td>

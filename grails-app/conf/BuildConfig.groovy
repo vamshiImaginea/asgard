@@ -48,6 +48,8 @@ grails.project.dependency.resolution = {
         grailsHome()
         grailsCentral()
         mavenCentral()
+		mavenRepo "http://repo.spring.io/milestone/"
+		
 
         // Optional custom repository for dependencies.
         Closure internalRepo = {
@@ -144,8 +146,9 @@ grails.project.dependency.resolution = {
                 'com.googlecode.json-simple:json-simple:1.1',
                 //Jclouds dependencies
 		'org.apache.jclouds:jclouds-all:1.6.2-incubating',
-		'org.jclouds.driver:jclouds-log4j:1.5.4',
-                'org.jclouds.driver:jclouds-jsch:1.5.4',
+		'org.apache.jclouds.driver:jclouds-log4j:1.6.2-incubating',
+		'log4j:log4j:1.2.17',
+                         'org.apache.jclouds.driver:jclouds-sshj:1.6.2-incubating',
 				 'org.xerial:sqlite-jdbc:3.6.17'
 	        		
 
@@ -172,6 +175,8 @@ grails.project.dependency.resolution = {
         compile ":context-param:1.0"
         compile ':shiro:1.1.4'
         compile ":standalone:1.1.1"
+		compile ":spring-security-ldap:2.0-RC2"
+		
 
         runtime ":cors:1.0.4"
 

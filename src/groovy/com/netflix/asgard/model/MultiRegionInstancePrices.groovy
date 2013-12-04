@@ -16,58 +16,43 @@
 package com.netflix.asgard.model
 
 import com.netflix.asgard.Region
-import com.netflix.asgard.RegionalInstancePrices
 import com.netflix.asgard.Time
 import com.netflix.asgard.cache.Fillable
 import org.apache.commons.logging.LogFactory
 
 class MultiRegionInstancePrices implements Fillable {
-    private static final log = LogFactory.getLog(this)
+	private static final log = LogFactory.getLog(this)
 
-    final String name
-    private Closure retriever
-    private Boolean doingFirstFill = true
+	final String name
+	private Closure retriever
+	private Boolean doingFirstFill = true
 
-    private Map<Region, RegionalInstancePrices> regionsToRegionalPrices = [:]
 
-    private MultiRegionInstancePrices(String name) {
-        this.name = name
-    }
+	private MultiRegionInstancePrices(String name) {
+		this.name = name
+	}
 
-    static MultiRegionInstancePrices create(String name) {
-        new MultiRegionInstancePrices(name)
-    }
+	static MultiRegionInstancePrices create(String name) {
+		new MultiRegionInstancePrices(name)
+	}
 
-    /**
-     * Initializes cache if not already done.
-     *
-     * @param retriever a closure containing the algorithm for loading the pricing data
-     */
-    void ensureSetUp(Closure retriever) {
-        this.retriever = retriever
-    }
+	/**
+	 * Initializes cache if not already done.
+	 *
+	 * @param retriever a closure containing the algorithm for loading the pricing data
+	 */
+	void ensureSetUp(Closure retriever) {
+		this.retriever = retriever
+	}
 
-    void fill() {
-        Map<Region, RegionalInstancePrices> latestPrices = retriever()
+	void fill() {
 
-        // Only replace the prices if they are not yet loaded or if something in them has changed. This keeps the
-        // unchanging objects in memory longer which is better for garbage collection behavior.
-        if (regionsToRegionalPrices != latestPrices) {
-            regionsToRegionalPrices = latestPrices
-        }
-        if (doingFirstFill) {
-            log.info("${Time.nowReadable()} Cached ${name}")
-            doingFirstFill = false
-        }
-    }
+	}
 
-    boolean isFilled() {
-        !doingFirstFill
-    }
+	boolean isFilled() {
+		!doingFirstFill
+	}
 
-    RegionalInstancePrices by(Region region) {
-        regionsToRegionalPrices[region]
-    }
 
 	@Override
 	public void removeCachedEntries() {

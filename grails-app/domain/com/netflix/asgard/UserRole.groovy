@@ -1,67 +1,65 @@
-/*
- * Copyright 2012 Netflix, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package com.netflix.asgard
 
 import org.apache.commons.lang.builder.HashCodeBuilder
 
 class UserRole implements Serializable {
 
-    User user
-    Role role
+	private static final long serialVersionUID = 1
 
-    boolean equals(other) {
-        if (!(other instanceof UserRole)) {
-            return false
-        }
+	User user
+	Role role
 
-        other.user?.id == user?.id &&
-                other.role?.id == role?.id
-    }
+	boolean equals(other) {
+		if (!(other instanceof UserRole)) {
+			return false
+		}
 
-    int hashCode() {
-        def builder = new HashCodeBuilder()
-        if (user) builder.append(user.id)
-        if (role) builder.append(role.id)
-        builder.toHashCode()
-    }
+		other.user?.id == user?.id &&
+			other.role?.id == role?.id
+	}
 
-    static UserRole get(long userId, long roleId) {
-        find 'from UserRole where user.id=:userId and role.id=:roleId',
-                [userId: userId, roleId: roleId]
-    }
+	int hashCode() {
+		def builder = new HashCodeBuilder()
+		if (user) builder.append(user.id)
+		if (role) builder.append(role.id)
+		builder.toHashCode()
+	}
 
-    static UserRole create(User user, Role role, boolean flush = false) {
-        new UserRole(user: user, role: role).save(flush: flush, insert: true)
-    }
+	static UserRole get(long userId, long roleId) {
+		UserRole.where {
+			user == User.load(userId) &&
+			role == Role.load(roleId)
+		}.get()
+	}
 
-    static boolean remove(User user, Role role, boolean flush = false) {
-        UserRole instance = UserRole.findByUserAndRole(user, role)
-        instance ? instance.delete(flush: flush) : false
-    }
+	static UserRole create(User user, Role role, boolean flush = false) {
+		new UserRole(user: user, role: role).save(flush: flush, insert: true)
+	}
 
-    static void removeAll(User user) {
-        executeUpdate 'DELETE FROM UserRole WHERE user=:user', [user: user]
-    }
+	static boolean remove(User u, Role r, boolean flush = false) {
 
-    static void removeAll(Role role) {
-        executeUpdate 'DELETE FROM UserRole WHERE role=:role', [role: role]
-    }
+		int rowCount = UserRole.where {
+			user == User.load(u.id) &&
+			role == Role.load(r.id)
+		}.deleteAll()
 
-    static mapping = {
-        id composite: ['role', 'user']
-        version false
-    }
+		rowCount > 0
+	}
+
+	static void removeAll(User u) {
+		UserRole.where {
+			user == User.load(u.id)
+		}.deleteAll()
+	}
+
+	static void removeAll(Role r) {
+		UserRole.where {
+			role == Role.load(r.id)
+		}.deleteAll()
+	}
+
+	static mapping = {
+		id composite: ['role', 'user']
+		version false
+	}
 }

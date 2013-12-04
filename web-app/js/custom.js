@@ -70,7 +70,7 @@ jQuery.extend({
     }
 });
 function showCloudConfig() {
-    window.location = '/home/selectService?cloudProvider='+jQuery("#cloudProvider").val();
+    window.location = '/init/index?cloudProvider='+jQuery("#cloudProvider").val();
 	
 	}
 

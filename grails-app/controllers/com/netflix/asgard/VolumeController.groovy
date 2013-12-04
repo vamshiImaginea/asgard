@@ -30,7 +30,7 @@ class VolumeController {
 
     def list = {
         UserContext userContext = UserContext.of(request)
-        def volumes = (ec2Service.getVolumes(userContext) as List).sort { it.id.toLowerCase() }
+        def volumes = (ec2Service.getVolumes(userContext) as List)
         def details = ['volumes': volumes, 'zoneList': ec2Service.getAvailabilityZones(userContext)]
         withFormat {
             html { details }

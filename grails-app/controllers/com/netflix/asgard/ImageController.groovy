@@ -62,7 +62,7 @@ class ImageController {
             images = ec2Service.getImagesForPackage(userContext, '')
         }
         images = images.sort { it.description.toLowerCase() }
-        Map<String, String> accounts = grailsApplication.config.grails.awsAccountNames
+        List<String> accounts = configService.accounts
         withFormat {
             html { [images: images, packageNames: packageNames, accounts: accounts] }
             xml { new XML(images).render(response) }
@@ -74,6 +74,7 @@ class ImageController {
         UserContext userContext = UserContext.of(request)
         String imageId = EntityType.image.ensurePrefix(params.imageId ?: params.id)
 		imageId=URLDecoder.decode(imageId,'UTF-8');
+		imageId = imageId.contains('/')?imageId.substring(imageId.indexOf('/')+1):imageId
 		log.info 'show details for '+ imageId 
         Image image = imageId ? ec2Service.getImage(userContext, imageId) : null
         image?.tags?.sort { it.key }
@@ -85,13 +86,13 @@ class ImageController {
             catch (AmazonServiceException ignored) { /* We may not own the image, so ignore failures here */ }
             /*String snapshotId = image.blockDeviceMappings.findResult { it.ebs?.snapshotId }*/
             String ownerId = image.userMetadata.get("owner")
-            Map<String, String> accounts = configService.accountNames
+           String accounts = configService.account
             Map details = [
                     image: image,
                    /* snapshotId: snapshotId,*/
                     launchUsers: launchUsers,
                     accounts: accounts,
-                    accountName: accounts[ownerId] ?: ownerId
+                    accountName: ownerId
             ]
             withFormat {
                 html { return details }
@@ -116,7 +117,7 @@ class ImageController {
         }
         ['image' : ec2Service.getImage(userContext, imageId),
          'launchPermissions' : launchUsers,
-         'accounts' : grailsApplication.config.grails.awsAccountNames]
+         'accounts' : grailsApplication.config.grails.accountName]
     }
 
     def update = {

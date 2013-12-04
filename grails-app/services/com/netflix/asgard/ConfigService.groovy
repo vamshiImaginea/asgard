@@ -15,6 +15,8 @@
  */
 package com.netflix.asgard
 
+import org.springframework.security.core.context.SecurityContextHolder
+
 import com.netflix.asgard.model.InstanceTypeData
 import com.netflix.asgard.server.Environment
 import com.netflix.asgard.text.TextLinkTemplate
@@ -103,7 +105,7 @@ class ConfigService {
 	 */
 	String getRegionalDiscoveryServer(Region region) {
 		if (isOnline()) {
-			Map<Region, String> regionsToDiscoveryServers = grailsApplication.config.eureka?.regionsToServers
+			Map<Region, String> regionsToDiscoveryServers = grailsApplication.config.eureka?.regionsToServers?:[:]
 			return regionsToDiscoveryServers[region] ?: regionsToDiscoveryServers[Region.US_EAST_1]
 		}
 		null
@@ -231,9 +233,8 @@ class ConfigService {
 	}
 
 	List<String> getAccounts() {
-		
-		[getAccount(provider)]
 
+		[getAccount(provider)]
 	}
 
 	/**
@@ -343,7 +344,7 @@ class ConfigService {
 	 * @return name of the current cloud account, such as "test" or "prod", with a default of null
 	 */
 	String getAccountName() {
-		grailsApplication.config.grails?.accountName ?: null
+		userConfig?.grails?.accountName ?: null
 	}
 
 	/**
@@ -699,7 +700,7 @@ class ConfigService {
 	}
 
 	String getProvider(){
-		grailsApplication.config.grails?.currentActiveService?:"openstack";
+		grailsApplication.config.get(SecurityContextHolder.getContext().getAuthentication().getName())?.grails?.currentActiveService 
 	}
 
 	String getOpenStackEndPoint(){
@@ -718,37 +719,32 @@ class ConfigService {
 		Provider.withCode(getProvider());
 	}
 
-	String getCloudEndPoint(){
-		grailsApplication.config.openstack?.endpoint?:"";
-	}
 
 	ConfigObject getProviderValues(cloudProvider = null){
-		Provider provider = null == cloudProvider ?  Provider.withCode(getProvider()) :Provider.withCode(cloudProvider);
-		if( provider == Provider.AWS){
-			return	grailsApplication.config.aws;
-		}else if(provider == Provider.RACKSPACE){
-			return	grailsApplication.config.rackspace;
-		}else {
-			return	grailsApplication.config.openstack;
-		}
+		getUserConfig()?.get(cloudProvider?:getProvider())?:null
+	}
+
+	ConfigObject getUserConfig(){
+		grailsApplication.config.get(SecurityContextHolder.getContext().getAuthentication().getName())
 	}
 
 	String getUserName(cloudProvider = null){
-		ConfigObject config = getProviderValues(cloudProvider);
-		return getProviderValues(cloudProvider).userName;
+		getProviderValues(cloudProvider)?.userName?:""
 	}
 
 	String getApiKey( cloudProvider= null){
-		ConfigObject config = getProviderValues(cloudProvider);
-		config.apiKey ;
+		getProviderValues(cloudProvider)?.apiKey?:""
 	}
 
 	String getEndPoint(cloudProvider =null){
-		ConfigObject config = getProviderValues(cloudProvider);
-		config?.endPoint?:"";
+		getProviderValues(cloudProvider)?.endPoint?:"";
 	}
 
 	String getAccount(cloudProvider = null){
-		return getProviderValues(cloudProvider)?.accountNumber?:"";
+		getProviderValues(cloudProvider)?.accountNumber?:"";
+	}
+
+	boolean isUserConfigured(){
+		grailsApplication.config.get(SecurityContextHolder.getContext().getAuthentication().getName())
 	}
 }

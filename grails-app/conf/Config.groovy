@@ -214,3 +214,50 @@ environments {
 }
 
 
+
+
+//Active directory setup, read the spring-security-ldap docs for more information
+grails.plugin.springsecurity.providerNames = [	'ldapAuthProvider',	'anonymousAuthenticationProvider',	'rememberMeAuthenticationProvider']
+grails.plugin.springsecurity.ldap.context.anonymousReadOnly = true
+grails.plugin.springsecurity.ldap.authenticator.dnPatterns='uid={0},ou=Employees,dc=pramati,dc=com'
+
+grails.plugin.springsecurity.ldap.authorities.ignorePartialResultException = true // typically needed for Active Directory
+grails.plugin.springsecurity.ldap.context.server = 'ldap://ldap.pramati.com:389'
+grails.plugin.springsecurity.ldap.authorities.groupSearchBase = 'ou=Employees,dc=pramati,dc=com'
+grails.plugin.springsecurity.ldap.authorities.retrieveGroupRoles = false
+grails.plugin.springsecurity.ldap.authorities.retrieveDatabaseRoles = false
+grails.plugin.springsecurity.ldap.mapper.userDetailsClass = 'person'
+grails.plugin.springsecurity.ldap.search.filter = '(sAMAccountName={0})'
+grails.plugin.springsecurity.ldap.search.base = 'dc=pramati,dc=com' 
+grails.plugin.springsecurity.ldap.auth.hideUserNotFoundExceptions = false
+grails.plugin.springsecurity.successHandler.defaultTargetUrl = '/init'
+grails.plugin.springsecurity.successHandler.alwaysUseDefault=true
+grails.plugin.springsecurity.failureHandler.defaultFailureUrl  = '/login/auth'
+
+
+grails.plugin.springsecurity.securityConfigType = 'InterceptUrlMap'
+grails.plugin.springsecurity.interceptUrlMap = [
+		'/application/**':  ['ROLE_USER', 'IS_AUTHENTICATED_FULLY'],
+		'/**/instance/**':    ['ROLE_USER'],
+		'/**/security/**':       ['ROLE_USER'],
+		'/**/instanceType/**' :['ROLE_USER'],
+		'/**/volume/**' :['ROLE_USER'],
+		'/**/image/**' :['ROLE_USER'],
+		'/home/**' :['ROLE_USER'],
+		'/init/**' :['IS_AUTHENTICATED_ANONYMOUSLY'],
+		'/**/snapshot/**' :['ROLE_USER'],
+		'/task/**' :['ROLE_USER'],	
+		'/js/**':           ['IS_AUTHENTICATED_ANONYMOUSLY'],
+		'/css/**':          ['IS_AUTHENTICATED_ANONYMOUSLY'],
+		'/images/**':       ['IS_AUTHENTICATED_ANONYMOUSLY'],
+		'/firefox/**':       ['IS_AUTHENTICATED_ANONYMOUSLY'],
+		'/*':               ['IS_AUTHENTICATED_FULLY'],
+		'/login/**':        ['IS_AUTHENTICATED_ANONYMOUSLY'],
+		'/logout/**':       ['IS_AUTHENTICATED_ANONYMOUSLY']
+
+]
+
+
+
+
+

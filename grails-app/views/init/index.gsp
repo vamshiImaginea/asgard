@@ -20,11 +20,27 @@
 <html>
 <head>
 <title>Initialize Asgard</title>
-<meta name="layout" content="main" />
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<title>Asgard Login</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<link rel="shortcut icon" href="${resource(dir: 'images', file: 'favicon.ico')}" type="image/x-icon">
+		<link rel="apple-touch-icon" href="${resource(dir: 'images', file: 'apple-touch-icon.png')}">
+		<link rel="apple-touch-icon" sizes="114x114" href="${resource(dir: 'images', file: 'apple-touch-icon-retina.png')}">
+         <link rel="stylesheet" href="${resource(dir: 'css', file: 'main.css')}?v=${build}"/>
+		<link rel="stylesheet" href="${resource(dir: 'css', file: 'mobile.css')}" type="text/css">
 <meta name="hideNav" content="true" />
 
 </head>
 <body>
+<div class="titlebar banner">
+    <div class="header">
+      <a href="${resource(dir: '/')}">
+        <img id="occasionIcon" class="logo" title="${occasion.message}" src="${resource(dir: 'images/occasion', file: occasion?.iconFileName)}"/>
+        <div class="mainHeader">Asgard</div>
+      </a>
+      <span>${env}</span>
+    </div>
 	<div class="body">
 		<h1>Welcome to Asgard!</h1>
 		<h1>
@@ -99,7 +115,9 @@
 		</g:form>
 	</div>
 
-
+<script type="text/javascript" src="${resource(dir: 'js', file: 'jquery.js')}?v=${build}"></script>
+  <script defer type="text/javascript" src="${resource(dir: 'js/select2-3.2', file: 'select2.min.js')}?v=${build}"></script>
+  <script defer type="text/javascript" src="${resource(dir: 'js', file: 'custom.js')}?v=${build}"></script>
 
 </body>
 </html>

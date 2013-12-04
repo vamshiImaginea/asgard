@@ -16,10 +16,12 @@ class RegionService {
 	static boolean reloadRegions = true
 	List<Region> regions = []
 	List<Region> values(){
-		if(reloadRegions){
+		//if(reloadRegions){
 			regions.clear()
-			if(configService.appConfigured){
+			if(configService.appConfigured && configService.userConfigured){
+				log.info 'cloud provider in region service' + configService.getCloudProvider()
 				if( configService.getCloudProvider() != Provider.RACKSPACE ){
+					
 					ComputeService computeService = providerComputeService.getComputeServiceForProvider(null)
 					EC2Client ec2Client = providerEc2Service.getProivderClient(computeService.getContext())
 					Set<Entry<String, URI>> entry = ec2Client.getAvailabilityZoneAndRegionServices().describeRegions(null).entrySet();
@@ -29,9 +31,9 @@ class RegionService {
 					}
 				}
 				else{
-					regions = Region.RACKSPACE_SERVER_REGIONS;
+					regions = [new Region(provider:'rackspace-cloudservers-us',code:'US'),new Region(provider:'rackspace-cloudservers-uk',code:'UK')]
 				}
-			}
+			//}
 			reloadRegions = false
 		}
 		regions

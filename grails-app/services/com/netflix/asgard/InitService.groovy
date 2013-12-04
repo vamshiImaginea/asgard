@@ -18,20 +18,19 @@ package com.netflix.asgard
 import java.awt.TexturePaintContext.Int;
 import java.awt.event.ItemEvent;
 
+import org.springframework.beans.factory.InitializingBean;
+
 import javassist.bytecode.stackmap.BasicBlock.Catch;
 
 import com.netflix.asgard.cache.CacheInitializer
 import com.netflix.asgard.cache.Fillable
 import com.sun.org.apache.bcel.internal.generic.NEW;
 
-import org.springframework.context.ApplicationContext
-import org.springframework.context.ApplicationContextAware
 
-class InitService implements ApplicationContextAware {
+class InitService implements InitializingBean {
 
 	static transactional = false
 
-	ApplicationContext applicationContext
 	Caches caches
 
 	def configService
@@ -68,54 +67,47 @@ class InitService implements ApplicationContextAware {
 
 		grailsApplication.config.appConfigured = true
 		grailsApplication.config.merge(config)
-
-		initializeApplication()
 	}
 
-	/**
-	 * Kicks off populating of caches and background threads
-	 */
-	void initializeApplication() {
 
-		removeCaches()
-		log.info 'Starting caches'
-		Collection<CacheInitializer> cacheInitializers = applicationContext.getBeansOfType(CacheInitializer).values()
-		for (CacheInitializer cacheInitializer in cacheInitializers) {
-			cacheInitializer.initializeCaches()
-		}
-		/*log.info 'Starting background threads'
-		Collection<BackgroundProcessInitializer> backgroundProcessInitializers =
-				applicationContext.getBeansOfType(BackgroundProcessInitializer).values()
-		for (BackgroundProcessInitializer backgroundProcessInitializer in backgroundProcessInitializers) {
-			try{
-				backgroundProcessInitializer.cancel()
-			
-			}catch(Exception e){
-			
-				log.info "error :"+e.getMessage()
-				log.error "error while Stopping the back ground thread, "
-				
-
-			}
-			backgroundProcessInitializer.initializeBackgroundProcess()
-		}*/
-	}
 
 	/**
 	 * @return true if all caches have completed their initial load, false otherwise
 	 */
 	boolean cachesFilled() {
-		Collection<Fillable> fillableCaches = [caches.allImages,caches.allInstances,caches.allVolumes,caches.allSecurityGroups]
-		!fillableCaches.find {
-			!it.filled
-			 }
-		
-		
+		Collection<Fillable> fillableCaches = [
+			caches.allImages,
+			caches.allInstances,
+			caches.allVolumes,
+			caches.allSecurityGroups
+		]
+		!fillableCaches.find { !it.filled }
+
+
 	}
 	void removeCaches() {
 		regionService.reloadRegions = true
 		cachedMapBuilder.regions = regionService.values()
 		caches.rebuild(cachedMapBuilder,configService)
+
+	}
+
+	@Override
+	public void afterPropertiesSet() throws Exception {
+		File asgardHomeDir = new File(configService.asgardHome)
+		asgardHomeDir.mkdirs()
+		if (!asgardHomeDir.exists()) {
+			throw new IOException("Unable to create directory ${configService.asgardHome}")
+		}
+
+		File configFile = new File(configService.asgardHome, 'Config.groovy')
+		if(!configFile.exists()) {
+			boolean fileCreated = configFile.createNewFile()
+			if (!fileCreated && !configFile.exists()) {
+				throw new IOException("Unable to create Config.groovy file in directory ${configService.asgardHome}")
+			}
+			grailsApplication.config.appConfigured = true
+		}
 
 	}
 }

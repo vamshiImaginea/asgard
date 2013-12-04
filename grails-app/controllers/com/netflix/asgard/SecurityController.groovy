@@ -68,7 +68,6 @@ class SecurityController {
         def details = [
                 group: group,
 				app: applicationService.getRegisteredApplication(userContext, group.name),
-                accountNames: configService.accountNames,
                 editable: ec2Service.isSecurityGroupEditable(group.name)          
               /*  instances: instances,*/
               

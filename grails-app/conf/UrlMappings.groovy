@@ -16,6 +16,9 @@
 class UrlMappings {
     static mappings = {
 
+		"/login/$action?"(controller:"login")
+		"/logout/$action?"(controller: "logout")
+		
         "/externalImage/$name**"(controller: 'externalImage')
 
         "/$controller/$action?/$id?" {

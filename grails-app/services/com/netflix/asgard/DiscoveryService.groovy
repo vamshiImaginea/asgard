@@ -116,7 +116,8 @@ class DiscoveryService implements CacheInitializer {
      * @return the base API URL of one of the healthiest Eureka nodes
      */
     String findSpecificBaseApiUrl(Region region) {
-        String hostName = findSpecificHostName(region)
+        /*String hostName = findSpecificHostName(region)*/
+		 String hostName = configService.getRegionalDiscoveryServer(region)
         constructBaseApiUrl(hostName)
     }
 

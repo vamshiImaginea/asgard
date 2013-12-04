@@ -51,7 +51,6 @@ import com.netflix.asgard.LaunchTemplateService
 import com.netflix.asgard.Link
 import com.netflix.asgard.MergedInstanceGroupingService
 import com.netflix.asgard.MergedInstanceService
-import com.netflix.asgard.MonkeyPatcherService
 import com.netflix.asgard.MultiRegionAwsClient
 import com.netflix.asgard.Region
 import com.netflix.asgard.RestClientService
@@ -147,16 +146,7 @@ class Mocks extends Specification{
         caches
     }
 
-    private static def monkeyPatcherService
-    static def monkeyPatcherService() {
-        if (monkeyPatcherService == null) {
-            MockUtils.mockLogging(MonkeyPatcherService, false)
-            monkeyPatcherService = new MonkeyPatcherService()
-            monkeyPatcherService.grailsApplication = grailsApplication()
-            monkeyPatcherService.afterPropertiesSet()
-        }
-        monkeyPatcherService
-    }
+    
 
     private static def item(String name) {
         new Item().withName(name).withAttributes(

@@ -30,14 +30,13 @@ import org.jclouds.openstack.nova.v2_0.NovaApiMetadata
 import org.jclouds.openstack.nova.v2_0.extensions.VolumeApi
 import com.google.common.collect.ImmutableSet
 import com.google.inject.Module
+
+
 class ProviderComputeService {
 	static transactional = false
 	def configService
 
 	ComputeService getComputeServiceForProvider(Region region){
-		log.info 'current provider ' + configService.getProvider().toString()
-		log.info 'current jcloudsProviderMapping ' + configService.getCloudProvider().jcloudsProviderMapping
-		log.info 'current region ' + region
 		getComputeService(region,configService.getCloudProvider())
 	}
 
@@ -53,7 +52,6 @@ class ProviderComputeService {
 				.credentials(configService.getUserName(), configService.getApiKey())
 				.modules(ImmutableSet.<Module> of(new SLF4JLoggingModule()))
 
-		log.info 'current provider credentials' + configService.getEndPoint()
 		if(null != region && provider == Provider.AWS){
 			context.overrides(properties).endpoint("https://ec2."+region.code+".amazonaws.com")
 		}

@@ -17,6 +17,7 @@ package com.netflix.asgard
 
 import grails.converters.JSON
 import grails.converters.XML
+import grails.plugin.springsecurity.annotation.Secured
 
 import org.apache.commons.collections.Bag
 import org.apache.commons.collections.HashBag

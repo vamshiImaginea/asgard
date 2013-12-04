@@ -15,12 +15,8 @@
  */
 package com.netflix.asgard
 
-import com.amazonaws.services.opsworks.model.Command;
-import com.netflix.asgard.push.CommonPushOptions;
-import com.perforce.p4java.server.CmdSpec;
-import com.sun.org.apache.bcel.internal.generic.NEW;
-
-import org.springframework.web.servlet.ModelAndView
+import org.springframework.security.core.Authentication
+import org.springframework.security.core.context.SecurityContextHolder
 
 
 /**
@@ -47,7 +43,7 @@ class InitController {
 			return
 		}
 		String cloudProvider = params.get('cloudProvider')
-
+		
 		if(cloudProvider) {
 			cmd.userName = configService.getUserName(cloudProvider)
 			cmd.apiKey =  configService.getApiKey(cloudProvider)
@@ -90,21 +86,22 @@ class InitializeCommand {
 	String cloudProvider
 	String accountNo
 	boolean showPublicAmazonImages
-	/*static constraints = {
-	 userName(nullable: false)
-	 apiKey(nullable: false)
-	 }*/
+	
 
 	ConfigObject toConfigObject() {
 		ConfigObject rootConfig = new ConfigObject()
 		ConfigObject grailsConfig = new ConfigObject()
-		rootConfig['grails'] = grailsConfig
-		if(!userName || !apiKey) {
+		ConfigObject userCofig = new ConfigObject()
+		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+		String loggedInUser = auth.getName();
+		rootConfig[loggedInUser] = userCofig
+		userCofig['grails'] = grailsConfig
+		if(!loggedInUser || !apiKey) {
 			throw new Exception("Cloud Credentials are not provided")
 		}
 		ConfigObject cloud = new ConfigObject()
 		String accountNumber = accountNo.replace('-','')
-		cloud['userName'] = userName.trim()
+		cloud['userName'] = userName
 		cloud['apiKey'] = apiKey.trim()
 		cloud['accountNumber'] = accountNumber
 
@@ -116,8 +113,9 @@ class InitializeCommand {
 		}else if(cloudProvider.equals("openstack") ) {
 			cloud['endpoint'] = endPoint.trim()
 		}
-		rootConfig[cloudProvider] = cloud
+		userCofig[cloudProvider] = cloud
 		grailsConfig['currentActiveService'] = cloudProvider
+		grailsConfig['accountName'] = 'prod'
 		rootConfig
 	}
 }

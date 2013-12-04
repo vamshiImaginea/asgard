@@ -78,9 +78,9 @@
        
         <td class="variables">
           <g:if test="${mi.listTags()}">
-            <g:each var="tag" in="${mi.listTags()}">
+            <g:each var="tag" in="${mi.listTags()}"><%--
               <span class="tagKey">${tag.key}:</span> ${tag.value}<br/>
-            </g:each>
+            --%></g:each>
           </g:if>
         </td>
         <td><g:formatDate date="${mi.launchTime}"/></td>

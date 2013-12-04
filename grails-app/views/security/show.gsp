@@ -54,7 +54,7 @@
         --%></tr>
         <tr class="prop">
           <td class="name">Owner ID:</td>
-          <td class="value">${accountNames.containsKey(group.ownerId) ? accountNames[group.ownerId] : '?'} (${group.ownerId})</td>
+          <td class="value">${group.ownerId}</td>
         </tr>
         <tr class="prop">
           <td class="name">Description:</td>

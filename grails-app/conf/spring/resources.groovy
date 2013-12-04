@@ -13,6 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import grails.plugin.springsecurity.SpringSecurityUtils
+import groovy.io.FileType
+
 import com.google.common.base.CaseFormat
 import com.netflix.asgard.CachedMapBuilder
 import com.netflix.asgard.Caches
@@ -22,43 +25,57 @@ import com.netflix.asgard.ServiceInitLoggingBeanPostProcessor
 import com.netflix.asgard.ThreadScheduler
 import com.netflix.asgard.auth.OneLoginAuthenticationProvider
 import com.netflix.asgard.auth.RestrictEditAuthorizationProvider
-import groovy.io.FileType
+
 
 beans = {
-    serviceInitLoggingBeanPostProcessor(ServiceInitLoggingBeanPostProcessor)
+	serviceInitLoggingBeanPostProcessor(ServiceInitLoggingBeanPostProcessor)
 
-    threadScheduler(ThreadScheduler, ref('configService'))
+	threadScheduler(ThreadScheduler, ref('configService'))
 
-    List<Region> limitedRegions = Region.limitedRegions ?: Region.values()
-    cachedMapBuilder(CachedMapBuilder, ref('threadScheduler'), limitedRegions)
+	List<Region> limitedRegions = Region.limitedRegions ?: Region.values()
+	cachedMapBuilder(CachedMapBuilder, ref('threadScheduler'), limitedRegions)
 
-    caches(Caches, ref('cachedMapBuilder'), ref('configService'))
+	caches(Caches, ref('cachedMapBuilder'), ref('configService'))
 
-    defaultUserDataProvider(DefaultUserDataProvider) { bean ->
-        bean.lazyInit = true
-    }
+	defaultUserDataProvider(DefaultUserDataProvider) { bean ->
+		bean.lazyInit = true
+	}
 
 
-    if (application.config.plugin?.authenticationProvider == 'oneLoginAuthenticationProvider') {
-        oneLoginAuthenticationProvider(OneLoginAuthenticationProvider) { bean ->
-            bean.lazyInit = true
-        }
-    }
+	if (application.config.plugin?.authenticationProvider == 'oneLoginAuthenticationProvider') {
+		oneLoginAuthenticationProvider(OneLoginAuthenticationProvider) { bean ->
+			bean.lazyInit = true
+		}
+	}
 
-    restrictEditAuthorizationProvider(RestrictEditAuthorizationProvider) { bean ->
-        bean.lazyInit = true
-    }
+	restrictEditAuthorizationProvider(RestrictEditAuthorizationProvider) { bean ->
+		bean.lazyInit = true
+	}
 
-    //**** Plugin behavior
+	//**** Plugin behavior
 
-    xmlns lang:'http://www.springframework.org/schema/lang'
+	xmlns lang:'http://www.springframework.org/schema/lang'
 
-    File pluginDir = new File("${application.config.asgardHome}/plugins/")
-    if (pluginDir.exists()) {
-        pluginDir.eachFileMatch(FileType.FILES, ~/.*\.groovy/) { File plugin ->
-            String beanName = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL, plugin.name.replace('.groovy', ''))
-            lang.groovy(id: beanName, 'script-source': "file:${application.config.asgardHome}/plugins/${plugin.name}",
-                    'refresh-check-delay': application.config.plugin.refreshDelay?: -1)
-        }
-    }
+	File pluginDir = new File("${application.config.asgardHome}/plugins/")
+	if (pluginDir.exists()) {
+		pluginDir.eachFileMatch(FileType.FILES, ~/.*\.groovy/) { File plugin ->
+			String beanName = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL, plugin.name.replace('.groovy', ''))
+			lang.groovy(id: beanName, 'script-source': "file:${application.config.asgardHome}/plugins/${plugin.name}",
+			'refresh-check-delay': application.config.plugin.refreshDelay?: -1)
+		}
+	}
+
+	ldapUserDetailsMapper(com.netflix.asgard.auth.MyUserDetailsContextMapper) {
+	}
+
+	authenticationSuccessHandler(com.netflix.asgard.auth.MyAuthSuccessHandler) {
+		def conf = SpringSecurityUtils.securityConfig
+		requestCache = ref('requestCache')
+		defaultTargetUrl = conf.successHandler.defaultTargetUrl
+		alwaysUseDefaultTargetUrl = conf.successHandler.alwaysUseDefault
+		targetUrlParameter = conf.successHandler.targetUrlParameter
+		useReferer = conf.successHandler.useReferer
+		redirectStrategy = ref('redirectStrategy')
+		configService = ref('configService')
+	}
 }

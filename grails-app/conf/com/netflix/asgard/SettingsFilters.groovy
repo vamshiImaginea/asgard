@@ -26,6 +26,12 @@ class SettingsFilters {
     def filters = {
         all(controller: '*', action: '*') {
             before = {
+				log.info controllerName
+				if(['login','init'].contains(controllerName)) {
+					return true
+				}
+				
+
                 String accountName = configService.accountName
                 request.env = accountName
                 request.envStyle = params.envStyle ?: configService.envStyle
@@ -41,7 +47,7 @@ class SettingsFilters {
                 request.bleskDataUrl = configService.bleskDataUrl
                 request.authenticationEnabled = (pluginService.authenticationProvider != null)
                 request.apiTokenEnabled = configService.apiTokenEnabled
-				request.provider = configService.provider.toUpperCase()
+			    request.provider = configService.provider.toUpperCase()
                 boolean authenticated = SecurityUtils.subject?.authenticated
                 request.requireLoginForEdit = configService.authenticationRequiredForEdit && !authenticated
                 // If the last value is falsy and there is no explicit return statement then this filter method will

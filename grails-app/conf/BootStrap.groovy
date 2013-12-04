@@ -28,7 +28,7 @@ class BootStrap {
 
     def init = { servletContext ->
         if (configService.appConfigured) { // Only start warming the caches if Asgard has been configured
-            initService.initializeApplication()
+            //initService.initializeApplication()
         }
     }
 }
