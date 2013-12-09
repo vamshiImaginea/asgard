@@ -97,7 +97,7 @@ grails.config.locations = [
 // if (System.properties["${appName}.config.location"]) {
 //    grails.config.locations << "file:" + System.properties["${appName}.config.location"]
 // }
-grails.app.context = '/'
+grails.app.context = '/asgard'
 grails.mime.file.extensions = true // enables the parsing of file extensions from URLs into the request format
 grails.mime.types = [
         html: ['text/html', 'application/xhtml+xml'],

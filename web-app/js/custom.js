@@ -632,7 +632,7 @@ ady
             action = params['action'];
             id = params['id'];
             region = this.value;
-            url = '/' + region + '/' + controller;
+            url = '/asgard/' + region + '/' + controller;
             if (action && action !== 'index') {
                 url += '/' + action + (id ? '/' + id : '');
             }
@@ -649,7 +649,7 @@ ady
         });
         
         jQuery('#cloudProviderId').change(function() {  
-            window.location = '/home/selectService?cloudProvider='+this.value;
+            window.location = '/asgard/home/selectService?cloudProvider='+this.value;
         });
 
         jQuery('.countAndList').each(function() {

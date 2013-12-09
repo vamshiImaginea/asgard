@@ -33,7 +33,7 @@
 
 </head>
 <body>
-<div class="titlebar banner">
+<div class="titlebar">
     <div class="header">
       <a href="${resource(dir: '/')}">
         <img id="occasionIcon" class="logo" title="${occasion.message}" src="${resource(dir: 'images/occasion', file: occasion?.iconFileName)}"/>
@@ -64,7 +64,7 @@
 
 		<div>
 			<g:form method="post" class="validate">
-				<label for="cloudProvider">Cloud Provider: </label>
+				<label for="cloudProvider" style="color: #3C617C;font-size: 14;">Cloud Provider: </label>
 				<g:select id="cloudProvider" name="cloudProvider" from="${Provider.values()}" class="noSelect2"	value="${Provider.withCode(params.cloudProvider)}" onchange="showCloudConfig()" />
 
 				<table>
