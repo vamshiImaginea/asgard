@@ -227,8 +227,8 @@ grails.plugin.springsecurity.ldap.authorities.groupSearchBase = 'ou=Employees,dc
 grails.plugin.springsecurity.ldap.authorities.retrieveGroupRoles = false
 grails.plugin.springsecurity.ldap.authorities.retrieveDatabaseRoles = false
 grails.plugin.springsecurity.ldap.mapper.userDetailsClass = 'person'
-grails.plugin.springsecurity.ldap.search.filter = '(sAMAccountName={0})'
-grails.plugin.springsecurity.ldap.search.base = 'dc=pramati,dc=com' 
+grails.plugin.springsecurity.ldap.search.filter = '(mail={0})'
+grails.plugin.springsecurity.ldap.search.base = 'ou=Employees,dc=pramati,dc=com' 
 grails.plugin.springsecurity.ldap.auth.hideUserNotFoundExceptions = false
 grails.plugin.springsecurity.successHandler.defaultTargetUrl = '/init'
 grails.plugin.springsecurity.successHandler.alwaysUseDefault=true
