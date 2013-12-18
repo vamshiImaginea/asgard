@@ -6,7 +6,9 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import org.jclouds.compute.ComputeService
+import org.jclouds.ec2.EC2Api;
 import org.jclouds.ec2.EC2Client
+import org.jclouds.ec2.features.AvailabilityZoneAndRegionApi
 
 class RegionService {
 	static transactional = false
@@ -20,11 +22,10 @@ class RegionService {
 			regions.clear()
 			if(configService.appConfigured && configService.userConfigured){
 				log.info 'cloud provider in region service' + configService.getCloudProvider()
-				if( configService.getCloudProvider() != Provider.RACKSPACE ){
-					
+				if( configService.getCloudProvider() != Provider.RACKSPACE ){					
 					ComputeService computeService = providerComputeService.getComputeServiceForProvider(null)
-					EC2Client ec2Client = providerEc2Service.getProivderClient(computeService.getContext())
-					Set<Entry<String, URI>> entry = ec2Client.getAvailabilityZoneAndRegionServices().describeRegions(null).entrySet();
+					EC2Api ec2Api = providerEc2Service.getProivderClient(computeService.getContext())
+					Set<Entry<String, URI>> entry = ((AvailabilityZoneAndRegionApi)ec2Api.availabilityZoneAndRegionApi.get()).describeRegions(null).entrySet();
 					for (Iterator iterator = entry.iterator(); iterator.hasNext();) {
 						Entry<String, URI> regionsEntrySet = (Entry<String, URI>) iterator.next();
 						regions.add(new Region(code:regionsEntrySet.getKey(),endpoint:regionsEntrySet.getValue()))

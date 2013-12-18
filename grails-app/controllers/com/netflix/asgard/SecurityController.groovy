@@ -28,7 +28,7 @@ import org.jclouds.ec2.domain.SecurityGroup
 @ContextParam('region')
 class SecurityController {
 
-    def ec2Service
+    def providerEc2Service
     def configService
 	def applicationService
 
@@ -39,7 +39,7 @@ class SecurityController {
     def list = {
         UserContext userContext = UserContext.of(request)
         Set<String> appNames = Requests.ensureList(params.id).collect { it.split(',') }.flatten() as Set<String>
-        Collection<SecurityGroup> securityGroups = ec2Service.getSecurityGroups(userContext)
+        Collection<SecurityGroup> securityGroups = providerEc2Service.getSecurityGroups(userContext)
         if (appNames) {
             securityGroups = securityGroups.findAll {
                 appNames.contains(Relationships.appNameFromSecurityGroupName(it.name))
@@ -58,7 +58,7 @@ class SecurityController {
     def show = {
         UserContext userContext = UserContext.of(request)
         def name = params.name ?: params.id
-        SecurityGroup group = ec2Service.getSecurityGroup(userContext, name)
+        SecurityGroup group = providerEc2Service.getSecurityGroup(userContext, name)
         if (null == group) {
             Requests.renderNotFound('Security Group', name, this)
             return
@@ -68,7 +68,7 @@ class SecurityController {
         def details = [
                 group: group,
 				app: applicationService.getRegisteredApplication(userContext, group.name),
-                editable: ec2Service.isSecurityGroupEditable(group.name)          
+                editable: providerEc2Service.isSecurityGroupEditable(group.name)          
               /*  instances: instances,*/
               
         ]
@@ -107,9 +107,9 @@ class SecurityController {
             UserContext userContext = UserContext.of(request)
             String name = params.appName
             try {
-                SecurityGroup securityGroup = ec2Service.getSecurityGroup(userContext, name)
+                SecurityGroup securityGroup = providerEc2Service.getSecurityGroup(userContext, name)
                 if (!securityGroup) {
-                    securityGroup = ec2Service.createSecurityGroup(userContext, name, params.description, params.vpcId)
+                    securityGroup = providerEc2Service.createSecurityGroup(userContext, name, params.description, params.vpcId)
                     flash.message = "Security Group '${name}' has been created."
                 } else {
                     flash.message = "Security Group '${name}' already exists."
@@ -125,15 +125,15 @@ class SecurityController {
     def edit = {
         UserContext userContext = UserContext.of(request)
         String id = params.id
-        SecurityGroup group = ec2Service.getSecurityGroup(userContext, id)
+        SecurityGroup group = providerEc2Service.getSecurityGroup(userContext, id)
         if (null == group) {
             Requests.renderNotFound('Security Group', id, this)
             return
         }
         [
                 group: group,
-                groups: ec2Service.getSecurityGroupOptionsForTarget(userContext, group),
-                editable: ec2Service.isSecurityGroupEditable(group.name)
+                groups: providerEc2Service.getSecurityGroupOptionsForTarget(userContext, group),
+                editable: providerEc2Service.isSecurityGroupEditable(group.name)
         ]
     }
 
@@ -141,9 +141,9 @@ class SecurityController {
         String name = params.name ?: params.id
         List<String> selectedGroups = Requests.ensureList(params.selectedGroups)
         UserContext userContext = UserContext.of(request)
-        SecurityGroup securityGroup = ec2Service.getSecurityGroup(userContext, name)
+        SecurityGroup securityGroup = providerEc2Service.getSecurityGroup(userContext, name)
         if (null != securityGroup) {
-            if (ec2Service.isSecurityGroupEditable(securityGroup.name)) {
+            if (providerEc2Service.isSecurityGroupEditable(securityGroup.name)) {
                 try {
                     updateSecurityIngress(userContext, securityGroup, selectedGroups, params)
                     flash.message = "Security Group '${securityGroup.name}' has been updated."
@@ -164,13 +164,13 @@ class SecurityController {
     }
 
     private void updateSecurityIngress(UserContext userContext, SecurityGroup targetGroup, List<String> selectedGroups, Map portMap) {
-        ec2Service.getSecurityGroups(userContext).each {srcGroup ->
+        providerEc2Service.getSecurityGroups(userContext).each {srcGroup ->
 			log.info 'portMap' +portMap
 			log.info 'srcGroup' +srcGroup.name
             boolean wantAccess = selectedGroups.any {it == srcGroup.name} && portMap[srcGroup.name] != ''
             String wantPorts = wantAccess ? portMap[srcGroup.name] : null
-            List<IpPermission> wantPerms = ec2Service.permissionsFromString(wantPorts)
-            ec2Service.updateSecurityGroupPermissions(userContext, targetGroup, srcGroup, wantPerms)
+            List<IpPermission> wantPerms = providerEc2Service.permissionsFromString(wantPorts)
+            providerEc2Service.updateSecurityGroupPermissions(userContext, targetGroup, srcGroup, wantPerms)
         }
     }
 
@@ -179,9 +179,9 @@ class SecurityController {
         String name = params.name ?: params.id
         String msg
         try {
-            SecurityGroup securityGroup = ec2Service.getSecurityGroup(userContext, name)
+            SecurityGroup securityGroup = providerEc2Service.getSecurityGroup(userContext, name)
             if (null != securityGroup) {
-                ec2Service.removeSecurityGroup(userContext, name, securityGroup.name)
+                providerEc2Service.removeSecurityGroup(userContext, name, securityGroup.name)
                 msg = "Security Group '${securityGroup.name}' has been deleted."
             } else {
                 msg = "Security Group '${name}' does not exist."

@@ -21,13 +21,13 @@ import com.amazonaws.services.autoscaling.model.AutoScalingGroup
 import com.amazonaws.services.autoscaling.model.ScheduledUpdateGroupAction
 import com.amazonaws.services.simpleworkflow.flow.annotations.ManualActivityCompletion
 import com.amazonaws.services.simpleworkflow.model.WorkflowExecution
-import com.netflix.asgard.Ec2Service
 import com.netflix.asgard.Caches
 import com.netflix.asgard.CloudReadyService
 import com.netflix.asgard.ConfigService
 import com.netflix.asgard.DiscoveryService
 import com.netflix.asgard.EmailerService
 import com.netflix.asgard.LaunchTemplateService
+import com.netflix.asgard.ProviderEc2Service
 import com.netflix.asgard.Relationships
 import com.netflix.asgard.Task
 import com.netflix.asgard.Time
@@ -46,7 +46,7 @@ class DeploymentActivitiesImpl implements DeploymentActivities {
 
     @Delegate Activity activity = new SwfActivity()
 
-    Ec2Service ec2Service
+    ProviderEc2Service ec2Service
     Caches caches
     CloudReadyService cloudReadyService
     ConfigService configService

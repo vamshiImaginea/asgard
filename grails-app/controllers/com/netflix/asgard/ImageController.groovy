@@ -15,10 +15,6 @@
  */
 package com.netflix.asgard
 
-import com.amazonaws.AmazonServiceException
-import com.amazonaws.services.autoscaling.model.LaunchConfiguration
-import com.amazonaws.services.ec2.model.Instance
-import com.amazonaws.services.ec2.model.SpotInstanceRequest
 import com.netflix.asgard.model.InstanceTypeData
 import com.netflix.asgard.model.JanitorMode
 import com.netflix.asgard.model.MassDeleteRequest
@@ -29,13 +25,14 @@ import grails.converters.XML
 
 import org.codehaus.groovy.grails.web.binding.DataBindingUtils
 import org.codehaus.groovy.grails.web.json.JSONElement
-import org.jclouds.compute.domain.Image
+import org.jclouds.compute.domain.Image;
 import org.jclouds.compute.domain.NodeMetadata;
 
 @ContextParam('region')
 class ImageController {
 
-    def ec2Service
+    def providerEc2Service
+	def providerComputeService
     def imageService
     def instanceTypeService
     def mergedInstanceGroupingService
@@ -57,9 +54,9 @@ class ImageController {
         Collection<Image> images = []
         Set<String> packageNames = Requests.ensureList(params.id).collect { it.split(',') }.flatten() as Set<String>
         if (packageNames) {
-            images = packageNames.collect { ec2Service.getImagesForPackage(userContext, it) }.flatten()
+            images = packageNames.collect { providerComputeService.getImagesForPackage(userContext, it) }.flatten()
         } else {
-            images = ec2Service.getImagesForPackage(userContext, '')
+            images = providerComputeService.getImagesForPackage(userContext, '')
         }
         images = images.sort { it.description.toLowerCase() }
         List<String> accounts = configService.accounts
@@ -76,14 +73,14 @@ class ImageController {
 		imageId=URLDecoder.decode(imageId,'UTF-8');
 		imageId = imageId.contains('/')?imageId.substring(imageId.indexOf('/')+1):imageId
 		log.info 'show details for '+ imageId 
-        Image image = imageId ? ec2Service.getImage(userContext, imageId) : null
+        Image image = imageId ? providerComputeService.getImage(userContext, imageId) : null
         image?.tags?.sort { it.key }
         if (!image) {
             Requests.renderNotFound('Image', imageId, this)
         } else {
             List<String> launchUsers = []
-            try { launchUsers = ec2Service.getImageLaunchers(userContext, image.id) }
-            catch (AmazonServiceException ignored) { /* We may not own the image, so ignore failures here */ }
+            try { launchUsers = providerComputeService.getImageLaunchers(userContext, image.id) }
+            catch (Exception ignored) { /* We may not own the image, so ignore failures here */ }
             /*String snapshotId = image.blockDeviceMappings.findResult { it.ebs?.snapshotId }*/
             String ownerId = image.userMetadata.get("owner")
            String accounts = configService.account
@@ -109,13 +106,13 @@ class ImageController {
 		imageId=URLDecoder.decode(imageId,'UTF-8');
 		log.info 'changing image attributes for ' +imageId
         try {
-            launchUsers = ec2Service.getImageLaunchers(userContext, imageId)
+            launchUsers = providerComputeService.getImageLaunchers(userContext, imageId)
         }
         catch (Exception e) {
             flash.message = "Unable to modify ${imageId} on this account because ${e}"
             redirect(action: 'show', params: params)
         }
-        ['image' : ec2Service.getImage(userContext, imageId),
+        ['image' : providerComputeService.getImage(userContext, imageId),
          'launchPermissions' : launchUsers,
          'accounts' : grailsApplication.config.grails.accountName]
     }
@@ -126,7 +123,7 @@ class ImageController {
 		imageId=URLDecoder.decode(imageId,'UTF-8');
         List<String> launchPermissions = (params.launchPermissions instanceof String) ? [ params.launchPermissions ] : params.launchPermissions?: []
         try {
-            ec2Service.setImageLaunchers(userContext, imageId, launchPermissions)
+            providerEc2Service.setImageLaunchers(userContext, imageId, launchPermissions)
             flash.message = "Image '${imageId}' has been updated."
         } catch (Exception e) {
             flash.message = "Could not update Image: ${e}"
@@ -142,7 +139,7 @@ class ImageController {
             String imageId = params.id
 			imageId=URLDecoder.decode(imageId,'UTF-8');
             try {
-                Image image = ec2Service.getImage(userContext, imageId, From.CACHE)
+                Image image = providerComputeService.getImage(userContext, imageId)
                 String packageName = image.getType()
 	            imageService.deleteImage(userContext, imageId)
                 flash.message = "Image '${imageId}' has been deleted."
@@ -163,9 +160,9 @@ class ImageController {
                  'imageId' : imageId,
                  'instanceType' : '',
                  'instanceTypes' : instanceTypes,
-                 'securityGroups' : ec2Service.getEffectiveSecurityGroups(userContext),
+                 'securityGroups' : providerEc2Service.getEffectiveSecurityGroups(userContext),
                  'zone' : 'any',
-                 'zoneList' : ec2Service.getRecommendedAvailabilityZones(userContext)
+                 'zoneList' : providerEc2Service.getRecommendedAvailabilityZones(userContext)
         ]
     }
 
@@ -195,12 +192,6 @@ class ImageController {
                 instanceIds = launchedInstances*.id
                 message = "Image '${imageId}' has been launched as ${instanceIds}"
                 output = { instances { instanceIds.each { instance(it) } } }
-            } else {
-                List<SpotInstanceRequest> sirs = imageService.requestSpotInstances(userContext, imageId, count,
-                        securityGroups, instanceType, zone, owner)
-                spotInstanceRequestIds = sirs*.spotInstanceRequestId
-                message = "Image '${imageId}' has been used to create Spot Instance Request ${spotInstanceRequestIds}"
-                output = { spotInstanceRequests { spotInstanceRequestIds.each { spotInstanceRequest(it) } } }
             }
         } catch (Exception e) {
 		  e.printStackTrace();
@@ -229,12 +220,9 @@ class ImageController {
     def references = {
         UserContext userContext = UserContext.of(request)
         String imageId = EntityType.image.ensurePrefix(params.imageId ?: params.id)
-        Collection<Instance> instances = ec2Service.getInstancesUsingImageId(userContext, imageId)
-        Collection<LaunchConfiguration> launchConfigurations =
-                awsAutoScalingService.getLaunchConfigurationsUsingImageId(userContext, imageId)
+        Collection<NodeMetadata> instances = providerComputeService.getInstancesUsingImageId(userContext, imageId)
         Map result = [:]
         result['instances'] = instances.collect { it.instanceId }
-        result['launchConfigurations'] = launchConfigurations.collect { it.launchConfigurationName }
         render result as JSON
     }
 
@@ -333,7 +321,7 @@ class ImageController {
 
     def analyze = {
         UserContext userContext = UserContext.of(request)
-        Collection<Image> allImages = ec2Service.getAccountImages(userContext)
+        Collection<Image> allImages = providerComputeService.getAccountImages(userContext)
         List<Image> dateless = []
         List<Image> baseless = []
         List<Image> baselessInUse = []
@@ -424,7 +412,7 @@ class ImageController {
 
 class ImageDeleteCommand {
     String id
-    Ec2Service ec2Service
+    ProviderEc2Service ec2Service
     RestClientService restClientService
     def grailsApplication
 	def configService

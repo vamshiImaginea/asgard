@@ -32,7 +32,6 @@ import org.jclouds.compute.domain.Image
 import org.jclouds.compute.domain.NodeMetadata
 import org.jclouds.compute.domain.TemplateBuilder
 import org.jclouds.compute.domain.internal.ImageImpl
-import org.jclouds.ec2.EC2Client
 import org.jclouds.ec2.domain.Tag
 import org.jclouds.ec2.domain.Tag.ResourceType
 import org.joda.time.DateTime
@@ -53,8 +52,7 @@ class ImageService implements BackgroundProcessInitializer {
 
     static transactional = false
 	def providerComputeService
-    def ec2Service
-    def awsS3Service
+    def providerEc2Service
     def configService
     def emailerService
     def grailsApplication
@@ -83,38 +81,19 @@ class ImageService implements BackgroundProcessInitializer {
 		if(null != scheduledfuture)
 		scheduledfuture.cancel(true)
 	}
-    List<SpotInstanceRequest> requestSpotInstances(UserContext userContext, String imageId, Integer count,
-            Collection<String> securityGroups, String instanceType, String zone, String ownerName) {
-        Check.notEmpty(ownerName, 'Owner')
-        String keyName = ec2Service.getDefaultKeyName()
-        Image image = ec2Service.getImage(userContext, imageId)
-        String userData = Ensure.encoded(launchTemplateService.buildUserDataForImage(userContext, image))
-        Map<String, String> tagPairs = buildTagPairs(image, ownerName)
-
-        BigDecimal spotPrice = instanceTypeService.calculateLeisureLinuxSpotBid(userContext, instanceType)
-
-        LaunchSpecification launchSpec = new LaunchSpecification().withImageId(imageId).
-                withInstanceType(instanceType).withSecurityGroups(securityGroups).withKeyName(keyName).
-                withPlacement(zone ? new SpotPlacement(zone) : null).withUserData(userData)
-        SpotInstanceRequest spotInstanceRequest = new SpotInstanceRequest().withType('one-time').
-                withLaunchSpecification(launchSpec).withTags(tags).withSpotPrice(spotPrice.toString()).
-                withProductDescription(InstanceProductType.LINUX_UNIX.name())
-        List<SpotInstanceRequest> sirs = spotInstanceRequestService.createSpotInstanceRequests(userContext,
-                spotInstanceRequest, 1, zone)
-        sirs
-    }
+ 
 
     Set<NodeMetadata> runOnDemandInstances(UserContext userContext, String imageId, Integer count,
             Collection<String> securityGroups, String instanceType, String zone, String ownerName) {
         Check.notEmpty(ownerName, 'Owner')
-        String keyName = ec2Service.getDefaultKeyName()
-        Image image = ec2Service.getImage(userContext, imageId)
+        String keyName = configService.getDefaultKeyName()
+        Image image = providerComputeService.getImage(userContext, imageId)
         String userData = Ensure.encoded(launchTemplateService.buildUserDataForImage(userContext, image))
 		Set<NodeMetadata> instances
 		List<Tag> tags = null; 
         Map<String, String> tagPairs = buildTagPairs(image, ownerName)		
         String taskName = "Launch image ${imageId}, keyName ${keyName}, instanceType ${instanceType}, zone ${zone}"
-		ComputeService compute = ec2Service.getComputeService(userContext);
+		ComputeService compute = providerComputeService.getComputeService(userContext);
          TemplateBuilder templateBuilder = compute.templateBuilder();
 		 templateBuilder.fromImage(image);
         Set<NodeMetadata> nodes = taskService.runTask(userContext, taskName, { task ->			
@@ -146,7 +125,7 @@ class ImageService implements BackgroundProcessInitializer {
             Collection<String> inUseImageNames = findInUseImageNamesForAllRegions(task)
             regionService.values().each { Region region ->
                 UserContext userContextForRegion = task.userContext.withRegion(region)
-                Collection<Image> images = ec2Service.getAccountImages(userContextForRegion)
+                Collection<Image> images = providerComputeService.getAccountImages(userContextForRegion)
                 Collection<String> imageIdsToTag = images.findAll { inUseImageNames.contains(it.name) }*.imageId
                 task.log "Tagging ${imageIdsToTag} in ${region} with last_referenced_time ${now}"
                 if (imageIdsToTag) {
@@ -174,7 +153,7 @@ class ImageService implements BackgroundProcessInitializer {
         log.debug "Local in use AMI count: ${localUsedImageIds.size()}"
         inUseImageIdsForRegion += localUsedImageIds
 
-        Collection<Image> amis = ec2Service.getAccountImages(userContextForRegion)
+        Collection<Image> amis = providerComputeService.getAccountImages(userContextForRegion)
         Collection<String> inUseBaseImageIds = getInUseBaseImageIds(amis, inUseImageIdsForRegion)
         log.debug "In use base AMI count: ${inUseBaseImageIds.size()}"
         inUseImageIdsForRegion += inUseBaseImageIds
@@ -188,8 +167,7 @@ class ImageService implements BackgroundProcessInitializer {
      * @param userContext who, where, why
      */
     Collection<String> getLocalImageIdsInUse(UserContext userContext) {
-        Collection<String> imageIds = ec2Service.getInstances(userContext)*.imageId.unique()
-        imageIds += awsAutoScalingService.getLaunchConfigurations(userContext)*.imageId.unique()
+        Collection<String> imageIds = providerComputeService.getInstances(userContext)*.imageId.unique()
         imageIds.unique()
     }
 
@@ -270,7 +248,7 @@ class ImageService implements BackgroundProcessInitializer {
 
     private replicateTagsForRegion(String promotionTargetServer, Region region) {
         // Get the test and production AMI data
-        Collection<Image> testImages = ec2Service.getAccountImages(UserContext.auto(region))
+        Collection<Image> testImages = providerComputeService.getAccountImages(UserContext.auto(region))
 
         String url = "${promotionTargetServer}/${region.code}/image/list.xml"
         def prodImagesXml = restClientService.getAsXml(url)
@@ -378,12 +356,12 @@ class ImageService implements BackgroundProcessInitializer {
     void deleteImage(UserContext userContext, String imageId, Task existingTask = null) {
         String msg = "Deleting image ${imageId}"
         Closure work = { Task task ->
-            Image image = ec2Service.getImage(userContext, imageId)
+            Image image = providerComputeService.getImage(userContext, imageId)
             if (!image) {
                 task.log("Unable to find image '${imageId}'")
                 return
             }      
-			String snapshotId  = ec2Service.getEC2Client(userContext).AMIServices.getBlockDeviceMappingsForImageInRegion(userContext.region.code, image.providerId).findResult { it.ebs?.snapshotId }
+			String snapshotId  = providerComputeService.getEC2Client(userContext).AMIServices.getBlockDeviceMappingsForImageInRegion(userContext.region.code, image.providerId).findResult { it.ebs?.snapshotId }
 			if(configService.cloudProvider == Provider.AWS){
 				// Need to check equivalant of Aws imageLocation, Assuming id to be equal to the imageLocation of AWS API
 				String location = image.getLocation().id
@@ -405,7 +383,7 @@ class ImageService implements BackgroundProcessInitializer {
                     }
                 }
             }
-            ec2Service.getImage(userContext, imageId)
+            providerComputeService.getImage(userContext, imageId)
         }
         taskService.runTask(userContext, msg, work, Link.to(EntityType.image, imageId), existingTask)
     }
@@ -422,7 +400,7 @@ class ImageService implements BackgroundProcessInitializer {
         DateTime lastReferencedTime = Time.now().minusDays(request.lastReferencedDaysAgo)
         DateTime neverReferencedTime = Time.now().minusDays(request.neverReferencedDaysAgo)
 
-        Collection<Image> images = ec2Service.getAccountImages(userContext).sort { it.creationTime }
+        Collection<Image> images = providerComputeService.getAccountImages(userContext).sort { it.creationTime }
         abortIfNotEnoughRecentlyUsed(userContext, images)
 
         String accountId = grailsApplication.config.grails.awsAccounts[0]
@@ -516,7 +494,7 @@ class ImageService implements BackgroundProcessInitializer {
         if (!imagesEligibleForDelete) { // Don't call Amazon again if there's nothing to delete
             return imagesEligibleForDelete
         }
-        Collection<Image> imagesToExclude = ec2Service.getImagesWithLaunchPermissions(userContext,
+        Collection<Image> imagesToExclude = providerEc2Service.getImagesWithLaunchPermissions(userContext,
                 configService.getExcludedLaunchPermissionsForMassDelete(), imagesEligibleForDelete*.imageId)
         if (!imagesToExclude) {
             return imagesEligibleForDelete

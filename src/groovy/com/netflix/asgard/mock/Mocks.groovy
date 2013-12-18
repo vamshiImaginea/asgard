@@ -19,8 +19,11 @@ import grails.converters.JSON
 import grails.converters.XML
 import grails.test.MockUtils
 import groovy.util.slurpersupport.GPathResult
+
 import org.jclouds.ContextBuilder;
+
 import javax.servlet.http.HttpServletRequest
+
 import org.codehaus.groovy.grails.web.json.JSONArray
 import org.jclouds.compute.ComputeService
 import org.jclouds.compute.ComputeServiceContext
@@ -38,7 +41,6 @@ import com.amazonaws.services.simpledb.model.Item
 import com.amazonaws.services.sns.AmazonSNS
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Module;
-import com.netflix.asgard.Ec2Service
 import com.netflix.asgard.CachedMapBuilder
 import com.netflix.asgard.Caches
 import com.netflix.asgard.ConfigService
@@ -52,6 +54,7 @@ import com.netflix.asgard.Link
 import com.netflix.asgard.MergedInstanceGroupingService
 import com.netflix.asgard.MergedInstanceService
 import com.netflix.asgard.MultiRegionAwsClient
+import com.netflix.asgard.ProviderEc2Service;
 import com.netflix.asgard.Region
 import com.netflix.asgard.RestClientService
 import com.netflix.asgard.SecretService
@@ -298,8 +301,8 @@ class Mocks extends Specification{
     }
 
 
-    private static Ec2Service ec2Service
-    static Ec2Service ec2Service() {
+    private static ProviderEc2Service ec2Service
+    static ProviderEc2Service ec2Service() {
         if (ec2Service == null) {
             ec2Service = newAwsEc2Service()
         }
@@ -313,9 +316,9 @@ class Mocks extends Specification{
 		computeService
 	}
 
-    static Ec2Service newAwsEc2Service() {
-        MockUtils.mockLogging(Ec2Service, false)
-        Ec2Service ec2Service = new Ec2Service()
+    static ProviderEc2Service newAwsEc2Service() {
+        MockUtils.mockLogging(ProviderEc2Service, false)
+        ProviderEc2Service ec2Service = new ProviderEc2Service()
 		
         ec2Service.with() {
             configService = configService()

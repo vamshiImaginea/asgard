@@ -15,18 +15,8 @@
  */
 package com.netflix.asgard
 
-import java.net.URI;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.Map.Entry;
-
-import groovy.transform.EqualsAndHashCode;
-import groovy.transform.Immutable;
-
-import org.jclouds.compute.ComputeService
-import org.jclouds.ec2.EC2Client;
-
-import com.google.common.cache.LocalCache.Values;
+import groovy.transform.EqualsAndHashCode
+import groovy.transform.Immutable
 
 /**
  * A way to indicate a choice of region within the Amazon Web Services global service offering.

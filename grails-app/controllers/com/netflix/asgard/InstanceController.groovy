@@ -44,7 +44,8 @@ class InstanceController {
 
     def index = { redirect(action: 'list', params:params) }
 
-    def ec2Service
+    def providerEc2Service
+	def providerComputeService
     def configService
     def discoveryService
     def mergedInstanceGroupingService
@@ -83,26 +84,7 @@ class InstanceController {
         }
     }
 
-    def appversions = {
-        UserContext userContext = UserContext.of(request)
-        Set<Multiset.Entry<AppVersion>> avs = ec2Service.getCountedAppVersions(userContext).entrySet()
-        withFormat {
-            xml {
-                render() {
-                    apps(count: avs.size()) {
-                        avs.each { Multiset.Entry<AppVersion> entry ->
-                            app(name: entry.element.packageName,
-                                version: entry.element.version,
-                                count: entry.count,
-                                cl: entry.element.commit,
-                                buildJob: entry.element.buildJobName,
-                                buildNum: entry.element.buildNumber)
-                        }
-                    }
-                }
-            }
-        }
-    }
+  
 
     def audit = {
         UserContext userContext = UserContext.of(request)
@@ -169,14 +151,14 @@ class InstanceController {
 			applicationInstances = applicationInstances.findAll{discoveryInstance -> providerId == discoveryInstance.instanceId}
 			applications = applicationInstances.collect {app -> app.appName}
         }
-        NodeMetadata instance = ec2Service.getInstance(userContext, instanceId);
+        NodeMetadata instance = providerComputeService.getInstance(userContext, instanceId);
         if (!appInst && !instance) {
             String identifier = instanceId ?: "${params.appName}/${params.hostName}"
             Requests.renderNotFound('Instance', identifier, this)
         } else {
             healthCheck = runHealthCheck(appInst)
             instance?.tags?.sort { it.key }
-            image = instance ? ec2Service.getImage(userContext, instance.imageId) : null
+            image = instance ? providerComputeService.getImage(userContext, instance.imageId) : null
 
             Map<String, List<TextLink>> linkGroupingsToListsOfTextLinks = [:]
             baseServer = instance?.hostname
@@ -204,7 +186,7 @@ class InstanceController {
     def terminate = {
         UserContext userContext = UserContext.of(request)
         List<String> instanceIds = Requests.ensureList(params.selectedInstances ?: params.instanceId)
-        ec2Service.terminateInstances(userContext, instanceIds)
+        providerComputeService.terminateInstances(userContext, instanceIds)
         flash.message = "Terminated ${instanceIds.size()} instance${instanceIds.size() == 1 ? '' : 's'}: ${instanceIds}"
         redirect (action: 'list')
     }
@@ -232,7 +214,7 @@ class InstanceController {
     def reboot = {
         String instanceId = params.instanceId
         UserContext userContext = UserContext.of(request)
-        ec2Service.rebootInstance(userContext, instanceId)
+        providerComputeService.rebootInstance(userContext, instanceId)
 
         flash.message = "Rebooting instance '${instanceId}'."
         redirect(action: 'show', params:[instanceId:instanceId.encodeAsURL()])
@@ -242,7 +224,7 @@ class InstanceController {
         UserContext userContext = UserContext.of(request)
         String instanceId = params.instanceId ?: params.id
         try {
-            String consoleOutput = ec2Service.getConsoleOutput(userContext, instanceId)
+            String consoleOutput = providerEc2Service.getConsoleOutput(userContext, instanceId)
             return [ 'instanceId': instanceId.encodeAsURL(), 'consoleOutput' : consoleOutput, 'now': new Date() ]
         } catch (AmazonServiceException ase) {
             Requests.renderNotFound('Instance', instanceId, this, ase.toString())
@@ -320,7 +302,7 @@ class InstanceController {
             redirect(action: 'list')
             return
         } else {
-            Map<String, String> publicIps = ec2Service.describeAddresses(userContext)
+            Map<String, String> publicIps = providerEc2Service.describeAddresses(userContext)
             log.debug "describeAddresses: ${publicIps}"
             return [
                     instance: instance,
@@ -335,7 +317,7 @@ class InstanceController {
         String instanceId = params.instanceId
         UserContext userContext = UserContext.of(request)
         try {
-            ec2Service.associateAddress(userContext, publicIp, instanceId)
+            providerEc2Service.associateAddress(userContext, publicIp, instanceId)
             flash.message = "Elastic IP '${publicIp}' has been associated with '${instanceId}'."
         } catch (Exception e) {
             flash.message = "Could not associate Elastic IP '${publicIp}' with '${instanceId}': ${e}"
@@ -380,7 +362,7 @@ class InstanceController {
     def addTag = {
         String instanceId = EntityType.instance.ensurePrefix(params.instanceId)
         UserContext userContext = UserContext.of(request)
-        ec2Service.createInstanceTag(userContext, [instanceId], params.name, params.value)
+        providerEc2Service.createInstanceTag(userContext, [instanceId], params.name, params.value)
         redirect(action: 'show', params:[instanceId:instanceId])
     }
 
@@ -394,7 +376,7 @@ class InstanceController {
     def userData = {
         UserContext userContext = UserContext.of(request)
         String instanceId = params.id ?: params.instanceId
-        render ec2Service.getUserDataForInstance(userContext, instanceId)
+        render providerEc2Service.getUserDataForInstance(userContext, instanceId)
     }
 
     def userDataHtml = {
@@ -405,6 +387,6 @@ class InstanceController {
     }
 
     private String runHealthCheck(ApplicationInstance appInst) {
-        appInst?.healthCheckUrl ? (ec2Service.checkHostHealth(appInst?.healthCheckUrl) ? 'pass' : 'fail') : 'NA'
+        appInst?.healthCheckUrl ? (providerEc2Service.checkHostHealth(appInst?.healthCheckUrl) ? 'pass' : 'fail') : 'NA'
     }
 }

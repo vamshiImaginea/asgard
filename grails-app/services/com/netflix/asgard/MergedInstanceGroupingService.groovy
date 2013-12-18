@@ -31,7 +31,7 @@ class MergedInstanceGroupingService {
 
     static transactional = false
 
-    def ec2Service
+    def providerComputeService
 	def discoveryService
 	
 
@@ -47,7 +47,7 @@ class MergedInstanceGroupingService {
      */
     List<MergedInstance> getMergedInstances(UserContext userContext) {
 	  
-	  Collection<NodeMetadata> ec2List = ec2Service.getInstances(userContext)
+	  Collection<NodeMetadata> ec2List = providerComputeService.getInstances(userContext)
 	  Collection<ApplicationInstance> discList = discoveryService.getAppInstances(userContext)
 	  Map<String, ApplicationInstance> idsToDiscInstances = discList.inject([:]) { map, discoveryInstance ->
 		  map << [(discoveryInstance.instanceId): discoveryInstance]
@@ -76,7 +76,7 @@ class MergedInstanceGroupingService {
         List<MergedInstance> instances = discList.collect { appInst ->
             NodeMetadata ec2Inst = null
             if (appInst.instanceId) {
-                ec2Inst = ec2Service.getInstance(userContext, appInst.instanceId)
+                ec2Inst = providerComputeService.getInstance(userContext, appInst.instanceId)
             }
             new MergedInstance(ec2Inst,[appInst])
         }
