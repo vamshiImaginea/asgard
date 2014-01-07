@@ -71,7 +71,7 @@ class ImageController {
         UserContext userContext = UserContext.of(request)
         String imageId = EntityType.image.ensurePrefix(params.imageId ?: params.id)
 		imageId=URLDecoder.decode(imageId,'UTF-8');
-		imageId = imageId.contains('/')?imageId.substring(imageId.indexOf('/')+1):imageId
+		imageId = imageId.contains('/') && configService.getCloudProvider() != Provider.RACKSPACE ?imageId.substring(imageId.indexOf('/')+1):imageId
 		log.info 'show details for '+ imageId 
         Image image = imageId ? providerComputeService.getImage(userContext, imageId) : null
         image?.tags?.sort { it.key }
