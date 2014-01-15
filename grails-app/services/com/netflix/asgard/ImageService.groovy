@@ -28,6 +28,7 @@ import java.util.concurrent.TimeUnit
 
 import org.codehaus.groovy.grails.web.json.JSONArray
 import org.jclouds.compute.ComputeService
+import org.jclouds.compute.domain.Hardware
 import org.jclouds.compute.domain.Image
 import org.jclouds.compute.domain.NodeMetadata
 import org.jclouds.compute.domain.TemplateBuilder
@@ -93,9 +94,15 @@ class ImageService implements BackgroundProcessInitializer {
 		List<Tag> tags = null; 
         Map<String, String> tagPairs = buildTagPairs(image, ownerName)		
         String taskName = "Launch image ${imageId}, keyName ${keyName}, instanceType ${instanceType}, zone ${zone}"
-		ComputeService compute = providerComputeService.getComputeService(userContext);
+		ComputeService compute = providerComputeService.getComputeServiceForProvider(userContext.region)
          TemplateBuilder templateBuilder = compute.templateBuilder();
-		 templateBuilder.fromImage(image);
+		 templateBuilder.fromImage(image).locationId(zone);
+		 Collection<Hardware> hardwareProfiles = providerComputeService.getComputeServiceForProvider(userContext.region).listHardwareProfiles()
+		 hardwareProfiles.each { it ->
+			 if(it.id.equals(instanceType)){
+				 templateBuilder.fromHardware(it)
+			 } 
+		 }
         Set<NodeMetadata> nodes = taskService.runTask(userContext, taskName, { task ->			
 		 instances = compute.createNodesInGroup(ownerName, count, templateBuilder.build())         
             return instances

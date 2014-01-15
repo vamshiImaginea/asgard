@@ -56,7 +56,7 @@ class ProviderEc2Service {
 	def taskService
 	def providerFeatureService
 
-	
+
 	EC2Api getProivderClient(ComputeServiceContext context){
 		EC2Api ec2Api
 		if(configService.getCloudProvider() == Provider.AWS){
@@ -66,7 +66,7 @@ class ProviderEc2Service {
 		}
 		ec2Api
 	}
-	
+
 
 
 
@@ -97,10 +97,10 @@ class ProviderEc2Service {
 		log.info 'retrieveSecurityGroups in region '+ region
 		Set<SecurityGroup> securityGroups = [] as Set
 		EC2Api ec2Api = getProivderClient(providerComputeService.getComputeServiceForProvider(region).getContext());
-	    if(ec2Api){
-		securityGroups= ((SecurityGroupApi)ec2Api.getSecurityGroupApi().get()).describeSecurityGroupsInRegion(region.code,null)
-		log.info 'retrieveSecurityGroups in region '+ securityGroups
-	    }
+		if(ec2Api){
+			securityGroups= ((SecurityGroupApi)ec2Api.getSecurityGroupApi().get()).describeSecurityGroupsInRegion(region.code,null)
+			log.info 'retrieveSecurityGroups in region '+ securityGroups
+		}
 		securityGroups
 	}
 
@@ -413,8 +413,8 @@ class ProviderEc2Service {
 					log.error("Error retrieving volume ${volumeId}", StackTraceUtils.sanitize(ase))
 				}
 			}else{
-			providerFeatureService.getVolume(userContext.region, volumeId)
-			
+				return providerFeatureService.getVolume(userContext.region, volumeId)
+
 			}
 		}
 		null
@@ -436,9 +436,9 @@ class ProviderEc2Service {
 	void deleteVolume(UserContext userContext, String volumeId) {
 		EC2Api ec2Api = getProivderClient(providerComputeService.getComputeServiceForProvider(userContext.region).getContext());
 		if(ec2Api)
-		((ElasticBlockStoreApi)ec2Api.elasticBlockStoreApi.get()).deleteVolumeInRegion(userContext.region.code, volumeId)
+			((ElasticBlockStoreApi)ec2Api.elasticBlockStoreApi.get()).deleteVolumeInRegion(userContext.region.code, volumeId)
 		else
-		providerFeatureService.deleteVolume(userContext.region, volumeId)
+			providerFeatureService.deleteVolume(userContext.region, volumeId)
 		// Do not remove it from the allVolumes map, as this prevents
 		// the list page from showing volumes that are in state "deleting".
 		// Volume deletes can take 20 minutes to process.
@@ -447,11 +447,11 @@ class ProviderEc2Service {
 	Volume createVolume(UserContext userContext, Integer size, String zone) {
 		EC2Api ec2Api = getProivderClient(providerComputeService.getComputeServiceForProvider(userContext.region).getContext());
 		if(ec2Api){
-		def volume=((ElasticBlockStoreApi)ec2Api.elasticBlockStoreApi.get()).createVolumeInAvailabilityZone(zone, size)
-		return volume
+			def volume=((ElasticBlockStoreApi)ec2Api.elasticBlockStoreApi.get()).createVolumeInAvailabilityZone(zone, size)
+			return volume
 		}
 		else{
-			return providerFeatureService.createVolume(userContext.region,size,RandomStringUtils.random(4), zone);
+			return providerFeatureService.createVolume(userContext.region,size,RandomStringUtils.random(4), zone,null);
 		}
 	}
 
@@ -460,9 +460,14 @@ class ProviderEc2Service {
 	}
 
 	Volume createVolume(UserContext userContext, Integer size, String zone, String snapshotId) {
+
 		EC2Api ec2Api = getProivderClient(providerComputeService.getComputeServiceForProvider(userContext.region).getContext());
-		def volume=((ElasticBlockStoreApi)ec2Api.elasticBlockStoreApi.get()).createVolumeFromSnapshotInAvailabilityZone(zone, size, snapshotId);
-		return volume
+		if(ec2Api){
+			return ((ElasticBlockStoreApi)ec2Api.elasticBlockStoreApi.get()).createVolumeFromSnapshotInAvailabilityZone(zone, size, snapshotId);
+		}else{
+			return providerFeatureService.createVolume(userContext.region,size,RandomStringUtils.random(4), zone,null);
+		}
+
 	}
 
 	Collection<String> preselectedZoneNames(Collection<Location> availabilityZones,
@@ -478,16 +483,16 @@ class ProviderEc2Service {
 
 	private Set<AvailabilityZoneInfo> retrieveAvailabilityZones(Region region) {
 		EC2Api ec2Api = getProivderClient(providerComputeService.getComputeServiceForProvider(region).getContext());
-		
+
 		if(ec2Api){
 			((AvailabilityZoneAndRegionApi)ec2Api.availabilityZoneAndRegionApi.get()).describeAvailabilityZonesInRegion(region.code);
 		}else{
-		    providerFeatureService.getAvailabilityZonesInRegion(region)
+			providerFeatureService.getAvailabilityZonesInRegion(region)
 
 		}
-		
-		
-		
+
+
+
 	}
 
 	Collection<AvailabilityZoneInfo> getAvailabilityZones(UserContext userContext) {
@@ -586,12 +591,12 @@ class ProviderEc2Service {
 		def snapshotsInRegion
 		log.info 'retrieveSnapshots in region '+ snapshotsInRegion
 		if(ec2Api){
-		snapshotsInRegion = ((ElasticBlockStoreApi)ec2Api.elasticBlockStoreApi.get()).describeSnapshotsInRegion(region.code,null)
+			snapshotsInRegion = ((ElasticBlockStoreApi)ec2Api.elasticBlockStoreApi.get()).describeSnapshotsInRegion(region.code,null)
 		}else{
-		snapshotsInRegion = providerFeatureService.retrieveSnapshots(region)
-		
+			snapshotsInRegion = providerFeatureService.retrieveSnapshots(region)
+
 		}
-		
+
 		snapshotsInRegion
 
 	}
@@ -602,17 +607,17 @@ class ProviderEc2Service {
 
 		if (snapshotId) {
 			if(ec2Api){
-			try {
-				Set<Snapshot> snapshots =((ElasticBlockStoreApi)ec2Api.elasticBlockStoreApi.get()).describeSnapshotsInRegion(regionCode,snapshotIds(snapshotId))
-				if (snapshots.size() > 0) {
-					Snapshot snapshot = Check.lone(snapshots, Snapshot)
-					return snapshot
+				try {
+					Set<Snapshot> snapshots =((ElasticBlockStoreApi)ec2Api.elasticBlockStoreApi.get()).describeSnapshotsInRegion(regionCode,snapshotIds(snapshotId))
+					if (snapshots.size() > 0) {
+						Snapshot snapshot = Check.lone(snapshots, Snapshot)
+						return snapshot
+					}
+				} catch (Exception ase) {
+					log.error("Error retrieving snapshot ${snapshotId}", StackTraceUtils.sanitize(ase))
 				}
-			} catch (Exception ase) {
-				log.error("Error retrieving snapshot ${snapshotId}", StackTraceUtils.sanitize(ase))
-			}
 			}else{
-			return providerFeatureService.getSnapshot(userContext.region, snapshotId)
+				return providerFeatureService.getSnapshot(userContext.region, snapshotId)
 			}
 		}
 		null
@@ -644,9 +649,9 @@ class ProviderEc2Service {
 			task.tryUntilSuccessful(
 					{
 						if(ec2Api)
-						((ElasticBlockStoreApi)ec2Api.elasticBlockStoreApi.get()).deleteSnapshotInRegion(regionCode, snapshotId)
+							((ElasticBlockStoreApi)ec2Api.elasticBlockStoreApi.get()).deleteSnapshotInRegion(regionCode, snapshotId)
 						else
-						providerFeatureService.deleteSnapshot(userContext.region, snapshotId)
+							providerFeatureService.deleteSnapshot(userContext.region, snapshotId)
 					},
 					{e.errorCode == 'InvalidSnapshot.InUse' },
 					250

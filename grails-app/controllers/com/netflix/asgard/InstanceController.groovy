@@ -142,7 +142,7 @@ class InstanceController {
         ApplicationInstance appInst
 		
         if (params.appName) {
-            appName = params.appName
+            String appName = params.appName
             String instName = instanceId ?: params.hostName
             appInst = discoveryService.getAppInstance(userContext, appName, instName)
         } else {
