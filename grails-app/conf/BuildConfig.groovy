@@ -23,170 +23,169 @@ grails.project.test.reports.dir = 'target/test-reports'
 grails.project.war.file = "target/${appName}.war"
 
 codenarc {
-    reports = {
-        AsgardXmlReport('xml') {
-            outputFile = 'CodeNarc-Report.xml'
-            title = 'Asgard CodeNarc Report'
-        }
-        AsgardHtmlReport('html') {
-            outputFile = 'CodeNarc-Report.html'
-            title = 'Asgard CodeNarc Report'
-        }
-    }
-    ruleSetFiles='file:grails-app/conf/CodeNarcRuleSet.groovy'
-    maxPriority1Violations = 0
+	reports = {
+		AsgardXmlReport('xml') {
+			outputFile = 'CodeNarc-Report.xml'
+			title = 'Asgard CodeNarc Report'
+		}
+		AsgardHtmlReport('html') {
+			outputFile = 'CodeNarc-Report.html'
+			title = 'Asgard CodeNarc Report'
+		}
+	}
+	ruleSetFiles='file:grails-app/conf/CodeNarcRuleSet.groovy'
+	maxPriority1Violations = 0
 }
 
 grails.project.dependency.resolution = {
-    // Inherit Grails' default dependencies
-    inherits('global') {}
+	// Inherit Grails' default dependencies
+	inherits('global') {}
 
-    log 'warn'
+	log 'warn'
 
-    repositories {
-        grailsPlugins()
-        grailsHome()
-        grailsCentral()
-        mavenCentral()
+	repositories {
+		grailsPlugins()
+		grailsHome()
+		grailsCentral()
+		mavenCentral()
 		mavenRepo "http://repo.spring.io/milestone/"
-		
 
-        // Optional custom repository for dependencies.
-        Closure internalRepo = {
-            String repoUrl = 'http://artifacts/ext-releases-local'
-            String artifactPattern = '[organisation]/[module]/[revision]/[artifact]-[revision](-[classifier]).[ext]'
-            String ivyPattern = '[organisation]/[module]/[revision]/[module]-[revision]-ivy.[ext]'
-            URLResolver urlLibResolver = new URLResolver()
-            urlLibResolver.with {
-                name = repoUrl
-                addArtifactPattern("${repoUrl}/${artifactPattern}")
-                addIvyPattern("${repoUrl}/${ivyPattern}")
-                m2compatible = true
-            }
-            resolver urlLibResolver
 
-            String localDir = System.getenv('IVY_LOCAL_REPO') ?: "${System.getProperty('user.home')}/ivy2-local"
-            FileSystemResolver localLibResolver = new FileSystemResolver()
-            localLibResolver.with {
-                name = localDir
-                addArtifactPattern("${localDir}/${artifactPattern}")
-                addIvyPattern("${localDir}/${ivyPattern}")
-            }
-            resolver localLibResolver
-        }
-        // Comment or uncomment the next line to toggle the use of an internal artifacts repository.
-        //internalRepo()
-    }
+		// Optional custom repository for dependencies.
+		Closure internalRepo = {
+			String repoUrl = 'http://artifacts/ext-releases-local'
+			String artifactPattern = '[organisation]/[module]/[revision]/[artifact]-[revision](-[classifier]).[ext]'
+			String ivyPattern = '[organisation]/[module]/[revision]/[module]-[revision]-ivy.[ext]'
+			URLResolver urlLibResolver = new URLResolver()
+			urlLibResolver.with {
+				name = repoUrl
+				addArtifactPattern("${repoUrl}/${artifactPattern}")
+				addIvyPattern("${repoUrl}/${ivyPattern}")
+				m2compatible = true
+			}
+			resolver urlLibResolver
 
-    dependencies {
+			String localDir = System.getenv('IVY_LOCAL_REPO') ?: "${System.getProperty('user.home')}/ivy2-local"
+			FileSystemResolver localLibResolver = new FileSystemResolver()
+			localLibResolver.with {
+				name = localDir
+				addArtifactPattern("${localDir}/${artifactPattern}")
+				addIvyPattern("${localDir}/${ivyPattern}")
+			}
+			resolver localLibResolver
+		}
+		// Comment or uncomment the next line to toggle the use of an internal artifacts repository.
+		//internalRepo()
+	}
 
-        compile(
-                // Amazon Web Services programmatic interface
-                'com.amazonaws:aws-java-sdk:1.6.0',
-				
-				
-        ) 
-	/*	{
-            // AWS defines their dependencies as open-ended, which causes problems when resolving.
-            // See http://stackoverflow.com/a/7990573/869
-            transitive = false
-		
-        }*/
+	dependencies {
 
-        compile(
-                // Transitive dependencies of aws-java-sdk, but also used directly.
-                // It would be great if we could upgrade httpcore and httpclient, but we can't until the AWS Java SDK
-                // upgrades its dependencies. If we simply upgrade these, then some Amazon calls fail.
-                'org.apache.httpcomponents:httpcore:4.1',
-                'org.apache.httpcomponents:httpclient:4.1.1',
+		compile(
+				// Amazon Web Services programmatic interface
+				'com.amazonaws:aws-java-sdk:1.6.0',
 
-                // Explicitly including aws-java-sdk transitive dependencies
-                'org.codehaus.jackson:jackson-core-asl:1.8.9',
-                'org.codehaus.jackson:jackson-mapper-asl:1.8.9',
 
-                // Extra collection types and utilities
-                'commons-collections:commons-collections:3.2.1',
+				)
+		/*	{
+		 // AWS defines their dependencies as open-ended, which causes problems when resolving.
+		 // See http://stackoverflow.com/a/7990573/869
+		 transitive = false
+		 }*/
 
-                // Easier Java from of the Apache Foundation
-                'commons-lang:commons-lang:2.4',
+		compile(
+				// Transitive dependencies of aws-java-sdk, but also used directly.
+				// It would be great if we could upgrade httpcore and httpclient, but we can't until the AWS Java SDK
+				// upgrades its dependencies. If we simply upgrade these, then some Amazon calls fail.
+				'org.apache.httpcomponents:httpcore:4.1',
+				'org.apache.httpcomponents:httpclient:4.1.1',
 
-                // Easier Java from Joshua Bloch and Google
-                'com.google.guava:guava:12.0',
+				// Explicitly including aws-java-sdk transitive dependencies
+				'org.codehaus.jackson:jackson-core-asl:1.8.9',
+				'org.codehaus.jackson:jackson-mapper-asl:1.8.9',
 
-                // SSH calls to retrieve secret keys from remote servers
-                'com.jcraft:jsch:0.1.45',
+				// Extra collection types and utilities
+				'commons-collections:commons-collections:3.2.1',
 
-                // Send emails about system errors and task completions
-                'javax.mail:mail:1.4.1',
+				// Easier Java from of the Apache Foundation
+				'commons-lang:commons-lang:2.4',
 
-                // Better date API
-                'joda-time:joda-time:1.6.2',
+				// Easier Java from Joshua Bloch and Google
+				'com.google.guava:guava:12.0',
 
-                // Delete when Amazon provides a proper instance type API. Web scraping API to parse poorly formed HTML.
-                'org.jsoup:jsoup:1.6.1',
+				// SSH calls to retrieve secret keys from remote servers
+				'com.jcraft:jsch:0.1.45',
 
-                // Static analysis for Groovy code.
-                'org.codenarc:CodeNarc:0.19',
+				// Send emails about system errors and task completions
+				'javax.mail:mail:1.4.1',
 
-                // This fixes ivy resolution issues we had with our transitive dependency on 1.4.
-                'commons-codec:commons-codec:1.5',
+				// Better date API
+				'joda-time:joda-time:1.6.2',
 
-                // Call Perforce in process. Delete when user data no longer come from Perforce at deployment time.
-                'com.perforce:p4java:2010.1.269249',
+				// Delete when Amazon provides a proper instance type API. Web scraping API to parse poorly formed HTML.
+				'org.jsoup:jsoup:1.6.1',
 
-                // Rules for AWS named objects.
-                'com.netflix.frigga:frigga:0.6',
+				// Static analysis for Groovy code.
+				'org.codenarc:CodeNarc:0.19',
 
-                // Groovy concurrency framework.
-                'org.codehaus.gpars:gpars:1.0.0',
+				// This fixes ivy resolution issues we had with our transitive dependency on 1.4.
+				'commons-codec:commons-codec:1.5',
 
-                // Used for JSON parsing of AWS Simple Workflow Service metadata.
-                // Previously this was an indirect depencency through Grails itself, but this caused errors in some
-                // Grails environments.
-                'com.googlecode.json-simple:json-simple:1.1',
-                //Jclouds dependencies
-		'org.apache.jclouds:jclouds-all:1.6.2-incubating',
-		'org.apache.jclouds.driver:jclouds-log4j:1.6.2-incubating',
-		'log4j:log4j:1.2.17',
-                         'org.apache.jclouds.driver:jclouds-sshj:1.6.2-incubating',
-				 'org.xerial:sqlite-jdbc:3.6.17'
-	        		
+				// Call Perforce in process. Delete when user data no longer come from Perforce at deployment time.
+				'com.perforce:p4java:2010.1.269249',
 
-        ) { // Exclude superfluous and dangerous transitive dependencies
-            excludes(
-                    // Some libraries bring older versions of JUnit as a transitive dependency and that can interfere
-                    // with Grails' built in JUnit
-                    'junit',
+				// Rules for AWS named objects.
+				'com.netflix.frigga:frigga:0.6',
 
-                    'mockito-core',
-            )
-        }
+				// Groovy concurrency framework.
+				'org.codehaus.gpars:gpars:1.0.0',
 
-        // Spock in Grails 2.2.x http://grails.org/plugin/spock
-        test "org.spockframework:spock-grails-support:0.7-groovy-2.0"
+				// Used for JSON parsing of AWS Simple Workflow Service metadata.
+				// Previously this was an indirect depencency through Grails itself, but this caused errors in some
+				// Grails environments.
+				'com.googlecode.json-simple:json-simple:1.1',
+				//Jclouds dependencies
+				'org.apache.jclouds:jclouds-all:1.6.2-incubating',
+				'org.apache.jclouds.driver:jclouds-log4j:1.6.2-incubating',
+				'log4j:log4j:1.2.17',
+				'org.apache.jclouds.driver:jclouds-sshj:1.6.2-incubating',
+				'org.xerial:sqlite-jdbc:3.6.17'
 
-        // Optional dependency for Spock to support mocking objects without a parameterless constructor.
-        test 'org.objenesis:objenesis:1.2'
-    }
 
-    plugins {
-        compile ":hibernate:$grailsVersion"
-        compile ":compress:0.4"
-        compile ":context-param:1.0"
-        compile ':shiro:1.1.4'
-        compile ":standalone:1.1.1"
+				) { // Exclude superfluous and dangerous transitive dependencies
+					excludes(
+							// Some libraries bring older versions of JUnit as a transitive dependency and that can interfere
+							// with Grails' built in JUnit
+							'junit',
+
+							'mockito-core',
+							)
+				}
+
+		// Spock in Grails 2.2.x http://grails.org/plugin/spock
+		test "org.spockframework:spock-grails-support:0.7-groovy-2.0"
+
+		// Optional dependency for Spock to support mocking objects without a parameterless constructor.
+		test 'org.objenesis:objenesis:1.2'
+	}
+
+	plugins {
+		compile ":hibernate:$grailsVersion"
+		compile ":compress:0.4"
+		compile ":context-param:1.0"
+		compile ':shiro:1.1.4'
+		compile ":standalone:1.1.1"
 		compile ":spring-security-ldap:2.0-RC2"
-		
 
-        runtime ":cors:1.0.4"
 
-        // Spock in Grails 2.2.x http://grails.org/plugin/spock
-        test(":spock:0.7") {
-            exclude "spock-grails-support"
-        }
+		runtime ":cors:1.0.4"
 
-        test ':code-coverage:1.2.5'
+		// Spock in Grails 2.2.x http://grails.org/plugin/spock
+		test(":spock:0.7") {
+			exclude "spock-grails-support"
+		}
 
-        build ":tomcat:$grailsVersion"
-    }
+		test ':code-coverage:1.2.5'
+
+		build ":tomcat:$grailsVersion"
+	}
 }

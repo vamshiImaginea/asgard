@@ -238,6 +238,7 @@ grails.plugin.springsecurity.failureHandler.defaultFailureUrl  = '/login/auth'
 grails.plugin.springsecurity.securityConfigType = 'InterceptUrlMap'
 grails.plugin.springsecurity.interceptUrlMap = [
 		'/application/**':  ['ROLE_USER', 'IS_AUTHENTICATED_FULLY'],
+		'/applicationAudit/**':  ['ROLE_USER', 'IS_AUTHENTICATED_FULLY'],
 		'/**/instance/**':    ['ROLE_USER'],
 		'/**/security/**':       ['ROLE_USER'],
 		'/**/instanceType/**' :['ROLE_USER'],

@@ -40,6 +40,7 @@ class ImageController {
     def grailsApplication
 	def configService
 	def launchTemplateService
+	def applicationAuditService
 
     def static allowedMethods = [update: 'POST', delete: ['POST', 'DELETE'], launch: 'POST', addTag: 'POST',
             addTags: 'POST', removeTag: ['POST', 'DELETE'], removeTags: ['POST', 'DELETE'], removeAllTags: 'DELETE',
@@ -193,11 +194,13 @@ class ImageController {
                 message = "Image '${imageId}' has been launched as ${instanceIds}"
                 output = { instances { instanceIds.each { instance(it) } } }
             }
-        } catch (Exception e) {
-		  e.printStackTrace();
-            message = "Could not launch Image: ${e}"
-            output = { error(message) }
-        }
+			applicationAuditService.addAuditData(userContext, AuditApplicationType.INSTANCE,Action.CREATE,Status.SUCCESS)
+		} catch (Exception e) {
+			applicationAuditService.addAuditData(userContext, AuditApplicationType.INSTANCE,Action.CREATE,Status.FAILURE)
+			e.printStackTrace();
+			message = "Could not launch Image: ${e}"
+			output = { error(message) }
+		}
 
         withFormat {
             form {

@@ -17,7 +17,6 @@ package com.netflix.asgard
 
 import grails.converters.JSON
 import grails.converters.XML
-import grails.plugin.springsecurity.annotation.Secured
 
 import org.apache.commons.collections.Bag
 import org.apache.commons.collections.HashBag
@@ -25,6 +24,7 @@ import org.jclouds.ec2.domain.IpPermission
 import org.jclouds.ec2.domain.SecurityGroup
 
 import com.google.common.collect.Lists
+import com.netflix.asgard.joke.FailureImage;
 import com.netflix.asgard.model.ApplicationInstance
 import com.netflix.asgard.model.MonitorBucketType
 import com.netflix.asgard.model.Owner
@@ -36,7 +36,7 @@ class ApplicationController {
 	def cloudReadyService
 	def ec2Service
 	def configService
-
+    def applicationAuditService
 	static allowedMethods = [save: 'POST', update: 'POST', delete: 'POST', securityUpdate: 'POST']
 
 	static editActions = ['security']
@@ -173,6 +173,7 @@ class ApplicationController {
 					type, desc, owner, email, bucketType, enableChaosMonkey)
 			flash.message = result.toString()
 			if (result.succeeded()) {
+				applicationAuditService.addAuditData(userContext, AuditApplicationType.APPLICATION,Action.CREATE,Status.SUCCESS)
 				redirect(action: 'show', params: [id: name])
 			} else {
 				chain(action: 'create', model: [cmd: cmd], params: params)
@@ -189,6 +190,7 @@ class ApplicationController {
 	}
 
 	def update = {
+		boolean updated = true
 		String name = params.name
 		UserContext userContext = UserContext.of(request)
 		String group = params.group
@@ -204,11 +206,15 @@ class ApplicationController {
 			flash.message = "Application '${name}' has been updated."
 		} catch (Exception e) {
 			flash.message = "Could not update Application: ${e}"
+			updated = false
 		}
+		applicationAuditService.addAuditData(userContext, AuditApplicationType.APPLICATION,Action.UPDATE,updated?Status.SUCCESS:Status.FAILURE)
 		redirect(action: 'show', params: [id: name])
+		
 	}
 
 	def delete = {
+		boolean deleted = true
 		String name = params.name
 		UserContext userContext = UserContext.of(request)
 		log.info "Delete App: ${name}"
@@ -221,8 +227,10 @@ class ApplicationController {
 			return
 		} catch (Exception e) {
 			flash.message = "Could not delete Application: ${e}"
+			deleted = false
 		}
 		redirect(action: 'list')
+		applicationAuditService.addAuditData(userContext, AuditApplicationType.APPLICATION,Action.DELETE,deleted?Status.SUCCESS:Status.FAILURE)
 	}
 
 

@@ -27,7 +27,7 @@ class VolumeController {
     def index = { redirect(action: 'list', params:params) }
 
     def providerEc2Service
-
+    def applicationAuditService
     def list = {
         UserContext userContext = UserContext.of(request)
         def volumes = (providerEc2Service.getVolumes(userContext) as List)
@@ -44,9 +44,11 @@ class VolumeController {
         try {
             Volume volume = providerEc2Service.createVolume(userContext, params.volumeSize as Integer,
                     params.availabilityZone)
+			applicationAuditService.addAuditData(userContext, AuditApplicationType.VOLUME,Action.CREATE,Status.SUCCESS)
             flash.message = "EBS Volume '${volume.id}' has been created."
             redirect(action: 'show', params:[id:volume.id])
         } catch (AmazonServiceException ase) {
+		applicationAuditService.addAuditData(userContext, AuditApplicationType.VOLUME,Action.CREATE,Status.FAILURE)
             flash.message = "Could not create EBS Volume: ${ase}"
             redirect(action: 'list')
         }
@@ -68,9 +70,11 @@ class VolumeController {
                 message += (deletedCount > 0) ? ", $it" : "Volume(s) deleted: $it"
                 deletedCount++
             }
+			applicationAuditService.addAuditData(userContext, AuditApplicationType.VOLUME,Action.DELETE,Status.SUCCESS)
             flash.message = message
         } catch (Exception e) {
             flash.message = "Could not delete volume: ${e}"
+			applicationAuditService.addAuditData(userContext, AuditApplicationType.VOLUME,Action.DELETE,Status.FAILURE)
         }
         redirect(action: 'list')
     }

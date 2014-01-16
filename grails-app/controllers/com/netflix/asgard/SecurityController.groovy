@@ -31,6 +31,7 @@ class SecurityController {
     def providerEc2Service
     def configService
 	def applicationService
+	def applicationAuditService
 
     def static allowedMethods = [save: 'POST', update: 'POST', delete: 'POST']
 
@@ -109,6 +110,7 @@ class SecurityController {
             try {
                 SecurityGroup securityGroup = providerEc2Service.getSecurityGroup(userContext, name)
                 if (!securityGroup) {
+					applicationAuditService.addAuditData(userContext, AuditApplicationType.SECURITY_GROUP,Action.CREATE,Status.SUCCESS)
                     securityGroup = providerEc2Service.createSecurityGroup(userContext, name, params.description, params.vpcId)
                     flash.message = "Security Group '${name}' has been created."
                 } else {
@@ -116,6 +118,7 @@ class SecurityController {
                 }
                 redirect(action: 'show', params: [id: securityGroup.name])
             } catch (Exception e) {
+			applicationAuditService.addAuditData(userContext, AuditApplicationType.SECURITY_GROUP,Action.CREATE,Status.FAILURE)
                 flash.message = "Could not create Security Group: ${e}"
                 chain(action: 'create', model: [cmd: cmd], params: params)
             }
@@ -146,9 +149,11 @@ class SecurityController {
             if (providerEc2Service.isSecurityGroupEditable(securityGroup.name)) {
                 try {
                     updateSecurityIngress(userContext, securityGroup, selectedGroups, params)
+					applicationAuditService.addAuditData(userContext, AuditApplicationType.SECURITY_GROUP,Action.UPDATE,Status.SUCCESS)
                     flash.message = "Security Group '${securityGroup.name}' has been updated."
                     redirect(action: 'show', params: [id: securityGroup.name])
                 } catch (Exception e) {
+				applicationAuditService.addAuditData(userContext, AuditApplicationType.SECURITY_GROUP,Action.UPDATE,Status.FAILURE)
 				  e.printStackTrace();
                     flash.message = "Could not update Security Group: ${e}"
                     redirect(action: 'edit', params: [id: securityGroup.name])
@@ -182,6 +187,7 @@ class SecurityController {
             SecurityGroup securityGroup = providerEc2Service.getSecurityGroup(userContext, name)
             if (null != securityGroup) {
                 providerEc2Service.removeSecurityGroup(userContext, name, securityGroup.name)
+				applicationAuditService.addAuditData(userContext, AuditApplicationType.SECURITY_GROUP,Action.DELETE,Status.SUCCESS)
                 msg = "Security Group '${securityGroup.name}' has been deleted."
             } else {
                 msg = "Security Group '${name}' does not exist."
@@ -189,6 +195,7 @@ class SecurityController {
             flash.message = msg
             redirect(action: 'result')
         } catch (Exception e) {
+		applicationAuditService.addAuditData(userContext, AuditApplicationType.SECURITY_GROUP,Action.DELETE,Status.FAILURE)
             flash.message = "Could not delete Security Group: ${e}"
             redirect(action: 'show', params: [id: name])
         }

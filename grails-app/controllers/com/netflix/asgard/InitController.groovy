@@ -111,7 +111,7 @@ class InitializeCommand {
 			}
 			cloud['publicResourceAccounts'] = showPublicAmazonImages ? ['amazon']: []
 		}else if(cloudProvider.equals("openstack") ) {
-			cloud['endpoint'] = endPoint.trim()
+			cloud['endPoint'] = endPoint.trim()
 		}
 		userCofig[cloudProvider] = cloud
 		grailsConfig['currentActiveService'] = cloudProvider
