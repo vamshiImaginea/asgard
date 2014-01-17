@@ -145,6 +145,7 @@
        </ul>
      </li>--%>
      <li class="menuButton"><g:link class="tasks" controller="task" action="list">Task</g:link></li>
+     <li class="menuButton"><g:link class="simpleDb" controller="cloudUsageTracker" action="list">Usage Details</g:link></li>
    </ul>
   </g:if>
   <div class="clear"></div>
