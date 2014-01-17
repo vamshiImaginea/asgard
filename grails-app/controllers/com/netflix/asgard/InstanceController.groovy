@@ -49,7 +49,7 @@ class InstanceController {
     def configService
     def discoveryService
     def mergedInstanceGroupingService
-	def applicationAuditService
+	def cloudUsageTrackerService
 
     def list = {
         UserContext userContext = UserContext.of(request)
@@ -188,7 +188,7 @@ class InstanceController {
         UserContext userContext = UserContext.of(request)
         List<String> instanceIds = Requests.ensureList(params.selectedInstances ?: params.instanceId)
         providerComputeService.terminateInstances(userContext, instanceIds)
-		applicationAuditService.addAuditData(userContext, AuditApplicationType.INSTANCE,Action.DELETE,Status.SUCCESS)
+		cloudUsageTrackerService.addAuditData(userContext, AuditApplicationType.INSTANCE,Action.DELETE,Status.SUCCESS)
         flash.message = "Terminated ${instanceIds.size()} instance${instanceIds.size() == 1 ? '' : 's'}: ${instanceIds}"
         redirect (action: 'list')
     }
@@ -217,7 +217,7 @@ class InstanceController {
         String instanceId = params.instanceId
         UserContext userContext = UserContext.of(request)
         providerComputeService.rebootInstance(userContext, instanceId)
-		applicationAuditService.addAuditData(userContext, AuditApplicationType.INSTANCE,Action.REBOOT,Status.SUCCESS)
+		cloudUsageTrackerService.addAuditData(userContext, AuditApplicationType.INSTANCE,Action.REBOOT,Status.SUCCESS)
         flash.message = "Rebooting instance '${instanceId}'."
         redirect(action: 'show', params:[instanceId:instanceId.encodeAsURL()])
     }

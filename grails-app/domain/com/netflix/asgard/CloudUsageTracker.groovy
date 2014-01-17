@@ -2,7 +2,7 @@ package com.netflix.asgard
 
 import com.netflix.asgard.model.MonitorBucketType;
 
-class ApplicationAudit {  
+class CloudUsageTracker {  
 	String date
 	String user
 	String action
@@ -11,7 +11,10 @@ class ApplicationAudit {
 	String applicationType
 	String status	
 	String userAccount
+	String auditId
+	String message
     static constraints = {
+		auditId blank: false, unique: true
 		applicationType blank: false, unique: false
 		user blank: false, unique: false
 		date blank: false, unique: false

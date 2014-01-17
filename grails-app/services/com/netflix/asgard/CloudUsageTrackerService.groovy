@@ -7,21 +7,22 @@ import org.apache.commons.lang.StringUtils;
 import org.joda.time.DateTime
 import org.springframework.security.core.context.SecurityContextHolder
 
-class ApplicationAuditService {
+class CloudUsageTrackerService {
 	def configService
 
 	boolean addAuditData(UserContext userContext, AuditApplicationType applicationType,Action action,Status status) {
 
 		String date = new DateTime().toString()
 		String user = SecurityContextHolder?.getContext()?.getAuthentication()?.getName()?:'default'
-		String message = 'user has '+action+' '+applicationType
+		String message = user+' has '+action+'D '+applicationType
 		String region = userContext.region.code
 		String cloudProvider = configService.provider
 		String userAccount = configService.getProviderValues(cloudProvider).userName
-		ApplicationAudit applicationAudit = new ApplicationAudit(userAccount: userAccount, cloudProvider: cloudProvider, date: date, user: user, region: region, action:action.toString(),applicationType: applicationType.toString(),status:status.toString()  )
+		String auditId = RandomStringUtils.randomAlphanumeric(4)
+		CloudUsageTracker cloudUsageTracker = new CloudUsageTracker(message:message,userAccount: userAccount, auditId:auditId,cloudProvider: cloudProvider, date: date, user: user, region: region, action:action.toString(),applicationType: applicationType.toString(),status:status.toString()  )
 		try{
-			if (!applicationAudit.save(flush:true)) {
-				applicationAudit.errors.each { println it }
+			if (!cloudUsageTracker.save()) {
+				cloudUsageTracker.errors.each { println it }
 			}
 		} catch (Exception e) {
 			e.printStackTrace();

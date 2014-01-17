@@ -25,7 +25,7 @@ import org.jclouds.ec2.domain.Volume
 class SnapshotController {
 
     def providerEc2Service
-    def applicationAuditService
+    def cloudUsageTrackerService
     def index = { redirect(action: 'list', params: params) }
 
     def list = {
@@ -69,7 +69,7 @@ class SnapshotController {
     def create = {
         UserContext userContext = UserContext.of(request)
         def snapshot = providerEc2Service.createSnapshot(userContext, params.volumeId, params.description)
-		applicationAuditService.addAuditData(userContext, AuditApplicationType.SNAPSHOT,Action.CREATE,Status.SUCCESS)
+		cloudUsageTrackerService.addAuditData(userContext, AuditApplicationType.SNAPSHOT,Action.CREATE,Status.SUCCESS)
         redirect(action: 'show', params:[id:snapshot?.id])
     }
 
@@ -92,14 +92,14 @@ class SnapshotController {
             }
             if (deletedSnapshotIds) {
                 message += "Snapshot${deletedSnapshotIds.size() == 1 ? '' : 's'} deleted: ${deletedSnapshotIds}. "
-				applicationAuditService.addAuditData(userContext, AuditApplicationType.SNAPSHOT,Action.DELETE,Status.SUCCESS)
+				cloudUsageTrackerService.addAuditData(userContext, AuditApplicationType.SNAPSHOT,Action.DELETE,Status.SUCCESS)
             }
             if (nonexistentSnapshotIds) {
                 message += "Snapshot${nonexistentSnapshotIds.size() == 1 ? '' : 's'} not found: ${nonexistentSnapshotIds}. "
             }
         } catch (Exception e) {
             message = "Error deleting snapshot${snapshotIds.size() == 1 ? '' : 's'} ${snapshotIds}: ${e}"
-			applicationAuditService.addAuditData(userContext, AuditApplicationType.SNAPSHOT,Action.DELETE,Status.FAILURE)
+			cloudUsageTrackerService.addAuditData(userContext, AuditApplicationType.SNAPSHOT,Action.DELETE,Status.FAILURE)
         }
         flash.message = message
         redirect(action: 'result')

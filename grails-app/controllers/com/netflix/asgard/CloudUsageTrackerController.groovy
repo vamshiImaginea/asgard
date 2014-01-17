@@ -1,22 +1,22 @@
 package com.netflix.asgard
 import grails.converters.JSON
 import grails.converters.XML
-class ApplicationAuditController {
+class CloudUsageTrackerController {
 	def configService
-	def applicationAuditService
+	def cloudUsageTrackerService
 
 	def index() { redirect(action: 'list', params: params) }
 	def list ={
 		UserContext userContext = UserContext.of(request)
-		List<ApplicationAudit> applicationAudit = ApplicationAudit.getAll();
+		List<CloudUsageTracker> cloudUsageData = CloudUsageTracker.getAll();
 		withFormat {
 			html {
 				[
-					auditData: applicationAudit
+					cloudUsageData: cloudUsageData
 				]
 			}
-			xml { new XML(applicationAudit).render(response) }
-			json { new JSON(applicationAudit).render(response) }
+			xml { new XML(cloudUsageData).render(response) }
+			json { new JSON(cloudUsageData).render(response) }
 		}
 	
 	}
