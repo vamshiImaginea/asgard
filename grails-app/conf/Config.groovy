@@ -217,6 +217,7 @@ environments {
 
 
 //Active directory setup, read the spring-security-ldap docs for more information
+grails.plugin.springsecurity.active=true
 grails.plugin.springsecurity.providerNames = [	'ldapAuthProvider',	'anonymousAuthenticationProvider',	'rememberMeAuthenticationProvider']
 grails.plugin.springsecurity.ldap.context.anonymousReadOnly = true
 grails.plugin.springsecurity.ldap.authenticator.dnPatterns='uid={0},ou=Employees,dc=pramati,dc=com'

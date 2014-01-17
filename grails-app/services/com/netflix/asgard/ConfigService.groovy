@@ -700,7 +700,9 @@ class ConfigService {
 	}
 
 	String getProvider(){
-		grailsApplication.config.get(SecurityContextHolder.getContext().getAuthentication().getName())?.grails?.currentActiveService 
+		
+		def grailsApplicationConfigGet = grailsApplication.config.get(SecurityContextHolder?.getContext()?.getAuthentication()?.getName())!=null?grailsApplication.config.get(SecurityContextHolder.getContext().getAuthentication().getName()):grailsApplication.config.get("defaultuser")
+		grailsApplicationConfigGet?.grails?.currentActiveService 
 	}
 
 	String getOpenStackEndPoint(){
@@ -725,7 +727,7 @@ class ConfigService {
 	}
 
 	ConfigObject getUserConfig(){
-		grailsApplication.config.get(SecurityContextHolder.getContext().getAuthentication().getName())
+		return grailsApplication.config.get(SecurityContextHolder?.getContext()?.getAuthentication()?.getName())!=null?grailsApplication.config.get(SecurityContextHolder.getContext().getAuthentication().getName()):grailsApplication.config.get("defaultuser")
 	}
 
 	String getUserName(cloudProvider = null){
@@ -745,6 +747,7 @@ class ConfigService {
 	}
 
 	boolean isUserConfigured(){
-		grailsApplication.config.get(SecurityContextHolder.getContext().getAuthentication().getName())
+		def grailsApplicationConfigGet = grailsApplication.config.get(SecurityContextHolder?.getContext()?.getAuthentication()?.getName())!=null?grailsApplication.config.get(SecurityContextHolder.getContext().getAuthentication().getName()):grailsApplication.config.get("defaultuser")
+		return grailsApplicationConfigGet!=null
 	}
 }

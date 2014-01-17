@@ -19,7 +19,7 @@ import java.awt.TexturePaintContext.Int;
 import java.awt.event.ItemEvent;
 
 import org.springframework.beans.factory.InitializingBean;
-
+import org.springframework.security.core.context.SecurityContextHolder
 import javassist.bytecode.stackmap.BasicBlock.Catch;
 
 import com.netflix.asgard.cache.CacheInitializer
@@ -57,7 +57,6 @@ class InitService implements InitializingBean {
 				throw new IOException("Unable to create Config.groovy file in directory ${configService.asgardHome}")
 			}
 		}
-
 		ConfigObject config = new ConfigSlurper().parse(configFile.toURL());
 		config.merge(configObject)
 

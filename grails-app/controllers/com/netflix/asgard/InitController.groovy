@@ -67,7 +67,7 @@ class InitController {
 		}
 
 		try {
-			initService.writeConfig(cmd.toConfigObject())
+			initService.writeConfig(cmd.toConfigObject(configService.userConfig))
 		} catch (Exception ioe) {
 			flash.message = ioe.message
 			redirect(action: 'index')
@@ -88,10 +88,10 @@ class InitializeCommand {
 	boolean showPublicAmazonImages
 	
 
-	ConfigObject toConfigObject() {
+	ConfigObject toConfigObject(ConfigObject userConf) {
 		ConfigObject rootConfig = new ConfigObject()
 		ConfigObject grailsConfig = new ConfigObject()
-		ConfigObject userCofig = new ConfigObject()
+		ConfigObject userCofig = userConf
 		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 		String loggedInUser = auth.getName();
 		rootConfig[loggedInUser] = userCofig
