@@ -98,7 +98,10 @@
          --%><%--<li class="menuButton"><g:link class="applications" controller="application" action="list">Applications</g:link></li>
          <li class="menuButton"><g:link class="stacks" controller="stack" action="list">Stacks</g:link></li>
          <li class="menuButton"><g:link class="users" controller="application" action="owner">Owners</g:link></li>
-         --%><li class="menuButton"><g:link class="securityGroups" controller="security" action="list">Security Groups</g:link></li>
+         --%>
+         <g:if test="${provider != 'RACKSPACE'}">
+         <li class="menuButton"><g:link class="securityGroups" controller="security" action="list">Security Groups</g:link></li>
+         </g:if>
          <g:if test="${platformserviceExists}"><%--
            <li class="menuButton"><g:link class="fastProperties" controller="fastProperty" action="apps">Fast Properties</g:link></li>
          --%></g:if><%--

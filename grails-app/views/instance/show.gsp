@@ -42,13 +42,14 @@
           </div>
         </g:if>
         <div class="buttons">
-          <h3>Operating System:</h3>
           <g:buttonSubmit class="stop" data-warning="Really Terminate: ${instance.id}?"
                   action="terminate" value="Terminate Instance" title="Shut down and delete this instance." />
+           <g:if test="${provider != 'RACKSPACE'}">
           <g:buttonSubmit class="shutdown" data-warning="Really Reboot: ${instance.id}?"
                   action="reboot" value="Reboot Instance" title="Restart the OS of the instance." />
           <g:link class="cli" action="raw" params="[instanceId: java.net.URLEncoder.encode(instance.id,'UTF-8')]" title="Display the operating system console output log.">Console Output (Raw)</g:link>
           <g:link class="userData" action="userDataHtml" params="[instanceId: java.net.URLEncoder.encode(instance.id,'UTF-8') ]" title="Display the user data executed by the instance on startup.">User Data</g:link>
+       </g:if>
         </div>
         <g:if test="${appNames}">
         <g:each var="app" in="${appNames}" > 
@@ -175,11 +176,22 @@
             <td class="name">Public DNS/IP:</td>
             <td class="value">${instance.publicAddresses}</td>
           </tr>
-          <tr class="prop">
-            <td class="name">Private DNS/IP:</td>
-             <td class="value">${instance.privateAddresses}</td>
-          </tr>
-          <tr class="prop">
+						<tr class="prop">
+							<td class="name">Private DNS/IP:</td>
+							<td class="value">
+								${instance.privateAddresses}
+							</td>
+						</tr>
+						<tr class="prop">
+							<td class="name">Hostname:</td>
+							<td class="value">${instance.hostname}
+							</td>
+						</tr>
+						<tr class="prop">
+							<td class="name">Operating System:</td>
+							<td class="value">${instance.os}</td>
+						</tr>
+						<tr class="prop">
             <td class="name">Image:</td>
             <td class="value">
               <g:linkObject type="image" name="${java.net.URLEncoder.encode(instance.imageId,'UTF-8')}">${instance.imageId}</g:linkObject>${image ? ' | ' + image.operatingSystem + ' | ' + image.location : ''}

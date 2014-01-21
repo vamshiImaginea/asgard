@@ -420,17 +420,24 @@ class ProviderEc2Service {
 		null
 	}
 
-	void detachVolume(UserContext userContext, String volumeId, String instanceId, String device) {
+	void detachVolume(UserContext userContext, String volumeId, String instanceId, String device,String zone) {
 		String regionCode = configService.getCloudProvider() == Provider.AWS ? userContext.region.code : "nova"
 		EC2Api ec2Api = getProivderClient(providerComputeService.getComputeServiceForProvider(userContext.region).getContext());
+		if(ec2Api){
 		DetachVolumeOptions detachVolumeOptions = new  DetachVolumeOptions().fromDevice(device).fromInstance(instanceId)
 		((ElasticBlockStoreApi)ec2Api.elasticBlockStoreApi.get()).detachVolumeInRegion(regionCode, volumeId, false,detachVolumeOptions)
-	}
+		}else{
+		providerFeatureService.detachVolume(userContext, volumeId, instanceId, device,zone);
+		}
+		}
 
-	Attachment attachVolume(UserContext userContext, String volumeId, String instanceId, String device) {
+	Attachment attachVolume(UserContext userContext, String volumeId, String instanceId, String device,String zone) {
 		EC2Api ec2Api = getProivderClient(providerComputeService.getComputeServiceForProvider(userContext.region).getContext());
+		if(ec2Api)
 		((ElasticBlockStoreApi)ec2Api.elasticBlockStoreApi.get()).attachVolumeInRegion(userContext.region.code, volumeId, instanceId, device)
-
+        else{
+			providerFeatureService.attachVolume(userContext.region.code, volumeId, instanceId, device,zone)
+		}
 	}
 
 	void deleteVolume(UserContext userContext, String volumeId) {

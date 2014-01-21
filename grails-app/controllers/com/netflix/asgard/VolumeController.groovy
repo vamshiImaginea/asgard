@@ -28,6 +28,7 @@ class VolumeController {
 
     def providerEc2Service
     def cloudUsageTrackerService
+	def providerComputeService
     def list = {
         UserContext userContext = UserContext.of(request)
         def volumes = (providerEc2Service.getVolumes(userContext) as List)
@@ -83,23 +84,37 @@ class VolumeController {
         UserContext userContext = UserContext.of(request)
         String volumeId = EntityType.volume.ensurePrefix(params.volumeId ?: params.id)
         Volume volume = providerEc2Service.getVolume(userContext, volumeId)
+		def instances = providerComputeService.retrieveInstances(userContext.region)
     /*    volume?.tags?.sort { it.key }*/
         if (!volume) {
             Requests.renderNotFound('EBS Volume', volumeId, this)
         } else {
             withFormat {
-                html { return ['volume':volume] }
+                html { return ['volume':volume,'instances':instances] }
                 xml { new XML(volume).render(response) }
                 json { new JSON(volume).render(response) }
             }
         }
     }
 
+	
+	def attach = {
+		String volumeId = EntityType.volume.ensurePrefix(params.volumeId ?: params.id)
+		UserContext userContext = UserContext.of(request)
+		try {
+			providerEc2Service.attachVolume(userContext, volumeId, params.instanceId, params.device,params.zone)
+			flash.message = "EBS Volume '${volumeId}' has been detached from ${params.instanceId}."
+		} catch (Exception e) {
+			flash.message = "Could not detach EBS Volume ${volumeId}: ${e}"
+		}
+		redirect(action: 'show', params:[id:volumeId])
+	}
+	
     def detach = {
         String volumeId = EntityType.volume.ensurePrefix(params.volumeId ?: params.id)
         UserContext userContext = UserContext.of(request)
         try {
-            providerEc2Service.detachVolume(userContext, volumeId, params.instanceId, params.device)
+            providerEc2Service.detachVolume(userContext, volumeId, params.instanceId, params.device,params.zone)
             flash.message = "EBS Volume '${volumeId}' has been detached from ${params.instanceId}."
         } catch (Exception e) {
             flash.message = "Could not detach EBS Volume ${volumeId}: ${e}"

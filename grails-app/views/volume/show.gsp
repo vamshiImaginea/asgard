@@ -35,6 +35,20 @@
                           data-warning="Really delete Volume '${volume.id}'?" />
         </div>
       </g:form>
+        <g:form controller="volume">
+        <input type="hidden" name="volumeId" value="${volume.id}"/>
+        <input type="hidden" name="zone" value="${volume.availabilityZone}"/>
+        
+        <div class="buttons">
+        Instance: <select id="instanceId" name="instanceId">
+                <g:each var="instance" in="${instances}">
+                  <option value="${instance.id}">${instance.id}</option>
+                </g:each>
+              </select>
+            <g:textField name="device" size="30" value="--ENTER DEVICE LOCATION--" class="requireLogin"/>
+          <g:buttonSubmit class="create" action="attach" value="Attach Volume"/>
+        </div>
+      </g:form>
       <g:form controller="snapshot">
         <input type="hidden" name="volumeId" value="${volume.id}"/>
         <div class="buttons">
@@ -101,6 +115,7 @@
                     <div class="buttons">
                       <g:form>
                         <input type="hidden" name="volumeId" value="${volume.id}"/>
+                        <input type="hidden" name="zone" value="${volume.availabilityZone}"/>
                         <input type="hidden" name="instanceId" value="${va.instanceId}"/>
                         <input type="hidden" name="device" value="${va.device}"/>
                         <g:buttonSubmit class="delete" onclick="return confirm('Really Detach ${volume.id} from ${va.instanceId} ?');"

@@ -723,7 +723,8 @@ class ConfigService {
 
 
 	ConfigObject getProviderValues(cloudProvider = null){
-		getUserConfig()?.get(cloudProvider?:getProvider())?:null
+		getUserConfig()?.get(cloudProvider?:getProvider())?:grailsApplication.config.get("defaultuser").get(cloudProvider?:getProvider())
+		
 	}
 
 	ConfigObject getUserConfig(){

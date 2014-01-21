@@ -12,10 +12,14 @@ import static org.jclouds.ec2.options.CreateSnapshotOptions.Builder.*
 import static org.jclouds.ec2.options.DescribeImagesOptions.Builder.*
 import static org.jclouds.ec2.options.DescribeSnapshotsOptions.Builder.*
 import static org.jclouds.ec2.options.DetachVolumeOptions.Builder.*
+
 import java.util.Date;
 import java.util.Iterator;
 import java.util.concurrent.TimeoutException;
+
+import org.jclouds.ContextBuilder
 import org.jclouds.aws.ec2.options.CreateSecurityGroupOptions.Buidler.*
+import org.jclouds.compute.ComputeService;
 import org.jclouds.ec2.domain.Attachment;
 import org.jclouds.ec2.domain.AvailabilityZoneInfo;
 import org.jclouds.ec2.domain.Snapshot.Status;
@@ -26,6 +30,10 @@ import org.jclouds.openstack.cinder.v1.features.VolumeApi;
 import org.jclouds.openstack.cinder.v1.options.CreateSnapshotOptions;
 import org.jclouds.openstack.cinder.v1.options.CreateVolumeOptions;
 import org.jclouds.openstack.cinder.v1.predicates.VolumePredicates;
+import org.jclouds.openstack.nova.v2_0.NovaApi;
+import org.jclouds.openstack.nova.v2_0.NovaAsyncApi;
+import org.jclouds.openstack.nova.v2_0.extensions.VolumeAttachmentApi;
+import org.jclouds.rest.RestContext;
 
 import com.google.common.base.Function
 import com.google.common.collect.EmptyImmutableListMultimap
@@ -251,6 +259,28 @@ class ProviderFeatureService {
 			close(cinderApi);
 		}
 
+	}
+	private void attachVolume(String regionCode, String volumeId, String instanceId, String device,String zone) {
+		Region cloudblockstorageRegion
+		if(configService.getCloudProvider() == Provider.RACKSPACE ){
+			cloudblockstorageRegion  = new Region(provider:'rackspace-cloudblockstorage-'+ region.code.toLowerCase(),code:region.code);
+
+		}
+		ContextBuilder context = providerComputeService.getContextBuilder(cloudblockstorageRegion,configService.getCloudProvider()).buildApi(CinderApi.class)
+		RestContext<NovaApi, NovaAsyncApi>  nova = context.unwrap();
+		VolumeAttachmentApi volumeAttachmentApi = nova.getApi().getVolumeAttachmentExtensionForZone(regionCode).get()
+		volumeAttachmentApi.attachVolumeToServerAsDevice(volumeId, instanceId, device)
+
+	}
+	private org.jclouds.ec2.domain.Volume detachVolume(String regionCode, String volumeId, String instanceId, String device,String zone) {
+	Region cloudblockstorageRegion
+		if(configService.getCloudProvider() == Provider.RACKSPACE ){
+			cloudblockstorageRegion  = new Region(provider:'rackspace-cloudblockstorage-'+ region.code.toLowerCase(),code:region.code);
+		}
+		ContextBuilder context = providerComputeService.getContextBuilder(cloudblockstorageRegion,configService.getCloudProvider()).buildApi(CinderApi.class)
+		RestContext<NovaApi, NovaAsyncApi>  nova = context.unwrap();
+		VolumeAttachmentApi volumeAttachmentApi = nova.getApi().getVolumeAttachmentExtensionForZone(zone).get()
+		volumeAttachmentApi.detachVolumeFromServer(volumeId, instanceId)
 	}
 
 	private org.jclouds.ec2.domain.Snapshot createSnapshot(Region region,String volumeId,String name) {
