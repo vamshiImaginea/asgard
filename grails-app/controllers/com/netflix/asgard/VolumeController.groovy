@@ -45,11 +45,11 @@ class VolumeController {
         try {
             Volume volume = providerEc2Service.createVolume(userContext, params.volumeSize as Integer,
                     params.availabilityZone)
-			cloudUsageTrackerService.addAuditData(userContext, AuditApplicationType.VOLUME,Action.CREATE,Status.SUCCESS)
+			cloudUsageTrackerService.addAuditData(userContext, AuditApplicationType.VOLUME,Action.CREATE,Status.SUCCESS,[volume.id])
             flash.message = "EBS Volume '${volume.id}' has been created."
             redirect(action: 'show', params:[id:volume.id])
         } catch (AmazonServiceException ase) {
-		cloudUsageTrackerService.addAuditData(userContext, AuditApplicationType.VOLUME,Action.CREATE,Status.FAILURE)
+		cloudUsageTrackerService.addAuditData(userContext, AuditApplicationType.VOLUME,Action.CREATE,Status.FAILURE,null)
             flash.message = "Could not create EBS Volume: ${ase}"
             redirect(action: 'list')
         }
@@ -71,11 +71,11 @@ class VolumeController {
                 message += (deletedCount > 0) ? ", $it" : "Volume(s) deleted: $it"
                 deletedCount++
             }
-			cloudUsageTrackerService.addAuditData(userContext, AuditApplicationType.VOLUME,Action.DELETE,Status.SUCCESS)
+			cloudUsageTrackerService.addAuditData(userContext, AuditApplicationType.VOLUME,Action.DELETE,Status.SUCCESS,volumeIds)
             flash.message = message
         } catch (Exception e) {
             flash.message = "Could not delete volume: ${e}"
-			cloudUsageTrackerService.addAuditData(userContext, AuditApplicationType.VOLUME,Action.DELETE,Status.FAILURE)
+			cloudUsageTrackerService.addAuditData(userContext, AuditApplicationType.VOLUME,Action.DELETE,Status.FAILURE,volumeIds)
         }
         redirect(action: 'list')
     }

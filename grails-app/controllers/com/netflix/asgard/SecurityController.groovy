@@ -110,15 +110,16 @@ class SecurityController {
             try {
                 SecurityGroup securityGroup = providerEc2Service.getSecurityGroup(userContext, name)
                 if (!securityGroup) {
-					cloudUsageTrackerService.addAuditData(userContext, AuditApplicationType.SECURITY_GROUP,Action.CREATE,Status.SUCCESS)
+					
                     securityGroup = providerEc2Service.createSecurityGroup(userContext, name, params.description, params.vpcId)
+					cloudUsageTrackerService.addAuditData(userContext, AuditApplicationType.SECURITY_GROUP,Action.CREATE,Status.SUCCESS,[name])
                     flash.message = "Security Group '${name}' has been created."
                 } else {
                     flash.message = "Security Group '${name}' already exists."
                 }
                 redirect(action: 'show', params: [id: securityGroup.name])
             } catch (Exception e) {
-			cloudUsageTrackerService.addAuditData(userContext, AuditApplicationType.SECURITY_GROUP,Action.CREATE,Status.FAILURE)
+			cloudUsageTrackerService.addAuditData(userContext, AuditApplicationType.SECURITY_GROUP,Action.CREATE,Status.FAILURE,[name])
                 flash.message = "Could not create Security Group: ${e}"
                 chain(action: 'create', model: [cmd: cmd], params: params)
             }
@@ -149,11 +150,11 @@ class SecurityController {
             if (providerEc2Service.isSecurityGroupEditable(securityGroup.name)) {
                 try {
                     updateSecurityIngress(userContext, securityGroup, selectedGroups, params)
-					cloudUsageTrackerService.addAuditData(userContext, AuditApplicationType.SECURITY_GROUP,Action.UPDATE,Status.SUCCESS)
+					cloudUsageTrackerService.addAuditData(userContext, AuditApplicationType.SECURITY_GROUP,Action.UPDATE,Status.SUCCESS,[securityGroup.name])
                     flash.message = "Security Group '${securityGroup.name}' has been updated."
                     redirect(action: 'show', params: [id: securityGroup.name])
                 } catch (Exception e) {
-				cloudUsageTrackerService.addAuditData(userContext, AuditApplicationType.SECURITY_GROUP,Action.UPDATE,Status.FAILURE)
+				cloudUsageTrackerService.addAuditData(userContext, AuditApplicationType.SECURITY_GROUP,Action.UPDATE,Status.FAILURE,[securityGroup.name])
 				  e.printStackTrace();
                     flash.message = "Could not update Security Group: ${e}"
                     redirect(action: 'edit', params: [id: securityGroup.name])
@@ -187,7 +188,7 @@ class SecurityController {
             SecurityGroup securityGroup = providerEc2Service.getSecurityGroup(userContext, name)
             if (null != securityGroup) {
                 providerEc2Service.removeSecurityGroup(userContext, name, securityGroup.name)
-				cloudUsageTrackerService.addAuditData(userContext, AuditApplicationType.SECURITY_GROUP,Action.DELETE,Status.SUCCESS)
+				cloudUsageTrackerService.addAuditData(userContext, AuditApplicationType.SECURITY_GROUP,Action.DELETE,Status.SUCCESS,[name])
                 msg = "Security Group '${securityGroup.name}' has been deleted."
             } else {
                 msg = "Security Group '${name}' does not exist."
@@ -195,7 +196,7 @@ class SecurityController {
             flash.message = msg
             redirect(action: 'result')
         } catch (Exception e) {
-		cloudUsageTrackerService.addAuditData(userContext, AuditApplicationType.SECURITY_GROUP,Action.DELETE,Status.FAILURE)
+		cloudUsageTrackerService.addAuditData(userContext, AuditApplicationType.SECURITY_GROUP,Action.DELETE,Status.FAILURE,[name])
             flash.message = "Could not delete Security Group: ${e}"
             redirect(action: 'show', params: [id: name])
         }

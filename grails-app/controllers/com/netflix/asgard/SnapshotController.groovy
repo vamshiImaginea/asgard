@@ -69,7 +69,7 @@ class SnapshotController {
     def create = {
         UserContext userContext = UserContext.of(request)
         def snapshot = providerEc2Service.createSnapshot(userContext, params.volumeId, params.description)
-		cloudUsageTrackerService.addAuditData(userContext, AuditApplicationType.SNAPSHOT,Action.CREATE,Status.SUCCESS)
+		cloudUsageTrackerService.addAuditData(userContext, AuditApplicationType.SNAPSHOT,Action.CREATE,Status.SUCCESS,[snapshot.id])
         redirect(action: 'show', params:[id:snapshot?.id])
     }
 
@@ -92,14 +92,14 @@ class SnapshotController {
             }
             if (deletedSnapshotIds) {
                 message += "Snapshot${deletedSnapshotIds.size() == 1 ? '' : 's'} deleted: ${deletedSnapshotIds}. "
-				cloudUsageTrackerService.addAuditData(userContext, AuditApplicationType.SNAPSHOT,Action.DELETE,Status.SUCCESS)
+				cloudUsageTrackerService.addAuditData(userContext, AuditApplicationType.SNAPSHOT,Action.DELETE,Status.SUCCESS,snapshotIds)
             }
             if (nonexistentSnapshotIds) {
                 message += "Snapshot${nonexistentSnapshotIds.size() == 1 ? '' : 's'} not found: ${nonexistentSnapshotIds}. "
             }
         } catch (Exception e) {
             message = "Error deleting snapshot${snapshotIds.size() == 1 ? '' : 's'} ${snapshotIds}: ${e}"
-			cloudUsageTrackerService.addAuditData(userContext, AuditApplicationType.SNAPSHOT,Action.DELETE,Status.FAILURE)
+			cloudUsageTrackerService.addAuditData(userContext, AuditApplicationType.SNAPSHOT,Action.DELETE,Status.FAILURE,snapshotIds)
         }
         flash.message = message
         redirect(action: 'result')

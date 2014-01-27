@@ -173,7 +173,7 @@ class ApplicationController {
 					type, desc, owner, email, bucketType, enableChaosMonkey)
 			flash.message = result.toString()
 			if (result.succeeded()) {
-				cloudUsageTrackerService.addAuditData(userContext, AuditApplicationType.APPLICATION,Action.CREATE,Status.SUCCESS)
+				cloudUsageTrackerService.addAuditData(userContext, AuditApplicationType.APPLICATION,Action.CREATE,Status.SUCCESS,[name])
 				redirect(action: 'show', params: [id: name])
 			} else {
 				chain(action: 'create', model: [cmd: cmd], params: params)
@@ -208,7 +208,7 @@ class ApplicationController {
 			flash.message = "Could not update Application: ${e}"
 			updated = false
 		}
-		cloudUsageTrackerService.addAuditData(userContext, AuditApplicationType.APPLICATION,Action.UPDATE,updated?Status.SUCCESS:Status.FAILURE)
+		cloudUsageTrackerService.addAuditData(userContext, AuditApplicationType.APPLICATION,Action.UPDATE,updated?Status.SUCCESS:Status.FAILURE,[name])
 		redirect(action: 'show', params: [id: name])
 		
 	}
@@ -230,7 +230,7 @@ class ApplicationController {
 			deleted = false
 		}
 		redirect(action: 'list')
-		cloudUsageTrackerService.addAuditData(userContext, AuditApplicationType.APPLICATION,Action.DELETE,deleted?Status.SUCCESS:Status.FAILURE)
+		cloudUsageTrackerService.addAuditData(userContext, AuditApplicationType.APPLICATION,Action.DELETE,deleted?Status.SUCCESS:Status.FAILURE,[name])
 	}
 
 
