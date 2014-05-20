@@ -701,7 +701,7 @@ class ConfigService {
 
 	String getProvider(){
 		
-		def grailsApplicationConfigGet = grailsApplication.config.get(SecurityContextHolder?.getContext()?.getAuthentication()?.getName())!=null?grailsApplication.config.get(SecurityContextHolder.getContext().getAuthentication().getName()):grailsApplication.config.get("defaultuser")
+		def grailsApplicationConfigGet = grailsApplication.config.get(SecurityContextHolder?.getContext()?.getAuthentication()?.getName()?.split("@")[0].replace('.', ''))!=null?grailsApplication.config.get(SecurityContextHolder?.getContext()?.getAuthentication()?.getName()?.split("@")[0].replace('.', '')):grailsApplication.config.get("defaultuser")
 		grailsApplicationConfigGet?.grails?.currentActiveService 
 	}
 
@@ -728,7 +728,7 @@ class ConfigService {
 	}
 
 	ConfigObject getUserConfig(){
-		return grailsApplication.config.get(SecurityContextHolder?.getContext()?.getAuthentication()?.getName())!=null?grailsApplication.config.get(SecurityContextHolder.getContext().getAuthentication().getName()):grailsApplication.config.get("defaultuser")
+		return grailsApplication.config.get(SecurityContextHolder?.getContext()?.getAuthentication()?.getName()?.split("@")[0].replace('.', ''))!=null?grailsApplication.config.get(SecurityContextHolder?.getContext()?.getAuthentication()?.getName()?.split("@")[0].replace('.', '')):grailsApplication.config.get("defaultuser")
 	}
 
 	String getUserName(cloudProvider = null){
@@ -748,7 +748,7 @@ class ConfigService {
 	}
 
 	boolean isUserConfigured(){
-		def grailsApplicationConfigGet = grailsApplication.config.get(SecurityContextHolder?.getContext()?.getAuthentication()?.getName())!=null?grailsApplication.config.get(SecurityContextHolder.getContext().getAuthentication().getName()):grailsApplication.config.get("defaultuser")
+		def grailsApplicationConfigGet = grailsApplication.config.get(SecurityContextHolder?.getContext()?.getAuthentication()?.getName()?.split("@")[0].replace('.', '').replaceAll(".", ""))!=null?grailsApplication.config.get(SecurityContextHolder?.getContext()?.getAuthentication()?.getName()?.split("@")[0].replace('.', '')):grailsApplication.config.get("defaultuser")
 		return grailsApplicationConfigGet!=null
 	}
 }

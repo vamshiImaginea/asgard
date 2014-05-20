@@ -93,7 +93,7 @@ class InitializeCommand {
 		ConfigObject grailsConfig = new ConfigObject()
 		ConfigObject userCofig = userConf
 		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-		String loggedInUser = auth.getName();
+		String loggedInUser = auth.getName()?.split("@")[0].replace('.', '');
 		rootConfig[loggedInUser] = userCofig
 		userCofig['grails'] = grailsConfig
 		if(!loggedInUser || !apiKey) {
